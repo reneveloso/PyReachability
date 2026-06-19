@@ -92,6 +92,10 @@ def main():
     _, t_build = timed(lambda: grail.build(g))
     print(f"GRAIL(d={args.d}) build: {t_build:.2f}s, "
           f"index size: {grail.index_size_bytes / 1e6:.1f} MB")
+    grail_bi = GRAIL(d=args.d, bidirectional=True)
+    _, t_build_bi = timed(lambda: grail_bi.build(g))
+    print(f"GRAIL(d={args.d}, bidirectional) build: {t_build_bi:.2f}s, "
+          f"index size: {grail_bi.index_size_bytes / 1e6:.1f} MB")
 
     # --- correctness: GRAIL must agree with the BFSDFS oracle ---
     check = sample_pairs(n, src, dst, args.bfs_queries // 2, args.bfs_queries // 2, seed=1)
@@ -122,13 +126,17 @@ def main():
         return
     deep = np.stack([du, dv], axis=1)
     bfs_deep, t_bfs_deep = timed(lambda: [bfs.query(int(u), int(v)) for u, v in deep])
-    grail_deep, t_grail_deep = timed(lambda: [grail.query(int(u), int(v)) for u, v in deep])
-    disagree = sum(int(a != b) for a, b in zip(bfs_deep, grail_deep))
+    g_deep, t_g_deep = timed(lambda: [grail.query(int(u), int(v)) for u, v in deep])
+    gb_deep, t_gb_deep = timed(lambda: [grail_bi.query(int(u), int(v)) for u, v in deep])
+    disagree = sum(int(a != b) for a, b in zip(bfs_deep, g_deep)) \
+        + sum(int(a != b) for a, b in zip(bfs_deep, gb_deep))
     print(f"\ndeep positives: {len(deep):,} multi-hop reachable pairs "
           f"({'AGREE ✓' if disagree == 0 else f'{disagree} DISAGREEMENTS ✗'})")
-    print(f"BFSDFS: {1000 * t_bfs_deep / len(deep):.3f} ms/query")
-    print(f"GRAIL : {1000 * t_grail_deep / len(deep):.3f} ms/query   "
-          f"(speedup x{t_bfs_deep / t_grail_deep:.0f})")
+    print(f"BFSDFS             : {1000 * t_bfs_deep / len(deep):.3f} ms/query")
+    print(f"GRAIL              : {1000 * t_g_deep / len(deep):.3f} ms/query   "
+          f"(x{t_bfs_deep / t_g_deep:.0f} vs BFS)")
+    print(f"GRAIL bidirectional: {1000 * t_gb_deep / len(deep):.3f} ms/query   "
+          f"(x{t_bfs_deep / t_gb_deep:.0f} vs BFS)")
 
 
 if __name__ == "__main__":
