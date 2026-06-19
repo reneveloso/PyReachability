@@ -115,6 +115,15 @@ runs only for pairs none of these decide, and it is itself pruned by the same cu
 backward from the target over a reverse CSR) that meets in the middle — faster on hard pairs,
 at the cost of an extra reverse-edge array.
 
+`FELINE` labels each vertex with a 2D coordinate (X, Y) from two complementary topological
+orders (the second built by the Kornaropoulos heuristic). Reachability implies dominance
+(`X[u]≤X[v] ∧ Y[u]≤Y[v]`), so a failed test is an exact negative; it layers the same
+**positive-cut** (a min-post spanning-tree interval) and **level filter** before a
+dominance-pruned DFS. Its index is linear (O(|V|)), so it builds faster and far smaller than
+GRAIL. `FELINE(bidirectional=True)` (FELINE-B) adds a second coordinate system on the reversed
+graph for a target-side dominance cut. The shared `topological_levels()` util backs the level
+filter of both GRAIL and FELINE.
+
 ## How to add a method to the catalog
 
 Adding a method follows the same pattern every time. The implemented **`GRAIL`** is a complete

@@ -101,6 +101,10 @@ def main():
     _, t_build_f = timed(lambda: feline.build(g))
     print(f"FELINE build: {t_build_f:.2f}s, "
           f"index size: {feline.index_size_bytes / 1e6:.1f} MB")
+    feline_b = FELINE(bidirectional=True)
+    _, t_build_fb = timed(lambda: feline_b.build(g))
+    print(f"FELINE-B build: {t_build_fb:.2f}s, "
+          f"index size: {feline_b.index_size_bytes / 1e6:.1f} MB")
 
     # --- correctness: GRAIL must agree with the BFSDFS oracle ---
     check = sample_pairs(n, src, dst, args.bfs_queries // 2, args.bfs_queries // 2, seed=1)
@@ -134,9 +138,11 @@ def main():
     g_deep, t_g_deep = timed(lambda: [grail.query(int(u), int(v)) for u, v in deep])
     gb_deep, t_gb_deep = timed(lambda: [grail_bi.query(int(u), int(v)) for u, v in deep])
     f_deep, t_f_deep = timed(lambda: [feline.query(int(u), int(v)) for u, v in deep])
+    fb_deep, t_fb_deep = timed(lambda: [feline_b.query(int(u), int(v)) for u, v in deep])
     disagree = sum(int(a != b) for a, b in zip(bfs_deep, g_deep)) \
         + sum(int(a != b) for a, b in zip(bfs_deep, gb_deep)) \
-        + sum(int(a != b) for a, b in zip(bfs_deep, f_deep))
+        + sum(int(a != b) for a, b in zip(bfs_deep, f_deep)) \
+        + sum(int(a != b) for a, b in zip(bfs_deep, fb_deep))
     print(f"\ndeep positives: {len(deep):,} multi-hop reachable pairs "
           f"({'AGREE ✓' if disagree == 0 else f'{disagree} DISAGREEMENTS ✗'})")
     print(f"BFSDFS             : {1000 * t_bfs_deep / len(deep):.3f} ms/query")
@@ -146,6 +152,8 @@ def main():
           f"(x{t_bfs_deep / t_gb_deep:.0f} vs BFS)")
     print(f"FELINE             : {1000 * t_f_deep / len(deep):.3f} ms/query   "
           f"(x{t_bfs_deep / t_f_deep:.0f} vs BFS)")
+    print(f"FELINE-B           : {1000 * t_fb_deep / len(deep):.3f} ms/query   "
+          f"(x{t_bfs_deep / t_fb_deep:.0f} vs BFS)")
 
 
 if __name__ == "__main__":
