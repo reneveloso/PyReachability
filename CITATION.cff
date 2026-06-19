@@ -9,6 +9,8 @@ type: software
 authors:
   - family-names: Veloso
     given-names: Renê Rodrigues
+    email: rene.veloso@unimontes.br
+    affiliation: Universidade Estadual de Montes Claros (Unimontes)
 version: 0.1.0
 date-released: "2026-06-19"
 license: MIT

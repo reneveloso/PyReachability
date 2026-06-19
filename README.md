@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['bfsdfs']  (grows as methods are added)
+catalog.methods()          # ['bfsdfs', 'grail']  (grows as methods are added)
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
@@ -122,7 +122,7 @@ The library is built in milestones, each producing working, tested software:
 
 1. **Foundation** *(this release)* — build system, CSR graph, SCC condensation, catalog,
    `BFSDFS` oracle, property-based tests, CI.
-2. **Tree-cover family** — `TC`, `TreeCover`, `GRAIL`.
+2. **Tree-cover family** — `GRAIL` ✅ (done), plus `TC` and `TreeCover`.
 3. **`FELINE` + `PLL`.**
 4. **Benchmark harness + datasets** — reproducible build/memory/query-time comparisons.
 5. **Docs site, PyPI wheels, Zenodo DOI.**

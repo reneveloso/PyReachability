@@ -43,8 +43,12 @@ Construction (from an edge list) **drops self-loops** (they never change reachab
 **deduplicates parallel edges** (each adjacency row is sorted and uniqued). Vertex ids are
 0-based 32-bit integers (`vid_t = int32_t`).
 
-`Graph.from_edges` marshals two NumPy `int32` arrays into the C++ constructor; `Graph.from_file`
-parses an edge-list text format and delegates to `from_edges`.
+`Graph.from_edges` marshals NumPy `int32` arrays into the C++ constructor (it accepts either
+separate `src`/`dst` arrays or a single `(E, 2)` array). `Graph.from_file` parses a file and
+delegates to `from_edges`, dispatching on `fmt`: `"edgelist"` (one `u v` per line) or `"gra"`
+(the GRAIL/GREACH adjacency format); paths ending in `.gz` are decompressed transparently. The
+format dispatch makes adding readers (SNAP, DIMACS `.gr`, …) straightforward. `Graph.to_edges`
+exports the CSR back to `(src, dst)` arrays (the inverse of `from_edges`).
 
 ## SCC condensation: from general digraphs to DAGs
 
@@ -104,7 +108,9 @@ This distinction (from the reachability literature) shapes how `query` is implem
 
 ## How to add a method to the catalog
 
-Adding a method follows the same pattern every time. Suppose you are adding `GRAIL`.
+Adding a method follows the same pattern every time. The implemented **`GRAIL`** is a complete
+worked example (C++ core in `src/cpp/grail.{hpp,cpp}`, Cython `_GRAILCore`, Python `GRAIL`
+wrapper); the steps below use it for illustration.
 
 **1. Read the paper first.** A method only enters the library if it has a peer-reviewed
 publication, and the implementation must follow the published algorithm (document any
