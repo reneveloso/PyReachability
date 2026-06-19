@@ -61,9 +61,11 @@ class BFSDFS(ReachabilityIndex):
 class GRAIL(ReachabilityIndex):
     """GRAIL: scalable reachability via d randomized interval labels + guided search.
 
-    A *partial* index: a constant-time containment test rejects most unreachable
-    pairs with no false negatives, and the remaining candidates fall back to a
-    label-guided DFS. General graphs are reduced to a DAG via SCC condensation.
+    A *partial* index. Each query is decided constant-time when possible by two exact
+    cuts over the labels — a **negative cut** (containment) and a **positive cut** (PP:
+    the target falls in the source's DFS-subtree interval) — plus a **topological level
+    filter**. Only genuinely inconclusive pairs fall back to a label-guided, level-pruned
+    DFS. General graphs are reduced to a DAG via SCC condensation.
 
     Yildirim, Chaoji, Zaki, *GRAIL: Scalable Reachability Index for Large Graphs*,
     PVLDB 3(1-2):276-284, 2010.

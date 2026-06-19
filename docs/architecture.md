@@ -106,6 +106,12 @@ This distinction (from the reachability literature) shapes how `query` is implem
   queries outright, and the undecided ones fall back to a **guided/pruned DFS**. Their `query`
   therefore combines a lookup with a bounded traversal.
 
+`GRAIL` layers three exact constant-time cuts before any DFS: a **negative cut** (interval
+containment must hold in every dimension), a **positive cut** (PP — the target's post-order
+number lies inside the source's DFS-subtree interval, so it is a true descendant), and a
+**topological level filter** (`u` can reach `v` only if `level(u) < level(v)`). The guided DFS
+runs only for pairs none of these decide, and it is itself pruned by the same cuts.
+
 ## How to add a method to the catalog
 
 Adding a method follows the same pattern every time. The implemented **`GRAIL`** is a complete
