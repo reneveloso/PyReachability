@@ -5,7 +5,7 @@ import numpy as np
 import gzip
 import array as _pyarray
 from libcpp.vector cimport vector
-from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail
+from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline
 
 cnp.import_array()
 
@@ -278,3 +278,38 @@ cdef class _GRAILCore:
 
     def index_size_bytes(self):
         return self._grail.index_size_bytes() + self._comp.size() * sizeof(int)
+
+
+cdef class _FelineCore:
+    cdef Feline* _feline
+    cdef vector[vid_t] _comp
+    cdef bint _built
+
+    def __cinit__(self):
+        self._feline = new Feline()
+        self._built = False
+
+    def __dealloc__(self):
+        if self._feline != NULL:
+            del self._feline
+
+    def build(self, Graph graph):
+        cdef Condensation cond = scc_condense(graph._g[0])
+        self._comp = cond.comp
+        self._feline.build(cond.dag)
+        self._built = True
+
+    def query(self, int u, int v):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef int n = <int>self._comp.size()
+        if u < 0 or u >= n or v < 0 or v >= n:
+            raise IndexError("vertex id out of range")
+        cdef vid_t cu = self._comp[u]
+        cdef vid_t cv = self._comp[v]
+        if cu == cv:
+            return True
+        return self._feline.reaches(cu, cv)
+
+    def index_size_bytes(self):
+        return self._feline.index_size_bytes() + self._comp.size() * sizeof(int)
