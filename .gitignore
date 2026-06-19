@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/
+_skbuild/
+*.so
+.venv/
+venv/
+*.csv
+benchmarks/data/
+docs/*.pdf
+build*/
+.venv*/
+docs/superpowers/
+*:Zone.Identifier

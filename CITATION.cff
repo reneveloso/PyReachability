@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: PyReachability
+abstract: >-
+  Fast graph reachability methods with a C++17 core and a Python API:
+  an extensible catalog of reachability indexing methods under a common
+  interface, for directed graphs.
+type: software
+authors:
+  - family-names: Veloso
+    given-names: Renê Rodrigues
+version: 0.1.0
+date-released: "2026-06-19"
+license: MIT
+repository-code: "https://github.com/ReneVeloso/PyReachability"
+keywords:
+  - graph reachability
+  - reachability index
+  - directed graph
+  - transitive closure
+  - graph algorithms

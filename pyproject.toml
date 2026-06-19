@@ -1,0 +1,26 @@
+[build-system]
+requires = ["scikit-build-core>=0.8", "cython>=3.0", "numpy>=1.21"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "PyReachability"
+dynamic = ["version"]
+description = "Fast graph reachability methods (C++17 core, Python API)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Renê Rodrigues Veloso" }]
+dependencies = ["numpy>=1.21"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "hypothesis>=6"]
+
+[tool.scikit-build]
+wheel.packages = ["src/pyreachability"]
+minimum-version = "0.8"
+cmake.version = ">=3.15"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "src/pyreachability/_version.py"
+regex = '__version__ = "(?P<value>[^"]+)"'
