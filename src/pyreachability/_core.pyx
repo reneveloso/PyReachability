@@ -2,6 +2,8 @@
 # cython: language_level=3
 cimport numpy as cnp
 import numpy as np
+import gzip
+import array as _pyarray
 from libcpp.vector cimport vector
 from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail
 
@@ -100,18 +102,24 @@ cdef class Graph:
 
     @staticmethod
     def from_file(path, fmt="edgelist"):
-        """Build a graph by reading an edge list from a text file.
+        """Build a graph by reading it from a file.
 
-        Each non-empty, non-comment line holds an edge as two integers
-        ``u v`` (whitespace-separated). Blank lines and lines starting with
-        ``#`` are ignored. ``num_nodes`` is inferred as ``max(id) + 1``.
+        Files ending in ``.gz`` are transparently decompressed.
 
         Parameters
         ----------
         path : str
-            Path to the file.
+            Path to the file (optionally gzipped).
         fmt : str, optional
-            Input format. Currently only ``"edgelist"`` is supported.
+            Input format:
+
+            - ``"edgelist"`` (default): one edge per line as ``u v``
+              (whitespace-separated). Blank lines and ``#`` comments are
+              ignored; ``num_nodes`` is inferred as ``max(id) + 1``.
+            - ``"gra"``: the GRAIL/GREACH adjacency format — an optional
+              ``graph_for_greach`` header line, then the vertex count, then
+              one line per vertex ``id: succ1 succ2 ... #``. The declared
+              vertex count is used (so isolated/sink vertices are kept).
 
         Returns
         -------
@@ -120,28 +128,58 @@ cdef class Graph:
         Raises
         ------
         ValueError
-            If ``fmt`` is unsupported, or a line is malformed (the error
-            message includes the 1-based line number).
+            If ``fmt`` is unsupported, or the file is malformed.
         """
-        if fmt != "edgelist":
+        opener = gzip.open if str(path).endswith(".gz") else open
+        if fmt == "edgelist":
+            srcs = []; dsts = []; n = 0
+            with opener(path, "rt") as fh:
+                for lineno, raw in enumerate(fh, start=1):
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split()
+                    if len(parts) < 2:
+                        raise ValueError(f"malformed edge at line {lineno}: {raw!r}")
+                    try:
+                        u = int(parts[0]); v = int(parts[1])
+                    except ValueError:
+                        raise ValueError(f"malformed edge at line {lineno}: {raw!r}")
+                    srcs.append(u); dsts.append(v)
+                    n = max(n, u + 1, v + 1)
+            return Graph.from_edges(np.asarray(srcs, dtype=np.int32),
+                                    np.asarray(dsts, dtype=np.int32), num_nodes=n)
+        elif fmt == "gra":
+            # array('i') keeps memory compact on the large graphs this format is used for.
+            srcs = _pyarray.array("i"); dsts = _pyarray.array("i")
+            n = -1
+            with opener(path, "rt") as fh:
+                for raw in fh:
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    if n < 0:
+                        if line.isdigit():        # vertex count
+                            n = int(line)
+                        # else: header marker (e.g. "graph_for_greach") -> skip
+                        continue
+                    head, sep, rest = line.partition(":")
+                    if not sep:
+                        continue
+                    try:
+                        u = int(head)
+                    except ValueError:
+                        raise ValueError(f"malformed .gra adjacency line: {raw!r}")
+                    for tok in rest.split():
+                        if tok == "#":
+                            break
+                        srcs.append(u); dsts.append(int(tok))
+            if n < 0:
+                raise ValueError("missing vertex count in .gra file")
+            return Graph.from_edges(np.frombuffer(srcs, dtype=np.int32),
+                                    np.frombuffer(dsts, dtype=np.int32), num_nodes=n)
+        else:
             raise ValueError(f"unsupported fmt: {fmt!r}")
-        srcs = []; dsts = []; n = 0
-        with open(path, "r") as fh:
-            for lineno, raw in enumerate(fh, start=1):
-                line = raw.strip()
-                if not line or line.startswith("#"):
-                    continue
-                parts = line.split()
-                if len(parts) < 2:
-                    raise ValueError(f"malformed edge at line {lineno}: {raw!r}")
-                try:
-                    u = int(parts[0]); v = int(parts[1])
-                except ValueError:
-                    raise ValueError(f"malformed edge at line {lineno}: {raw!r}")
-                srcs.append(u); dsts.append(v)
-                n = max(n, u + 1, v + 1)
-        return Graph.from_edges(np.asarray(srcs, dtype=np.int32),
-                                np.asarray(dsts, dtype=np.int32), num_nodes=n)
 
     @property
     def num_nodes(self):

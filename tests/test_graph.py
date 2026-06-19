@@ -48,6 +48,41 @@ def test_from_file_edgelist(tmp_path):
     assert g.num_edges == 3
 
 
+def test_from_file_gra(tmp_path):
+    # GRAIL/GREACH .gra format: header line, vertex count, then "id: succ... #"
+    p = tmp_path / "g.gra"
+    p.write_text("graph_for_greach\n4\n0: 1 2 #\n1: 3 #\n2: 3 #\n3: #\n")
+    g = Graph.from_file(str(p), fmt="gra")
+    assert g.num_nodes == 4          # declared count (node 3 is isolated as a sink)
+    assert g.num_edges == 4
+
+
+def test_from_file_gra_no_header(tmp_path):
+    # Older .gra variant: vertex count on the first line, no header marker.
+    p = tmp_path / "g2.gra"
+    p.write_text("3\n0: 1 #\n1: 2 #\n2: #\n")
+    g = Graph.from_file(str(p), fmt="gra")
+    assert g.num_nodes == 3
+    assert g.num_edges == 2
+
+
+def test_from_file_gra_gzip(tmp_path):
+    import gzip
+    p = tmp_path / "g.gra.gz"
+    with gzip.open(p, "wt") as fh:
+        fh.write("graph_for_greach\n3\n0: 1 2 #\n1: #\n2: #\n")
+    g = Graph.from_file(str(p), fmt="gra")   # gzip detected by .gz extension
+    assert g.num_nodes == 3
+    assert g.num_edges == 2
+
+
+def test_from_file_unknown_fmt(tmp_path):
+    p = tmp_path / "x.txt"
+    p.write_text("0 1\n")
+    with pytest.raises(ValueError):
+        Graph.from_file(str(p), fmt="nope")
+
+
 def test_from_file_malformed_reports_line(tmp_path):
     p = tmp_path / "bad.txt"
     p.write_text("0 1\nNOTANUMBER\n")
