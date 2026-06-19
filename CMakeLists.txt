@@ -42,9 +42,11 @@ add_executable(cpp_tests
   src/cpp/tests/test_csr_graph.cpp
   src/cpp/tests/test_scc.cpp
   src/cpp/tests/test_bfsdfs.cpp
+  src/cpp/tests/test_grail.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
-  src/cpp/bfsdfs.cpp)
+  src/cpp/bfsdfs.cpp
+  src/cpp/grail.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)
