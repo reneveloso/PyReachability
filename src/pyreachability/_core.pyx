@@ -283,10 +283,12 @@ cdef class _GRAILCore:
 cdef class _FelineCore:
     cdef Feline* _feline
     cdef vector[vid_t] _comp
+    cdef bint _bidir
     cdef bint _built
 
-    def __cinit__(self):
+    def __cinit__(self, bint bidirectional=False):
         self._feline = new Feline()
+        self._bidir = bidirectional
         self._built = False
 
     def __dealloc__(self):
@@ -296,7 +298,7 @@ cdef class _FelineCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._feline.build(cond.dag)
+        self._feline.build(cond.dag, self._bidir)
         self._built = True
 
     def query(self, int u, int v):

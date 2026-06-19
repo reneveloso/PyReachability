@@ -133,8 +133,19 @@ class FELINE(ReachabilityIndex):
     pairs fall back to a dominance-pruned DFS. The index is linear, O(|V|). General
     graphs are reduced to a DAG via SCC condensation.
 
+    Constant-time filters layered before any search: the positive-cut (a min-post
+    spanning-tree interval — a contained interval means a tree path, an exact positive)
+    and the topological level filter. Inconclusive pairs fall back to a pruned DFS.
+
     Veloso, Cerf, Meira Jr., Zaki, *Reachability Queries in Very Large Graphs: A Fast
     Refined Online Search Approach*, EDBT 2014, pp. 511-522.
+
+    Parameters
+    ----------
+    bidirectional : bool, optional
+        If True (FELINE-B), also index the reversed graph for a second dominance test that
+        prunes from the target side too — faster on hard pairs, at the cost of a second
+        coordinate pair and a reverse CSR. Default False.
 
     Examples
     --------
@@ -149,9 +160,10 @@ class FELINE(ReachabilityIndex):
 
     name = "feline"
 
-    def __init__(self):
-        self._core = _FelineCore()
+    def __init__(self, bidirectional: bool = False):
+        self._core = _FelineCore(bool(bidirectional))
         self._built = False
+        self.bidirectional = bool(bidirectional)
 
     def build(self, graph) -> None:
         self._core.build(graph)

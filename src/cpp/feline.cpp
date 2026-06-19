@@ -6,56 +6,73 @@
 
 namespace reachability {
 
-// Algorithm 1: two topological orderings.
+// Algorithm 1: two complementary topological orderings of g.
 //   X = a plain topological order (Kahn, FIFO).
 //   Y = Kahn where, among the current roots, we always pop the one with the largest X
 //       (Kornaropoulos heuristic — locally minimizes false-implied paths).
-void Feline::build(const CSRGraph& dag) {
-    dag_ = dag;
-    n_ = dag_.num_nodes();
-    X_.assign(n_, 0);
-    Y_.assign(n_, 0);
-    visited_.assign(n_, 0);
-    query_cnt_ = 0;
-
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
+void Feline::compute_orders(const CSRGraph& g, std::vector<vid_t>& X, std::vector<vid_t>& Y) {
+    const vid_t n = g.num_nodes();
+    X.assign(n, 0);
+    Y.assign(n, 0);
+    std::vector<vid_t> indeg(n, 0);
+    for (vid_t u = 0; u < n; ++u)
+        for (const vid_t* it = g.out_begin(u); it != g.out_end(u); ++it)
             ++indeg[*it];
 
     // X: FIFO Kahn.
     {
         std::vector<vid_t> ind = indeg;
         std::vector<vid_t> q;
-        q.reserve(n_);
-        for (vid_t u = 0; u < n_; ++u) if (ind[u] == 0) q.push_back(u);
+        q.reserve(n);
+        for (vid_t u = 0; u < n; ++u) if (ind[u] == 0) q.push_back(u);
         std::size_t head = 0;
         vid_t rank = 0;
         while (head < q.size()) {
             vid_t u = q[head++];
-            X_[u] = rank++;
-            for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
+            X[u] = rank++;
+            for (const vid_t* it = g.out_begin(u); it != g.out_end(u); ++it)
                 if (--ind[*it] == 0) q.push_back(*it);
         }
     }
-
     // Y: Kahn with a max-heap on X (pop the available root of highest X rank).
     {
         std::vector<vid_t> ind = indeg;
         std::priority_queue<std::pair<vid_t, vid_t>> pq;   // (X[u], u), max-heap by X
-        for (vid_t u = 0; u < n_; ++u)
-            if (ind[u] == 0) pq.push({X_[u], u});
+        for (vid_t u = 0; u < n; ++u)
+            if (ind[u] == 0) pq.push({X[u], u});
         vid_t rank = 0;
         while (!pq.empty()) {
             vid_t u = pq.top().second; pq.pop();
-            Y_[u] = rank++;
-            for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
-                if (--ind[*it] == 0) pq.push({X_[*it], *it});
+            Y[u] = rank++;
+            for (const vid_t* it = g.out_begin(u); it != g.out_end(u); ++it)
+                if (--ind[*it] == 0) pq.push({X[*it], *it});
         }
     }
+}
 
+void Feline::build(const CSRGraph& dag, bool bidirectional) {
+    dag_ = dag;
+    bidirectional_ = bidirectional;
+    n_ = dag_.num_nodes();
+    visited_.assign(n_, 0);
+    query_cnt_ = 0;
+
+    compute_orders(dag_, X_, Y_);
     level_ = topological_levels(dag_);   // shared level filter (negative cut + DFS prune)
     compute_positive_cut();
+
+    if (bidirectional_) {
+        // Reverse CSR + a second FELINE coordinate system (FELINE-B).
+        std::vector<vid_t> rs, rd;
+        rs.reserve(dag_.num_edges());
+        rd.reserve(dag_.num_edges());
+        for (vid_t u = 0; u < n_; ++u)
+            for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it) {
+                rs.push_back(*it); rd.push_back(u);
+            }
+        CSRGraph rdag(n_, rs, rd);
+        compute_orders(rdag, X2_, Y2_);
+    }
 }
 
 // Min-post intervals over a spanning forest (rooted at the in-degree-0 vertices). For each
@@ -104,6 +121,7 @@ bool Feline::reaches(vid_t u, vid_t v) {
     if (positive_contains(u, v)) return true;   // positive cut (tree path) — exact positive
     if (level_[u] >= level_[v]) return false;   // level filter (exact negative)
     if (!dominates(u, v)) return false;         // dominance negative cut (Theorem 1)
+    if (bidirectional_ && !dominates_rev(v, u)) return false;   // reversed-index negative cut
 
     const vid_t lv = level_[v];
     ++query_cnt_;
@@ -115,8 +133,10 @@ bool Feline::reaches(vid_t u, vid_t v) {
         for (const vid_t* it = dag_.out_begin(x); it != dag_.out_end(x); ++it) {
             vid_t w = *it;
             if (w == v) return true;
-            // expand only neighbors that still dominate v and sit below its level
-            if (visited_[w] != query_cnt_ && level_[w] < lv && dominates(w, v)) {
+            // expand only neighbors that dominate v, sit below its level, and (FELINE-B)
+            // also lie in the target's reversed dominance region
+            if (visited_[w] != query_cnt_ && level_[w] < lv && dominates(w, v)
+                    && (!bidirectional_ || dominates_rev(v, w))) {
                 if (positive_contains(w, v)) return true;   // positive short-circuit
                 visited_[w] = query_cnt_;
                 stack.push_back(w);
@@ -127,7 +147,8 @@ bool Feline::reaches(vid_t u, vid_t v) {
 }
 
 std::size_t Feline::index_size_bytes() const {
-    return (X_.size() + Y_.size() + level_.size() + ps_.size() + pe_.size()) * sizeof(vid_t);
+    return (X_.size() + Y_.size() + level_.size() + ps_.size() + pe_.size()
+            + X2_.size() + Y2_.size()) * sizeof(vid_t);
 }
 
 }  // namespace reachability

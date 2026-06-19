@@ -53,6 +53,25 @@ TEST_CASE("feline positive cut is sound (only true positives)") {
     CHECK(pos > 0);   // the positive cut must actually fire on some reachable pairs
 }
 
+TEST_CASE("feline-B (bidirectional) matches brute force") {
+    {
+        std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
+        CSRGraph g(5, s, d);
+        Feline idx; idx.build(g, /*bidirectional=*/true);
+        for (vid_t u = 0; u < 5; ++u)
+            for (vid_t v = 0; v < 5; ++v)
+                CHECK(idx.reaches(u, v) == bfs(g, u, v));
+    }
+    {
+        std::vector<vid_t> s{0,0,0,1,2,3}, d{1,2,3,4,4,4};
+        CSRGraph g(5, s, d);
+        Feline idx; idx.build(g, true);
+        for (vid_t u = 0; u < 5; ++u)
+            for (vid_t v = 0; v < 5; ++v)
+                CHECK(idx.reaches(u, v) == bfs(g, u, v));
+    }
+}
+
 TEST_CASE("feline reaches matches brute force") {
     {
         std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};

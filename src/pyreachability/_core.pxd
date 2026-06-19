@@ -35,6 +35,6 @@ cdef extern from "reachability/grail.hpp" namespace "reachability":
 cdef extern from "reachability/feline.hpp" namespace "reachability":
     cdef cppclass Feline:
         Feline() except +
-        void build(const CSRGraph&) except +
+        void build(const CSRGraph&, cbool) except +
         cbool reaches(vid_t, vid_t)
         size_t index_size_bytes()

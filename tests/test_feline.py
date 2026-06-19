@@ -45,14 +45,23 @@ def digraphs(draw):
     return n, edges
 
 
+def test_bidirectional_basic():
+    g = Graph.from_edges(np.array([0, 0, 1, 2, 2], np.int32),
+                         np.array([1, 2, 3, 3, 4], np.int32), num_nodes=5)
+    idx = FELINE(bidirectional=True); idx.build(g)
+    assert idx.query(0, 3) is True
+    assert idx.query(3, 0) is False
+    assert idx.bidirectional is True
+
+
 @settings(max_examples=200)
-@given(digraphs())
-def test_feline_matches_oracle(g):
+@given(digraphs(), st.booleans())
+def test_feline_matches_oracle(g, bidirectional):
     n, edges = g
     src = np.array([e[0] for e in edges], dtype=np.int32)
     dst = np.array([e[1] for e in edges], dtype=np.int32)
     graph = Graph.from_edges(src, dst, num_nodes=n)
-    idx = FELINE(); idx.build(graph)
+    idx = FELINE(bidirectional=bidirectional); idx.build(graph)
     reach = reachable_set(n, edges)
     for u in range(n):
         for v in range(n):
