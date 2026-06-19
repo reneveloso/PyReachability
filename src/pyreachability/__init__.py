@@ -77,6 +77,10 @@ class GRAIL(ReachabilityIndex):
         pruning (less DFS fallback) at the cost of ``2*d`` ints per node.
     seed : int, optional
         Seed for the randomized labeling (default 1), for reproducibility.
+    bidirectional : bool, optional
+        If True, inconclusive queries use a two-sided (forward + backward) search
+        instead of a one-sided guided DFS — faster on hard pairs, at the cost of an
+        extra reverse-edge array. Default False (keeps the index lean).
 
     Examples
     --------
@@ -91,10 +95,11 @@ class GRAIL(ReachabilityIndex):
 
     name = "grail"
 
-    def __init__(self, d: int = 5, seed: int = 1):
-        self._core = _GRAILCore(int(d), int(seed))
+    def __init__(self, d: int = 5, seed: int = 1, bidirectional: bool = False):
+        self._core = _GRAILCore(int(d), int(seed), bool(bidirectional))
         self._built = False
         self.d = int(d)
+        self.bidirectional = bool(bidirectional)
 
     def build(self, graph) -> None:
         self._core.build(graph)

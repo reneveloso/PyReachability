@@ -27,7 +27,7 @@ cdef extern from "reachability/scc.hpp" namespace "reachability":
 cdef extern from "reachability/grail.hpp" namespace "reachability":
     cdef cppclass Grail:
         Grail() except +
-        void build(const CSRGraph&, int, unsigned int) except +
+        void build(const CSRGraph&, int, unsigned int, cbool) except +
         cbool reaches(vid_t, vid_t)
         size_t index_size_bytes()
         int dim()

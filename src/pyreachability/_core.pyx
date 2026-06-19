@@ -244,12 +244,14 @@ cdef class _GRAILCore:
     cdef vector[vid_t] _comp
     cdef int _d
     cdef unsigned int _seed
+    cdef bint _bidir
     cdef bint _built
 
-    def __cinit__(self, int d=5, unsigned int seed=1):
+    def __cinit__(self, int d=5, unsigned int seed=1, bint bidirectional=False):
         self._grail = new Grail()
         self._d = d
         self._seed = seed
+        self._bidir = bidirectional
         self._built = False
 
     def __dealloc__(self):
@@ -259,7 +261,7 @@ cdef class _GRAILCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._grail.build(cond.dag, self._d, self._seed)
+        self._grail.build(cond.dag, self._d, self._seed, self._bidir)
         self._built = True
 
     def query(self, int u, int v):
