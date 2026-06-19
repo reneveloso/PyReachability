@@ -1,17 +1,18 @@
-"""Quick harness: GRAIL vs BFSDFS on a real graph in GRAIL's .gra(.gz) format.
+"""Quick harness comparing the indexing methods (GRAIL, GRAIL-bidirectional, FELINE)
+against the BFSDFS oracle, on a real graph in GRAIL's .gra(.gz) format.
 
 Usage:
     python benchmarks/grail_vs_bfsdfs.py benchmarks/data/cit-Patents.scc.gra.gz
 
-Reports build time and index size for GRAIL, checks that GRAIL agrees with the
-BFSDFS oracle on a sample of queries, and compares query throughput.
+Reports build time and index size per method, checks that every method agrees with
+the BFSDFS oracle, and compares query time (including deep multi-hop positives).
 """
 import argparse
 import time
 
 import numpy as np
 
-from pyreachability import Graph, GRAIL, BFSDFS
+from pyreachability import Graph, GRAIL, FELINE, BFSDFS
 
 
 def sample_pairs(n, src, dst, k_random, k_edge, seed=0):
@@ -96,6 +97,10 @@ def main():
     _, t_build_bi = timed(lambda: grail_bi.build(g))
     print(f"GRAIL(d={args.d}, bidirectional) build: {t_build_bi:.2f}s, "
           f"index size: {grail_bi.index_size_bytes / 1e6:.1f} MB")
+    feline = FELINE()
+    _, t_build_f = timed(lambda: feline.build(g))
+    print(f"FELINE build: {t_build_f:.2f}s, "
+          f"index size: {feline.index_size_bytes / 1e6:.1f} MB")
 
     # --- correctness: GRAIL must agree with the BFSDFS oracle ---
     check = sample_pairs(n, src, dst, args.bfs_queries // 2, args.bfs_queries // 2, seed=1)
@@ -128,8 +133,10 @@ def main():
     bfs_deep, t_bfs_deep = timed(lambda: [bfs.query(int(u), int(v)) for u, v in deep])
     g_deep, t_g_deep = timed(lambda: [grail.query(int(u), int(v)) for u, v in deep])
     gb_deep, t_gb_deep = timed(lambda: [grail_bi.query(int(u), int(v)) for u, v in deep])
+    f_deep, t_f_deep = timed(lambda: [feline.query(int(u), int(v)) for u, v in deep])
     disagree = sum(int(a != b) for a, b in zip(bfs_deep, g_deep)) \
-        + sum(int(a != b) for a, b in zip(bfs_deep, gb_deep))
+        + sum(int(a != b) for a, b in zip(bfs_deep, gb_deep)) \
+        + sum(int(a != b) for a, b in zip(bfs_deep, f_deep))
     print(f"\ndeep positives: {len(deep):,} multi-hop reachable pairs "
           f"({'AGREE ✓' if disagree == 0 else f'{disagree} DISAGREEMENTS ✗'})")
     print(f"BFSDFS             : {1000 * t_bfs_deep / len(deep):.3f} ms/query")
@@ -137,6 +144,8 @@ def main():
           f"(x{t_bfs_deep / t_g_deep:.0f} vs BFS)")
     print(f"GRAIL bidirectional: {1000 * t_gb_deep / len(deep):.3f} ms/query   "
           f"(x{t_bfs_deep / t_gb_deep:.0f} vs BFS)")
+    print(f"FELINE             : {1000 * t_f_deep / len(deep):.3f} ms/query   "
+          f"(x{t_bfs_deep / t_f_deep:.0f} vs BFS)")
 
 
 if __name__ == "__main__":
