@@ -13,3 +13,19 @@ cdef extern from "reachability/csr_graph.hpp" namespace "reachability":
 
 cdef extern from "reachability/bfsdfs.hpp" namespace "reachability":
     cbool bfs_reaches(const CSRGraph&, vid_t, vid_t)
+
+cdef extern from "reachability/scc.hpp" namespace "reachability":
+    cdef cppclass Condensation:
+        vector[vid_t] comp
+        vid_t num_comp
+        CSRGraph dag
+        vector[vid_t] topo_order
+    Condensation scc_condense(const CSRGraph&) except +
+
+cdef extern from "reachability/grail.hpp" namespace "reachability":
+    cdef cppclass Grail:
+        Grail() except +
+        void build(const CSRGraph&, int, unsigned int) except +
+        cbool reaches(vid_t, vid_t)
+        size_t index_size_bytes()
+        int dim()

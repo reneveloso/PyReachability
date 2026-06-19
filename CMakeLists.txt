@@ -27,7 +27,8 @@ set(CORE_SOURCES
   "${CPP_OUT}"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/csr_graph.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/scc.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfsdfs.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfsdfs.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/grail.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE

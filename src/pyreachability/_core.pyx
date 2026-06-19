@@ -3,7 +3,7 @@
 cimport numpy as cnp
 import numpy as np
 from libcpp.vector cimport vector
-from ._core cimport CSRGraph, vid_t, bfs_reaches
+from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail
 
 cnp.import_array()
 
@@ -170,3 +170,42 @@ cdef class _BFSDFSCore:
         if u < 0 or u >= n or v < 0 or v >= n:
             raise IndexError("vertex id out of range")
         return bfs_reaches(self._graph._g[0], u, v)
+
+
+cdef class _GRAILCore:
+    cdef Grail* _grail
+    cdef vector[vid_t] _comp
+    cdef int _d
+    cdef unsigned int _seed
+    cdef bint _built
+
+    def __cinit__(self, int d=5, unsigned int seed=1):
+        self._grail = new Grail()
+        self._d = d
+        self._seed = seed
+        self._built = False
+
+    def __dealloc__(self):
+        if self._grail != NULL:
+            del self._grail
+
+    def build(self, Graph graph):
+        cdef Condensation cond = scc_condense(graph._g[0])
+        self._comp = cond.comp
+        self._grail.build(cond.dag, self._d, self._seed)
+        self._built = True
+
+    def query(self, int u, int v):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef int n = <int>self._comp.size()
+        if u < 0 or u >= n or v < 0 or v >= n:
+            raise IndexError("vertex id out of range")
+        cdef vid_t cu = self._comp[u]
+        cdef vid_t cv = self._comp[v]
+        if cu == cv:
+            return True
+        return self._grail.reaches(cu, cv)
+
+    def index_size_bytes(self):
+        return self._grail.index_size_bytes() + self._comp.size() * sizeof(int)
