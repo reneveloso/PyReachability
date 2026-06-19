@@ -110,7 +110,10 @@ This distinction (from the reachability literature) shapes how `query` is implem
 containment must hold in every dimension), a **positive cut** (PP — the target's post-order
 number lies inside the source's DFS-subtree interval, so it is a true descendant), and a
 **topological level filter** (`u` can reach `v` only if `level(u) < level(v)`). The guided DFS
-runs only for pairs none of these decide, and it is itself pruned by the same cuts.
+runs only for pairs none of these decide, and it is itself pruned by the same cuts. With
+`GRAIL(bidirectional=True)` that fallback becomes a two-sided search (forward from the source,
+backward from the target over a reverse CSR) that meets in the middle — faster on hard pairs,
+at the cost of an extra reverse-edge array.
 
 ## How to add a method to the catalog
 
