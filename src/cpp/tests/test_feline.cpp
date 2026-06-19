@@ -42,6 +42,17 @@ TEST_CASE("feline topological levels (longest path from a root)") {
     CHECK(idx.top_level(3) == 3);
 }
 
+TEST_CASE("feline positive cut is sound (only true positives)") {
+    std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
+    CSRGraph g(5, s, d);
+    Feline idx; idx.build(g);
+    int pos = 0;
+    for (vid_t u = 0; u < 5; ++u)
+        for (vid_t v = 0; v < 5; ++v)
+            if (idx.positive_contains(u, v)) { CHECK(bfs(g, u, v)); ++pos; }
+    CHECK(pos > 0);   // the positive cut must actually fire on some reachable pairs
+}
+
 TEST_CASE("feline reaches matches brute force") {
     {
         std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};

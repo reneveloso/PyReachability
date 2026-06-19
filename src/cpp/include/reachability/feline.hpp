@@ -23,6 +23,13 @@ public:
     // Topological level (longest path from a root). u reaches v (u!=v) => level(u) < level(v).
     vid_t top_level(vid_t v) const { return level_[v]; }
 
+    // Positive cut: min-post interval over a spanning tree. If v's interval is contained
+    // in u's, then v is a tree-descendant of u, so u reaches v (exact positive). The
+    // converse need not hold (non-tree paths), so it is only a filter.
+    bool positive_contains(vid_t u, vid_t v) const {
+        return ps_[u] <= ps_[v] && pe_[v] <= pe_[u];
+    }
+
     // Exact reachability: dominance negative cut, then dominance-pruned guided DFS.
     bool reaches(vid_t u, vid_t v);
 
@@ -33,8 +40,11 @@ private:
     vid_t n_ = 0;
     std::vector<vid_t> X_, Y_;        // two topological-order ranks per vertex
     std::vector<vid_t> level_;        // topological level (longest path from a root)
+    std::vector<vid_t> ps_, pe_;      // positive-cut spanning-tree min-post interval [ps, pe]
     std::vector<int> visited_;        // per-query stamps for the guided DFS
     int query_cnt_ = 0;
+
+    void compute_positive_cut();      // min-post intervals over a spanning forest
 };
 
 }  // namespace reachability
