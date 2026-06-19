@@ -16,9 +16,10 @@ The library has a high-performance **C++17 core** exposed through **Cython** (C+
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
 reproducible benchmark harness (planned). It accompanies a *Software Impacts* article.
 
-> **Status:** v0.1.0 — *Foundation* milestone. The core, the catalog, graph ingestion, SCC
-> condensation, and the **BFS/DFS** baseline are implemented and tested. The indexing
-> methods below land in subsequent releases (see [Roadmap](#roadmap)).
+> **Status:** v0.1.0 — *Foundation* + first indexing method. The core, the catalog, graph
+> ingestion, SCC condensation, the **BFS/DFS** baseline, and **GRAIL** (the first indexing
+> method, using SCC condensation + label-guided search) are implemented and tested. The
+> remaining methods below land in subsequent releases (see [Roadmap](#roadmap)).
 
 ---
 
@@ -100,7 +101,7 @@ A method only enters the library if it has a peer-reviewed publication.
 | `BFSDFS` | online traversal (baseline / oracle) | ✅ implemented | CLRS, *Introduction to Algorithms* |
 | `TC` | transitive closure (bitset) | 🔜 planned | Warshall, JACM 1962 |
 | `TreeCover` | tree / interval cover | 🔜 planned | Agrawal, Borgida, Jagadish, SIGMOD 1989 |
-| `GRAIL` | tree-cover, interval-label pruning | 🔜 planned | Yıldırım, Chaoji, Zaki, PVLDB 2010 |
+| `GRAIL` | tree-cover, interval-label pruning | ✅ implemented | Yıldırım, Chaoji, Zaki, PVLDB 2010 |
 | `FELINE` | refined online search (2 topological orders) | 🔜 planned | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 |
 | `PLL` | 2-hop labeling | 🔜 planned | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
 
