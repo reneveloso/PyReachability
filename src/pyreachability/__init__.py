@@ -5,7 +5,7 @@ Build a :class:`Graph`, pick a method (e.g. :class:`BFSDFS`), call ``build`` the
 through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
-from ._core import Graph, _BFSDFSCore, _GRAILCore
+from ._core import Graph, _BFSDFSCore, _GRAILCore, _FelineCore
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -122,4 +122,57 @@ class GRAIL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
-__all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog", "BFSDFS", "GRAIL"]
+@catalog.register
+class FELINE(ReachabilityIndex):
+    """FELINE: Fast rEfined onLINE search via a 2D dominance drawing.
+
+    Each vertex gets a coordinate (X, Y) from two topological orderings; the second
+    is built so the two orders are complementary (Kornaropoulos heuristic), minimizing
+    false positives. Reachability implies dominance — ``X[u] <= X[v] and Y[u] <= Y[v]``
+    — so a failed componentwise test is an exact O(1) negative answer; inconclusive
+    pairs fall back to a dominance-pruned DFS. The index is linear, O(|V|). General
+    graphs are reduced to a DAG via SCC condensation.
+
+    Veloso, Cerf, Meira Jr., Zaki, *Reachability Queries in Very Large Graphs: A Fast
+    Refined Online Search Approach*, EDBT 2014, pp. 511-522.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, FELINE
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = FELINE(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "feline"
+
+    def __init__(self):
+        self._core = _FelineCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        p = np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        out = np.empty(p.shape[0], dtype=bool)
+        for i in range(p.shape[0]):
+            out[i] = self.query(int(p[i, 0]), int(p[i, 1]))
+        return out
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
+__all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
+           "BFSDFS", "GRAIL", "FELINE"]
