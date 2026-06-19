@@ -12,7 +12,10 @@ public:
     Grail() = default;
 
     // Build d random interval labels over the DAG. seed makes labeling reproducible.
-    void build(const CSRGraph& dag, int d, std::uint32_t seed = 1);
+    // bidirectional=true also builds a reverse CSR so inconclusive queries use a
+    // two-sided search (faster on hard pairs, at the cost of ~one extra edge array).
+    void build(const CSRGraph& dag, int d, std::uint32_t seed = 1,
+               bool bidirectional = false);
 
     int dim() const { return d_; }
 
@@ -33,15 +36,19 @@ public:
 
 private:
     CSRGraph dag_;
+    CSRGraph rdag_;                   // reverse of dag_ (built only when bidirectional_)
+    bool bidirectional_ = false;
     int d_ = 0;
     vid_t n_ = 0;
     std::vector<vid_t> pre_, post_, middle_;  // node-major labels: node v, dim k at v*d_ + k
     std::vector<vid_t> top_level_;    // topological level per node (longest path from a root)
-    std::vector<int> visited_;        // per-query stamps for guided DFS
+    std::vector<int> visited_;        // per-query stamps for guided/bidirectional search
     int query_cnt_ = 0;
 
     void label_dimension(int k, std::uint32_t seed);
     void compute_levels();
+    bool reaches_guided(vid_t u, vid_t v);          // one-sided, level-pruned DFS
+    bool reaches_bidirectional(vid_t u, vid_t v);   // two-sided, level-pruned search
 };
 
 }  // namespace reachability

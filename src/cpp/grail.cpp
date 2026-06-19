@@ -4,8 +4,9 @@
 
 namespace reachability {
 
-void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed) {
+void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed, bool bidirectional) {
     dag_ = dag;
+    bidirectional_ = bidirectional;
     d_ = d;
     n_ = dag_.num_nodes();
     pre_.assign((std::size_t)d_ * n_, 0);
@@ -16,6 +17,18 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed) {
     for (int k = 0; k < d_; ++k)
         label_dimension(k, seed + (std::uint32_t)k);
     compute_levels();
+
+    if (bidirectional_) {
+        // Reverse CSR (in-edges) for the backward half of the bidirectional search.
+        std::vector<vid_t> rs, rd;
+        rs.reserve(dag_.num_edges());
+        rd.reserve(dag_.num_edges());
+        for (vid_t u = 0; u < n_; ++u)
+            for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it) {
+                rs.push_back(*it); rd.push_back(u);
+            }
+        rdag_ = CSRGraph(n_, rs, rd);
+    }
 }
 
 // Topological level = longest path from any root, via Kahn's algorithm.
@@ -123,8 +136,12 @@ bool Grail::reaches(vid_t u, vid_t v) {
     int r = contains_pp(u, v);
     if (r == -1) return false;               // exact negative
     if (r == 1) return true;                 // exact positive
+    // Inconclusive: fall back to a search (one- or two-sided).
+    return bidirectional_ ? reaches_bidirectional(u, v) : reaches_guided(u, v);
+}
 
-    // Inconclusive: guided DFS, using the PP cuts and the level filter at every neighbor.
+// One-sided guided DFS from u, pruned by the PP cuts and the level filter.
+bool Grail::reaches_guided(vid_t u, vid_t v) {
     const vid_t lv = top_level_[v];
     ++query_cnt_;
     std::vector<vid_t> stack;
@@ -148,8 +165,53 @@ bool Grail::reaches(vid_t u, vid_t v) {
     return false;
 }
 
+// Two-sided search: a forward frontier from u (reachable-from-u) and a backward
+// frontier from v (can-reach-v) grow alternately; success when they meet. Both
+// sides are pruned by the PP cuts and the level filter. Forward stamps use +qc,
+// backward stamps use -qc, so a node carrying the other side's stamp is a meet.
+bool Grail::reaches_bidirectional(vid_t u, vid_t v) {
+    ++query_cnt_;
+    const int F = query_cnt_, B = -query_cnt_;
+    const vid_t lu = top_level_[u], lv = top_level_[v];
+    std::vector<vid_t> fq, bq;
+    std::size_t fh = 0, bh = 0;
+    visited_[u] = F; fq.push_back(u);
+    visited_[v] = B; bq.push_back(v);
+    while (fh < fq.size() && bh < bq.size()) {
+        // forward: expand one reachable-from-u node toward v
+        vid_t x = fq[fh++];
+        if (top_level_[x] < lv) {                 // x can still reach v
+            for (const vid_t* it = dag_.out_begin(x); it != dag_.out_end(x); ++it) {
+                vid_t w = *it;
+                if (visited_[w] == B) return true;        // met the backward frontier
+                if (visited_[w] == F) continue;
+                int rw = contains_pp(w, v);
+                if (rw == 1) return true;
+                if (rw == 0) { visited_[w] = F; fq.push_back(w); }
+            }
+        }
+        // backward: expand one can-reach-v node toward u (over in-edges)
+        vid_t y = bq[bh++];
+        if (lu < top_level_[y]) {                 // u can still reach y
+            for (const vid_t* it = rdag_.out_begin(y); it != rdag_.out_end(y); ++it) {
+                vid_t w = *it;
+                if (visited_[w] == F) return true;        // met the forward frontier
+                if (visited_[w] == B) continue;
+                int rw = contains_pp(u, w);
+                if (rw == 1) return true;
+                if (rw == 0) { visited_[w] = B; bq.push_back(w); }
+            }
+        }
+    }
+    return false;
+}
+
 std::size_t Grail::index_size_bytes() const {
-    return (pre_.size() + post_.size() + middle_.size() + top_level_.size()) * sizeof(vid_t);
+    std::size_t bytes =
+        (pre_.size() + post_.size() + middle_.size() + top_level_.size()) * sizeof(vid_t);
+    if (bidirectional_)
+        bytes += rdag_.num_edges() * sizeof(vid_t) + (std::size_t)(n_ + 1) * sizeof(std::size_t);
+    return bytes;
 }
 
 }  // namespace reachability

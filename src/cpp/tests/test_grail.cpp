@@ -76,6 +76,25 @@ TEST_CASE("grail reaches matches brute force on a dag") {
             CHECK(idx.reaches(u, v) == bfs(g, u, v));
 }
 
+TEST_CASE("grail bidirectional matches brute force") {
+    {
+        std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
+        CSRGraph g(5, s, d);
+        Grail idx; idx.build(g, 5, 1, /*bidirectional=*/true);
+        for (vid_t u = 0; u < 5; ++u)
+            for (vid_t v = 0; v < 5; ++v)
+                CHECK(idx.reaches(u, v) == bfs(g, u, v));
+    }
+    {   // wide DAG with multiple paths to a sink
+        std::vector<vid_t> s{0,0,0,1,2,3}, d{1,2,3,4,4,4};
+        CSRGraph g(5, s, d);
+        Grail idx; idx.build(g, 3, 7, true);
+        for (vid_t u = 0; u < 5; ++u)
+            for (vid_t v = 0; v < 5; ++v)
+                CHECK(idx.reaches(u, v) == bfs(g, u, v));
+    }
+}
+
 TEST_CASE("grail reaches on a chain and a wide dag") {
     { std::vector<vid_t> s{0,1,2,3}, d{1,2,3,4}; CSRGraph g(5, s, d);
       Grail idx; idx.build(g, 3, 7);
