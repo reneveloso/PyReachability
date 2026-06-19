@@ -5,7 +5,7 @@ Build a :class:`Graph`, pick a method (e.g. :class:`BFSDFS`), call ``build`` the
 through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
-from ._core import Graph, _BFSDFSCore
+from ._core import Graph, _BFSDFSCore, _GRAILCore
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -57,4 +57,62 @@ class BFSDFS(ReachabilityIndex):
         return 0
 
 
-__all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog", "BFSDFS"]
+@catalog.register
+class GRAIL(ReachabilityIndex):
+    """GRAIL: scalable reachability via d randomized interval labels + guided search.
+
+    A *partial* index: a constant-time containment test rejects most unreachable
+    pairs with no false negatives, and the remaining candidates fall back to a
+    label-guided DFS. General graphs are reduced to a DAG via SCC condensation.
+
+    Yildirim, Chaoji, Zaki, *GRAIL: Scalable Reachability Index for Large Graphs*,
+    PVLDB 3(1-2):276-284, 2010.
+
+    Parameters
+    ----------
+    d : int, optional
+        Number of interval-label dimensions (default 5). More dimensions sharpen the
+        pruning (less DFS fallback) at the cost of ``2*d`` ints per node.
+    seed : int, optional
+        Seed for the randomized labeling (default 1), for reproducibility.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, GRAIL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = GRAIL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "grail"
+
+    def __init__(self, d: int = 5, seed: int = 1):
+        self._core = _GRAILCore(int(d), int(seed))
+        self._built = False
+        self.d = int(d)
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        p = np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        out = np.empty(p.shape[0], dtype=bool)
+        for i in range(p.shape[0]):
+            out[i] = self.query(int(p[i, 0]), int(p[i, 1]))
+        return out
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
+__all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog", "BFSDFS", "GRAIL"]
