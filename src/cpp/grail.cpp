@@ -15,6 +15,27 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed) {
     query_cnt_ = 0;
     for (int k = 0; k < d_; ++k)
         label_dimension(k, seed + (std::uint32_t)k);
+    compute_levels();
+}
+
+// Topological level = longest path from any root, via Kahn's algorithm.
+void Grail::compute_levels() {
+    top_level_.assign(n_, 0);
+    std::vector<vid_t> indeg(n_, 0);
+    for (vid_t u = 0; u < n_; ++u)
+        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
+            ++indeg[*it];
+    std::vector<vid_t> q;
+    for (vid_t u = 0; u < n_; ++u) if (indeg[u] == 0) q.push_back(u);
+    std::size_t head = 0;
+    while (head < q.size()) {
+        vid_t u = q[head++];                 // popped in topological order
+        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it) {
+            vid_t w = *it;
+            if (top_level_[u] + 1 > top_level_[w]) top_level_[w] = top_level_[u] + 1;
+            if (--indeg[w] == 0) q.push_back(w);
+        }
+    }
 }
 
 // One randomized post-order DFS labeling, written iteratively.
@@ -98,11 +119,13 @@ int Grail::contains_pp(vid_t u, vid_t v) const {
 
 bool Grail::reaches(vid_t u, vid_t v) {
     if (u == v) return true;                 // reflexive
+    if (top_level_[u] >= top_level_[v]) return false;   // level filter (exact negative)
     int r = contains_pp(u, v);
     if (r == -1) return false;               // exact negative
     if (r == 1) return true;                 // exact positive
 
-    // Inconclusive: guided DFS, using the PP cuts at every neighbor.
+    // Inconclusive: guided DFS, using the PP cuts and the level filter at every neighbor.
+    const vid_t lv = top_level_[v];
     ++query_cnt_;
     std::vector<vid_t> stack;
     visited_[u] = query_cnt_;
@@ -114,18 +137,19 @@ bool Grail::reaches(vid_t u, vid_t v) {
             if (visited_[w] == query_cnt_) continue;
             int rw = contains_pp(w, v);
             if (rw == 1) return true;        // positive cut: w (hence x) reaches v
-            if (rw == 0) {                   // inconclusive: descend
+            // rw == 0 here implies w != v, so the level prune cannot skip the target.
+            if (rw == 0 && top_level_[w] < lv) {
                 visited_[w] = query_cnt_;
                 stack.push_back(w);
             }
-            // rw == -1: prune this branch
+            // rw == -1, or level too high: prune this branch
         }
     }
     return false;
 }
 
 std::size_t Grail::index_size_bytes() const {
-    return (pre_.size() + post_.size() + middle_.size()) * sizeof(vid_t);
+    return (pre_.size() + post_.size() + middle_.size() + top_level_.size()) * sizeof(vid_t);
 }
 
 }  // namespace reachability

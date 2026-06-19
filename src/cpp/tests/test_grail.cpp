@@ -41,6 +41,17 @@ TEST_CASE("grail contains rejects some unreachable pairs") {
     CHECK(cut > 0);
 }
 
+TEST_CASE("grail topological levels (longest path from a root)") {
+    // chain 0->1->2->3 plus a shortcut 0->3
+    std::vector<vid_t> s{0,1,2,0}, d{1,2,3,3};
+    CSRGraph g(4, s, d);
+    Grail idx; idx.build(g, 2, 1);
+    CHECK(idx.top_level(0) == 0);
+    CHECK(idx.top_level(1) == 1);
+    CHECK(idx.top_level(2) == 2);
+    CHECK(idx.top_level(3) == 3);   // longest path 0->1->2->3, not the 0->3 shortcut
+}
+
 TEST_CASE("grail PP cuts are sound in both directions") {
     std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
     CSRGraph g(5, s, d);

@@ -16,6 +16,9 @@ public:
 
     int dim() const { return d_; }
 
+    // Topological level (longest path from a root). u reaches v (u!=v) => level(u) < level(v).
+    vid_t top_level(vid_t v) const { return top_level_[v]; }
+
     // Necessary condition: u reaches v  =>  contains(u, v). (No false negatives.)
     bool contains(vid_t u, vid_t v) const;
 
@@ -33,10 +36,12 @@ private:
     int d_ = 0;
     vid_t n_ = 0;
     std::vector<vid_t> pre_, post_, middle_;  // node-major labels: node v, dim k at v*d_ + k
+    std::vector<vid_t> top_level_;    // topological level per node (longest path from a root)
     std::vector<int> visited_;        // per-query stamps for guided DFS
     int query_cnt_ = 0;
 
     void label_dimension(int k, std::uint32_t seed);
+    void compute_levels();
 };
 
 }  // namespace reachability
