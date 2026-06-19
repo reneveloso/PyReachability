@@ -73,10 +73,17 @@ edges = np.array([[0, 1], [1, 2], [2, 0]], dtype=np.int32)
 g = Graph.from_edges(edges, num_nodes=4)
 ```
 
-Load a graph from an edge-list file (`#` comments and blank lines are ignored):
+Load a graph from a file (`.gz` is decompressed transparently):
 
 ```python
-g = Graph.from_file("graph.txt", fmt="edgelist")
+g = Graph.from_file("graph.txt", fmt="edgelist")        # one "u v" edge per line
+g = Graph.from_file("graph.scc.gra.gz", fmt="gra")      # GRAIL/GREACH adjacency format
+```
+
+Export the edges back out (inverse of `from_edges`, reconstructed from CSR):
+
+```python
+src, dst = g.to_edges()
 ```
 
 Discover available methods dynamically through the catalog:
