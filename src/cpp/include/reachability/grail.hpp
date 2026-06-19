@@ -46,7 +46,6 @@ private:
     int query_cnt_ = 0;
 
     void label_dimension(int k, std::uint32_t seed);
-    void compute_levels();
     bool reaches_guided(vid_t u, vid_t v);          // one-sided, level-pruned DFS
     bool reaches_bidirectional(vid_t u, vid_t v);   // two-sided, level-pruned search
 };

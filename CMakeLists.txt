@@ -27,6 +27,7 @@ set(CORE_SOURCES
   "${CPP_OUT}"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/csr_graph.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/scc.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/levels.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfsdfs.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/grail.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/feline.cpp")
@@ -48,6 +49,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_feline.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
+  src/cpp/levels.cpp
   src/cpp/bfsdfs.cpp
   src/cpp/grail.cpp
   src/cpp/feline.cpp)

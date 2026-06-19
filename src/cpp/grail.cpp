@@ -1,4 +1,5 @@
 #include "reachability/grail.hpp"
+#include "reachability/levels.hpp"
 #include <random>
 #include <algorithm>
 
@@ -16,7 +17,7 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed, bool bidirecti
     query_cnt_ = 0;
     for (int k = 0; k < d_; ++k)
         label_dimension(k, seed + (std::uint32_t)k);
-    compute_levels();
+    top_level_ = topological_levels(dag_);
 
     if (bidirectional_) {
         // Reverse CSR (in-edges) for the backward half of the bidirectional search.
@@ -28,26 +29,6 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed, bool bidirecti
                 rs.push_back(*it); rd.push_back(u);
             }
         rdag_ = CSRGraph(n_, rs, rd);
-    }
-}
-
-// Topological level = longest path from any root, via Kahn's algorithm.
-void Grail::compute_levels() {
-    top_level_.assign(n_, 0);
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
-            ++indeg[*it];
-    std::vector<vid_t> q;
-    for (vid_t u = 0; u < n_; ++u) if (indeg[u] == 0) q.push_back(u);
-    std::size_t head = 0;
-    while (head < q.size()) {
-        vid_t u = q[head++];                 // popped in topological order
-        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it) {
-            vid_t w = *it;
-            if (top_level_[u] + 1 > top_level_[w]) top_level_[w] = top_level_[u] + 1;
-            if (--indeg[w] == 0) q.push_back(w);
-        }
     }
 }
 
