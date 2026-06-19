@@ -181,6 +181,35 @@ cdef class Graph:
         else:
             raise ValueError(f"unsupported fmt: {fmt!r}")
 
+    def to_edges(self):
+        """Return the graph's edges as two int32 arrays ``(src, dst)``.
+
+        Reconstructed from the internal CSR, so edges are deduplicated, free of
+        self-loops, and grouped/sorted by source. Inverse of :meth:`from_edges`.
+
+        Returns
+        -------
+        tuple of numpy.ndarray
+            ``(src, dst)``, each of length ``num_edges`` and dtype ``int32``.
+        """
+        cdef int n = self._g.num_nodes()
+        cdef size_t m = self._g.num_edges()
+        cdef cnp.ndarray[cnp.int32_t, ndim=1] src = np.empty(m, dtype=np.int32)
+        cdef cnp.ndarray[cnp.int32_t, ndim=1] dst = np.empty(m, dtype=np.int32)
+        cdef size_t idx = 0
+        cdef int u
+        cdef const vid_t* it
+        cdef const vid_t* end
+        for u in range(n):
+            it = self._g.out_begin(u)
+            end = self._g.out_end(u)
+            while it != end:
+                src[idx] = u
+                dst[idx] = it[0]
+                it += 1
+                idx += 1
+        return src, dst
+
     @property
     def num_nodes(self):
         """int: Number of vertices in the graph."""

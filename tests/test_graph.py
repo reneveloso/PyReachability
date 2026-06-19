@@ -48,6 +48,19 @@ def test_from_file_edgelist(tmp_path):
     assert g.num_edges == 3
 
 
+def test_to_edges_roundtrip():
+    src = np.array([0, 0, 1, 2], np.int32)
+    dst = np.array([2, 1, 2, 0], np.int32)
+    g = Graph.from_edges(src, dst, num_nodes=3)
+    s2, d2 = g.to_edges()
+    assert s2.dtype == np.int32 and d2.dtype == np.int32
+    assert len(s2) == g.num_edges
+    assert set(zip(s2.tolist(), d2.tolist())) == {(0, 2), (0, 1), (1, 2), (2, 0)}
+    # round-trips: rebuilding yields the same edge count
+    g2 = Graph.from_edges(s2, d2, num_nodes=3)
+    assert g2.num_edges == g.num_edges
+
+
 def test_from_file_gra(tmp_path):
     # GRAIL/GREACH .gra format: header line, vertex count, then "id: succ... #"
     p = tmp_path / "g.gra"
