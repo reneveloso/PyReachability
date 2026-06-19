@@ -82,7 +82,28 @@ bool Grail::contains(vid_t u, vid_t v) const {
     return true;
 }
 
-bool Grail::reaches(vid_t u, vid_t v) { (void)u; (void)v; return false; }  // Task 2
+bool Grail::reaches(vid_t u, vid_t v) {
+    if (u == v) return true;                 // reflexive
+    if (!contains(u, v)) return false;       // exact negative cut
+
+    // Guided DFS: descend only into neighbors whose labels still contain v.
+    ++query_cnt_;
+    std::vector<vid_t> stack;
+    visited_[u] = query_cnt_;
+    stack.push_back(u);
+    while (!stack.empty()) {
+        vid_t x = stack.back(); stack.pop_back();
+        for (const vid_t* it = dag_.out_begin(x); it != dag_.out_end(x); ++it) {
+            vid_t w = *it;
+            if (w == v) return true;
+            if (visited_[w] != query_cnt_ && contains(w, v)) {
+                visited_[w] = query_cnt_;
+                stack.push_back(w);
+            }
+        }
+    }
+    return false;
+}
 
 std::size_t Grail::index_size_bytes() const {
     return (pre_.size() + post_.size()) * sizeof(vid_t);

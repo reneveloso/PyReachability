@@ -40,3 +40,23 @@ TEST_CASE("grail contains rejects some unreachable pairs") {
             if (!bfs(g, u, v) && !idx.contains(u, v)) ++cut;
     CHECK(cut > 0);
 }
+
+TEST_CASE("grail reaches matches brute force on a dag") {
+    std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
+    CSRGraph g(5, s, d);
+    Grail idx; idx.build(g, 5, 1);
+    for (vid_t u = 0; u < 5; ++u)
+        for (vid_t v = 0; v < 5; ++v)
+            CHECK(idx.reaches(u, v) == bfs(g, u, v));
+}
+
+TEST_CASE("grail reaches on a chain and a wide dag") {
+    { std::vector<vid_t> s{0,1,2,3}, d{1,2,3,4}; CSRGraph g(5, s, d);
+      Grail idx; idx.build(g, 3, 7);
+      for (vid_t u=0; u<5; ++u) for (vid_t v=0; v<5; ++v)
+          CHECK(idx.reaches(u,v) == bfs(g,u,v)); }
+    { std::vector<vid_t> s{0,0,0,1,2,3}, d{1,2,3,4,4,4}; CSRGraph g(5, s, d);
+      Grail idx; idx.build(g, 2, 99);
+      for (vid_t u=0; u<5; ++u) for (vid_t v=0; v<5; ++v)
+          CHECK(idx.reaches(u,v) == bfs(g,u,v)); }
+}
