@@ -10,6 +10,7 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed) {
     n_ = dag_.num_nodes();
     pre_.assign((std::size_t)d_ * n_, 0);
     post_.assign((std::size_t)d_ * n_, 0);
+    middle_.assign((std::size_t)d_ * n_, 0);
     visited_.assign(n_, 0);
     query_cnt_ = 0;
     for (int k = 0; k < d_; ++k)
@@ -39,6 +40,9 @@ void Grail::label_dimension(int k, std::uint32_t seed) {
 
     auto push = [&](vid_t v) {
         seen[v] = 1;
+        // middle = finish-counter at entry; (middle, post] are v's tree-descendants,
+        // which gives an exact positive cut in contains_pp().
+        middle_[(std::size_t)v * d_ + k] = counter;
         std::vector<vid_t> nbrs(dag_.out_begin(v), dag_.out_end(v));
         std::shuffle(nbrs.begin(), nbrs.end(), rng);   // random child order
         stack.push_back(Frame{v, std::move(nbrs), 0, INF});
@@ -82,11 +86,23 @@ bool Grail::contains(vid_t u, vid_t v) const {
     return true;
 }
 
+int Grail::contains_pp(vid_t u, vid_t v) const {
+    for (int k = 0; k < d_; ++k) {
+        std::size_t iu = (std::size_t)u * d_ + k, iv = (std::size_t)v * d_ + k;
+        if (pre_[iu] > pre_[iv]) return -1;          // exact negative cut
+        if (post_[iu] < post_[iv]) return -1;        // exact negative cut
+        if (middle_[iu] < post_[iv]) return 1;       // exact positive cut (tree-descendant)
+    }
+    return 0;                                        // inconclusive
+}
+
 bool Grail::reaches(vid_t u, vid_t v) {
     if (u == v) return true;                 // reflexive
-    if (!contains(u, v)) return false;       // exact negative cut
+    int r = contains_pp(u, v);
+    if (r == -1) return false;               // exact negative
+    if (r == 1) return true;                 // exact positive
 
-    // Guided DFS: descend only into neighbors whose labels still contain v.
+    // Inconclusive: guided DFS, using the PP cuts at every neighbor.
     ++query_cnt_;
     std::vector<vid_t> stack;
     visited_[u] = query_cnt_;
@@ -95,18 +111,21 @@ bool Grail::reaches(vid_t u, vid_t v) {
         vid_t x = stack.back(); stack.pop_back();
         for (const vid_t* it = dag_.out_begin(x); it != dag_.out_end(x); ++it) {
             vid_t w = *it;
-            if (w == v) return true;
-            if (visited_[w] != query_cnt_ && contains(w, v)) {
+            if (visited_[w] == query_cnt_) continue;
+            int rw = contains_pp(w, v);
+            if (rw == 1) return true;        // positive cut: w (hence x) reaches v
+            if (rw == 0) {                   // inconclusive: descend
                 visited_[w] = query_cnt_;
                 stack.push_back(w);
             }
+            // rw == -1: prune this branch
         }
     }
     return false;
 }
 
 std::size_t Grail::index_size_bytes() const {
-    return (pre_.size() + post_.size()) * sizeof(vid_t);
+    return (pre_.size() + post_.size() + middle_.size()) * sizeof(vid_t);
 }
 
 }  // namespace reachability

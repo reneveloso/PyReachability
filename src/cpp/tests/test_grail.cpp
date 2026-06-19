@@ -41,6 +41,21 @@ TEST_CASE("grail contains rejects some unreachable pairs") {
     CHECK(cut > 0);
 }
 
+TEST_CASE("grail PP cuts are sound in both directions") {
+    std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
+    CSRGraph g(5, s, d);
+    Grail idx; idx.build(g, 5, 1);
+    int pos = 0, neg = 0;
+    for (vid_t u = 0; u < 5; ++u)
+        for (vid_t v = 0; v < 5; ++v) {
+            int r = idx.contains_pp(u, v);
+            if (r == 1) { CHECK(bfs(g, u, v)); ++pos; }      // positive => truly reachable
+            if (r == -1) { CHECK(!bfs(g, u, v)); ++neg; }    // negative => truly unreachable
+        }
+    CHECK(pos > 0);   // the positive cut must actually fire
+    CHECK(neg > 0);
+}
+
 TEST_CASE("grail reaches matches brute force on a dag") {
     std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
     CSRGraph g(5, s, d);
