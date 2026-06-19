@@ -20,6 +20,9 @@ public:
         return X_[u] <= X_[v] && Y_[u] <= Y_[v];
     }
 
+    // Topological level (longest path from a root). u reaches v (u!=v) => level(u) < level(v).
+    vid_t top_level(vid_t v) const { return level_[v]; }
+
     // Exact reachability: dominance negative cut, then dominance-pruned guided DFS.
     bool reaches(vid_t u, vid_t v);
 
@@ -29,6 +32,7 @@ private:
     CSRGraph dag_;
     vid_t n_ = 0;
     std::vector<vid_t> X_, Y_;        // two topological-order ranks per vertex
+    std::vector<vid_t> level_;        // topological level (longest path from a root)
     std::vector<int> visited_;        // per-query stamps for the guided DFS
     int query_cnt_ = 0;
 };

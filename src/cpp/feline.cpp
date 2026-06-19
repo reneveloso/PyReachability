@@ -1,4 +1,5 @@
 #include "reachability/feline.hpp"
+#include "reachability/levels.hpp"
 #include <queue>
 #include <utility>
 
@@ -51,13 +52,17 @@ void Feline::build(const CSRGraph& dag) {
                 if (--ind[*it] == 0) pq.push({X_[*it], *it});
         }
     }
+
+    level_ = topological_levels(dag_);   // shared level filter (negative cut + DFS prune)
 }
 
 // Algorithm 2: dominance negative cut + dominance-pruned guided DFS.
 bool Feline::reaches(vid_t u, vid_t v) {
     if (u == v) return true;
-    if (!dominates(u, v)) return false;      // negative cut (contrapositive of Theorem 1)
+    if (level_[u] >= level_[v]) return false;   // level filter (exact negative)
+    if (!dominates(u, v)) return false;         // dominance negative cut (Theorem 1)
 
+    const vid_t lv = level_[v];
     ++query_cnt_;
     std::vector<vid_t> stack;
     visited_[u] = query_cnt_;
@@ -67,8 +72,8 @@ bool Feline::reaches(vid_t u, vid_t v) {
         for (const vid_t* it = dag_.out_begin(x); it != dag_.out_end(x); ++it) {
             vid_t w = *it;
             if (w == v) return true;
-            // expand only neighbors still able to dominate v (others cannot reach v)
-            if (visited_[w] != query_cnt_ && dominates(w, v)) {
+            // expand only neighbors that still dominate v and sit below its level
+            if (visited_[w] != query_cnt_ && level_[w] < lv && dominates(w, v)) {
                 visited_[w] = query_cnt_;
                 stack.push_back(w);
             }
@@ -78,7 +83,7 @@ bool Feline::reaches(vid_t u, vid_t v) {
 }
 
 std::size_t Feline::index_size_bytes() const {
-    return (X_.size() + Y_.size()) * sizeof(vid_t);
+    return (X_.size() + Y_.size() + level_.size()) * sizeof(vid_t);
 }
 
 }  // namespace reachability

@@ -32,6 +32,16 @@ TEST_CASE("feline dominance is a necessary condition (no false negatives)") {
     CHECK(cut > 0);
 }
 
+TEST_CASE("feline topological levels (longest path from a root)") {
+    std::vector<vid_t> s{0,1,2,0}, d{1,2,3,3};   // chain 0->1->2->3 + shortcut 0->3
+    CSRGraph g(4, s, d);
+    Feline idx; idx.build(g);
+    CHECK(idx.top_level(0) == 0);
+    CHECK(idx.top_level(1) == 1);
+    CHECK(idx.top_level(2) == 2);
+    CHECK(idx.top_level(3) == 3);
+}
+
 TEST_CASE("feline reaches matches brute force") {
     {
         std::vector<vid_t> s{0,0,1,2,2}, d{1,2,3,3,4};
