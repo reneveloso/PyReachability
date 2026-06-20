@@ -5,7 +5,7 @@ Build a :class:`Graph`, pick a method (e.g. :class:`BFSDFS`), call ``build`` the
 through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
-from ._core import Graph, _BFSDFSCore, _GRAILCore, _FelineCore
+from ._core import Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -182,5 +182,54 @@ class FELINE(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class PLL(ReachabilityIndex):
+    """PLL: Pruned Landmark Labeling — a 2-hop reachability index.
+
+    Each vertex keeps two sorted landmark sets — the landmarks it reaches (L_out) and the
+    landmarks that reach it (L_in), built by pruned BFS in a canonical (degree-product)
+    order. ``u`` reaches ``v`` iff L_out(u) and L_in(v) share a landmark, so queries are a
+    sorted-list intersection with **no fallback search** (a complete index). General graphs
+    are reduced to a DAG via SCC condensation.
+
+    Yano, Akiba, Iwata, Yoshida, *Fast and Scalable Reachability Queries on Graphs by Pruned
+    Labeling with Landmarks and Paths*, CIKM 2013.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, PLL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = PLL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "pll"
+
+    def __init__(self):
+        self._core = _PLLCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
-           "BFSDFS", "GRAIL", "FELINE"]
+           "BFSDFS", "GRAIL", "FELINE", "PLL"]
