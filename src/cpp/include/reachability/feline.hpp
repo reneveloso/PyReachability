@@ -32,11 +32,11 @@ public:
     // Topological level (longest path from a root). u reaches v (u!=v) => level(u) < level(v).
     vid_t top_level(vid_t v) const { return level_[v]; }
 
-    // Positive cut: min-post interval over a spanning tree. If v's interval is contained
-    // in u's, then v is a tree-descendant of u, so u reaches v (exact positive). The
-    // converse need not hold (non-tree paths), so it is only a filter.
+    // Positive cut (same min-post labeling as GRAIL, d=1): v's DFS entry/exit window nested
+    // in u's means v is a tree-descendant of u, so u reaches v (exact positive). The converse
+    // need not hold (non-tree paths), so it is only a filter.
     bool positive_contains(vid_t u, vid_t v) const {
-        return ps_[u] <= ps_[v] && pe_[v] <= pe_[u];
+        return pc_middle_[u] <= pc_middle_[v] && pc_post_[u] >= pc_post_[v];
     }
 
     // Exact reachability: dominance negative cut, then dominance-pruned guided DFS.
@@ -51,11 +51,11 @@ private:
     std::vector<vid_t> X_, Y_;        // two topological-order ranks per vertex (normal)
     std::vector<vid_t> X2_, Y2_;      // reversed-graph coordinates (only if bidirectional_)
     std::vector<vid_t> level_;        // topological level (longest path from a root)
-    std::vector<vid_t> ps_, pe_;      // positive-cut spanning-tree min-post interval [ps, pe]
+    std::vector<vid_t> pc_middle_, pc_post_;  // positive-cut entry/exit (min-post, d=1)
     std::vector<int> visited_;        // per-query stamps for the guided DFS
     int query_cnt_ = 0;
 
-    void compute_positive_cut();      // min-post intervals over a spanning forest
+    void compute_positive_cut();      // min-post labeling over a spanning forest (shared util)
     // Two complementary topological orders of g (Algorithm 1) into X, Y.
     static void compute_orders(const CSRGraph& g, std::vector<vid_t>& X,
                                std::vector<vid_t>& Y);

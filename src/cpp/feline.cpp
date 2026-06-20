@@ -1,6 +1,6 @@
 #include "reachability/feline.hpp"
 #include "reachability/levels.hpp"
-#include <algorithm>
+#include "reachability/minpost.hpp"
 #include <queue>
 #include <utility>
 
@@ -87,44 +87,13 @@ void Feline::build(const CSRGraph& dag, bool bidirectional) {
     }
 }
 
-// Min-post intervals over a spanning forest (rooted at the in-degree-0 vertices). For each
-// vertex: pe = post-order finish number; ps = minimum pe over its TREE subtree only (no
-// non-tree edges), so [ps, pe] contains exactly the vertex's tree-descendants. Iterative DFS.
+// Positive-cut labeling: the same min-post labeling GRAIL uses, with a single (d=1) fixed
+// spanning forest. We keep the entry/exit numbers (middle, post); a nested entry/exit window
+// means a tree path, hence reachability.
 void Feline::compute_positive_cut() {
-    ps_.assign(n_, 0);
-    pe_.assign(n_, 0);
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
-            ++indeg[*it];
-    std::vector<char> seen(n_, 0);
-    vid_t counter = 0;
-    const vid_t INF = n_ + 1;
-    struct Frame { vid_t v; const vid_t* it; const vid_t* end; vid_t curmin; };
-    std::vector<Frame> st;
-    for (vid_t r = 0; r < n_; ++r) {
-        if (indeg[r] != 0 || seen[r]) continue;
-        seen[r] = 1;
-        st.push_back({r, dag_.out_begin(r), dag_.out_end(r), INF});
-        while (!st.empty()) {
-            std::size_t top = st.size() - 1;     // re-index: push() may reallocate
-            if (st[top].it != st[top].end) {
-                vid_t w = *st[top].it; ++st[top].it;
-                if (!seen[w]) {                  // tree edge: descend
-                    seen[w] = 1;
-                    st.push_back({w, dag_.out_begin(w), dag_.out_end(w), INF});
-                }
-                // non-tree edge: ignored (positive cut spans tree descendants only)
-            } else {
-                vid_t v = st[top].v, cm = st[top].curmin;
-                ++counter;
-                vid_t s = std::min(cm, counter);
-                ps_[v] = s; pe_[v] = counter;
-                st.pop_back();
-                if (!st.empty()) st.back().curmin = std::min(st.back().curmin, s);
-            }
-        }
-    }
+    MinPost L = min_post_label(dag_, /*rng=*/nullptr);
+    pc_middle_ = std::move(L.middle);
+    pc_post_ = std::move(L.post);
 }
 
 // Algorithm 2: dominance negative cut + dominance-pruned guided DFS.
@@ -162,7 +131,7 @@ bool Feline::reaches(vid_t u, vid_t v) {
 }
 
 std::size_t Feline::index_size_bytes() const {
-    return (X_.size() + Y_.size() + level_.size() + ps_.size() + pe_.size()
+    return (X_.size() + Y_.size() + level_.size() + pc_middle_.size() + pc_post_.size()
             + X2_.size() + Y2_.size()) * sizeof(vid_t);
 }
 

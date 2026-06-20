@@ -1,7 +1,7 @@
 #include "reachability/grail.hpp"
 #include "reachability/levels.hpp"
+#include "reachability/minpost.hpp"
 #include <random>
-#include <algorithm>
 
 namespace reachability {
 
@@ -32,64 +32,16 @@ void Grail::build(const CSRGraph& dag, int d, std::uint32_t seed, bool bidirecti
     }
 }
 
-// One randomized post-order DFS labeling, written iteratively.
+// One randomized min-post labeling (shared with FELINE's positive cut), scattered into the
+// node-major label arrays for dimension k.
 void Grail::label_dimension(int k, std::uint32_t seed) {
     std::mt19937 rng(seed);
-
-    // roots = in-degree 0 (CSR stores out-edges, so count in-degrees by scanning).
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag_.out_begin(u); it != dag_.out_end(u); ++it)
-            ++indeg[*it];
-    std::vector<vid_t> roots;
-    for (vid_t u = 0; u < n_; ++u) if (indeg[u] == 0) roots.push_back(u);
-    std::shuffle(roots.begin(), roots.end(), rng);
-
-    std::vector<char> seen(n_, 0);
-    vid_t counter = 0;
-    const vid_t INF = n_ + 1;
-
-    // Explicit DFS frames: vertex, its (shuffled) neighbors, cursor, running subtree min.
-    struct Frame { vid_t v; std::vector<vid_t> nbrs; std::size_t idx; vid_t curmin; };
-    std::vector<Frame> stack;
-
-    auto push = [&](vid_t v) {
-        seen[v] = 1;
-        // middle = finish-counter at entry; (middle, post] are v's tree-descendants,
-        // which gives an exact positive cut in contains_pp().
-        middle_[(std::size_t)v * d_ + k] = counter;
-        std::vector<vid_t> nbrs(dag_.out_begin(v), dag_.out_end(v));
-        std::shuffle(nbrs.begin(), nbrs.end(), rng);   // random child order
-        stack.push_back(Frame{v, std::move(nbrs), 0, INF});
-    };
-
-    for (vid_t r : roots) {
-        if (seen[r]) continue;
-        push(r);
-        while (!stack.empty()) {
-            std::size_t top = stack.size() - 1;       // re-index each turn: push() may realloc
-            if (stack[top].idx < stack[top].nbrs.size()) {
-                vid_t w = stack[top].nbrs[stack[top].idx++];
-                if (!seen[w]) {
-                    push(w);                          // descend (tree edge)
-                } else {
-                    // forward/cross edge: child already labeled — pull its min up
-                    stack[top].curmin = std::min(stack[top].curmin,
-                                                 pre_[(std::size_t)w * d_ + k]);
-                }
-            } else {
-                // finish v: assign post = finish number, pre = subtree min
-                vid_t v = stack[top].v;
-                vid_t cm = stack[top].curmin;
-                ++counter;
-                vid_t pv = std::min(cm, counter);
-                pre_[(std::size_t)v * d_ + k] = pv;
-                post_[(std::size_t)v * d_ + k] = counter;
-                stack.pop_back();
-                if (!stack.empty())
-                    stack.back().curmin = std::min(stack.back().curmin, pv);
-            }
-        }
+    MinPost L = min_post_label(dag_, &rng);
+    for (vid_t v = 0; v < n_; ++v) {
+        std::size_t idx = (std::size_t)v * d_ + k;
+        pre_[idx] = L.pre[v];
+        post_[idx] = L.post[v];
+        middle_[idx] = L.middle[v];
     }
 }
 
