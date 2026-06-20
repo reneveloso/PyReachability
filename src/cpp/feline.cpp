@@ -19,20 +19,32 @@ void Feline::compute_orders(const CSRGraph& g, std::vector<vid_t>& X, std::vecto
         for (const vid_t* it = g.out_begin(u); it != g.out_end(u); ++it)
             ++indeg[*it];
 
-    // X: FIFO Kahn.
+    // X: DFS reverse post-order (a topological order). A DFS order keeps a vertex close to
+    // its descendants, which tightens the dominance drawing (fewer false positives) far more
+    // than a BFS-layered order would.
     {
-        std::vector<vid_t> ind = indeg;
-        std::vector<vid_t> q;
-        q.reserve(n);
-        for (vid_t u = 0; u < n; ++u) if (ind[u] == 0) q.push_back(u);
-        std::size_t head = 0;
-        vid_t rank = 0;
-        while (head < q.size()) {
-            vid_t u = q[head++];
-            X[u] = rank++;
-            for (const vid_t* it = g.out_begin(u); it != g.out_end(u); ++it)
-                if (--ind[*it] == 0) q.push_back(*it);
+        std::vector<char> seen(n, 0);
+        std::vector<vid_t> finish;          // post-order (finish) sequence
+        finish.reserve(n);
+        struct F { vid_t v; const vid_t* it; const vid_t* end; };
+        std::vector<F> st;
+        for (vid_t r = 0; r < n; ++r) {
+            if (indeg[r] != 0 || seen[r]) continue;   // start DFS trees at the roots
+            seen[r] = 1;
+            st.push_back({r, g.out_begin(r), g.out_end(r)});
+            while (!st.empty()) {
+                std::size_t top = st.size() - 1;       // re-index: push() may reallocate
+                if (st[top].it != st[top].end) {
+                    vid_t w = *st[top].it; ++st[top].it;
+                    if (!seen[w]) { seen[w] = 1; st.push_back({w, g.out_begin(w), g.out_end(w)}); }
+                } else {
+                    finish.push_back(st[top].v);
+                    st.pop_back();
+                }
+            }
         }
+        // topological order = reverse of finish order: a source finishes last -> rank 0.
+        for (vid_t i = 0; i < n; ++i) X[finish[i]] = n - 1 - i;
     }
     // Y: Kahn with a max-heap on X (pop the available root of highest X rank).
     {
@@ -118,10 +130,13 @@ void Feline::compute_positive_cut() {
 // Algorithm 2: dominance negative cut + dominance-pruned guided DFS.
 bool Feline::reaches(vid_t u, vid_t v) {
     if (u == v) return true;
-    if (positive_contains(u, v)) return true;   // positive cut (tree path) — exact positive
+    // Negative cuts first: on a mostly-negative workload this avoids the positive-cut
+    // work on pairs that are already decided unreachable (a tree path implies dominance,
+    // so if dominance fails the positive cut would fail too).
     if (level_[u] >= level_[v]) return false;   // level filter (exact negative)
     if (!dominates(u, v)) return false;         // dominance negative cut (Theorem 1)
     if (bidirectional_ && !dominates_rev(v, u)) return false;   // reversed-index negative cut
+    if (positive_contains(u, v)) return true;   // positive cut (tree path) — exact positive
 
     const vid_t lv = level_[v];
     ++query_cnt_;
