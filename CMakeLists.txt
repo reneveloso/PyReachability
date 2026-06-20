@@ -35,7 +35,8 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pll.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/tc.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/treecover.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfl.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/chaincover.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE
@@ -56,6 +57,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_tc.cpp
   src/cpp/tests/test_treecover.cpp
   src/cpp/tests/test_bfl.cpp
+  src/cpp/tests/test_chaincover.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
   src/cpp/levels.cpp
@@ -66,7 +68,8 @@ add_executable(cpp_tests
   src/cpp/pll.cpp
   src/cpp/tc.cpp
   src/cpp/treecover.cpp
-  src/cpp/bfl.cpp)
+  src/cpp/bfl.cpp
+  src/cpp/chaincover.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)
