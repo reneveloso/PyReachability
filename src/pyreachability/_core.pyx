@@ -238,6 +238,24 @@ cdef class _BFSDFSCore:
             raise IndexError("vertex id out of range")
         return bfs_reaches(self._graph._g[0], u, v)
 
+    def query_batch(self, pairs):
+        if self._graph is None:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        cdef int n = self._graph._g.num_nodes()
+        if m and (int(p.min()) < 0 or int(p.max()) >= n):
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef CSRGraph* g = self._graph._g
+        with nogil:
+            for i in range(m):
+                ov[i] = 1 if bfs_reaches(g[0], pv[i, 0], pv[i, 1]) else 0
+        return out.view(np.bool_)
+
 
 cdef class _GRAILCore:
     cdef Grail* _grail
@@ -276,6 +294,30 @@ cdef class _GRAILCore:
             return True
         return self._grail.reaches(cu, cv)
 
+    def query_batch(self, pairs):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        cdef int n = <int>self._comp.size()
+        if m and (int(p.min()) < 0 or int(p.max()) >= n):
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef vector[vid_t]* comp = &self._comp
+        cdef Grail* gr = self._grail
+        cdef vid_t cu, cv
+        with nogil:
+            for i in range(m):
+                cu = comp[0][pv[i, 0]]; cv = comp[0][pv[i, 1]]
+                if cu == cv:
+                    ov[i] = 1
+                else:
+                    ov[i] = 1 if gr.reaches(cu, cv) else 0
+        return out.view(np.bool_)
+
     def index_size_bytes(self):
         return self._grail.index_size_bytes() + self._comp.size() * sizeof(int)
 
@@ -312,6 +354,30 @@ cdef class _FelineCore:
         if cu == cv:
             return True
         return self._feline.reaches(cu, cv)
+
+    def query_batch(self, pairs):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        cdef int n = <int>self._comp.size()
+        if m and (int(p.min()) < 0 or int(p.max()) >= n):
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef vector[vid_t]* comp = &self._comp
+        cdef Feline* fe = self._feline
+        cdef vid_t cu, cv
+        with nogil:
+            for i in range(m):
+                cu = comp[0][pv[i, 0]]; cv = comp[0][pv[i, 1]]
+                if cu == cv:
+                    ov[i] = 1
+                else:
+                    ov[i] = 1 if fe.reaches(cu, cv) else 0
+        return out.view(np.bool_)
 
     def index_size_bytes(self):
         return self._feline.index_size_bytes() + self._comp.size() * sizeof(int)

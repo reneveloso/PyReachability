@@ -15,17 +15,6 @@ import numpy as np
 from pyreachability import Graph, GRAIL, FELINE, BFSDFS
 
 
-def sample_pairs(n, src, dst, k_random, k_edge, seed=0):
-    """Mix random pairs (mostly negative) with real edges (guaranteed positive)."""
-    rng = np.random.default_rng(seed)
-    ru = rng.integers(0, n, size=k_random, dtype=np.int32)
-    rv = rng.integers(0, n, size=k_random, dtype=np.int32)
-    ei = rng.integers(0, src.shape[0], size=k_edge)
-    pu = np.concatenate([ru, src[ei]])
-    pv = np.concatenate([rv, dst[ei]])
-    return np.stack([pu, pv], axis=1).astype(np.int32)
-
-
 def timed(fn):
     t0 = time.perf_counter()
     out = fn()
@@ -77,9 +66,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("path")
     ap.add_argument("--d", type=int, default=5)
-    ap.add_argument("--bfs-queries", type=int, default=200)
-    ap.add_argument("--grail-queries", type=int, default=50000)
-    ap.add_argument("--deep-queries", type=int, default=2000)
+    ap.add_argument("--random-queries", type=int, default=500000)
+    ap.add_argument("--deep-queries", type=int, default=50000)
     ap.add_argument("--deep-steps", type=int, default=20)
     args = ap.parse_args()
 
@@ -106,54 +94,34 @@ def main():
     print(f"FELINE-B build: {t_build_fb:.2f}s, "
           f"index size: {feline_b.index_size_bytes / 1e6:.1f} MB")
 
-    # --- correctness: GRAIL must agree with the BFSDFS oracle ---
-    check = sample_pairs(n, src, dst, args.bfs_queries // 2, args.bfs_queries // 2, seed=1)
-    disagree = 0
-    pos = 0
-    (_, t_bfs) = timed(lambda: [bfs.query(int(u), int(v)) for u, v in check])
-    bfs_ans = [bfs.query(int(u), int(v)) for u, v in check]
-    grail_ans = [grail.query(int(u), int(v)) for u, v in check]
-    for a, b in zip(bfs_ans, grail_ans):
-        pos += int(b)
-        disagree += int(a != b)
-    print(f"\ncorrectness on {len(check)} pairs ({pos} reachable): "
-          f"{'AGREE ✓' if disagree == 0 else f'{disagree} DISAGREEMENTS ✗'}")
-    print(f"BFSDFS: {t_bfs:.3f}s for {len(check)} queries "
-          f"({1000 * t_bfs / len(check):.3f} ms/query)")
+    # Methods to compare. Timing uses query_batch, whose loop runs in C++ with the GIL
+    # released — so we measure the methods, not Python per-call overhead.
+    methods = [("GRAIL", grail), ("GRAIL-bidirectional", grail_bi),
+               ("FELINE", feline), ("FELINE-B", feline_b)]
 
-    # --- throughput: GRAIL on a much larger sample ---
-    big = sample_pairs(n, src, dst, args.grail_queries // 2, args.grail_queries // 2, seed=2)
-    _, t_grail = timed(lambda: [grail.query(int(u), int(v)) for u, v in big])
-    print(f"GRAIL : {t_grail:.3f}s for {len(big):,} queries "
-          f"({1e6 * t_grail / len(big):.2f} us/query)")
+    def report(title, pairs):
+        truth = bfs.query_batch(pairs)
+        npos = int(truth.sum())
+        print(f"\n{title}: {len(pairs):,} pairs "
+              f"({npos:,} reachable, {100.0 * npos / len(pairs):.2f}% positive)")
+        ans, t = timed(lambda: bfs.query_batch(pairs))
+        print(f"  {'BFSDFS':20s}: {1e6 * t / len(pairs):8.3f} us/query")
+        for name, m in methods:
+            a, t = timed(lambda m=m: m.query_batch(pairs))
+            ok = "AGREE ✓" if np.array_equal(a, truth) else "DISAGREE ✗"
+            print(f"  {name:20s}: {1e6 * t / len(pairs):8.3f} us/query   ({ok})")
 
-    # --- deep positives: where the index pays off (BFS must traverse far) ---
+    # Paper methodology: uniformly random pairs (mostly negative on a large sparse DAG).
+    rng = np.random.default_rng(1)
+    rp = np.stack([rng.integers(0, n, size=args.random_queries, dtype=np.int32),
+                   rng.integers(0, n, size=args.random_queries, dtype=np.int32)], axis=1)
+    report("random pairs", rp)
+
+    # Deep multi-hop positives (where a naive search must traverse far).
     off, targets = build_adj(n, src, dst)
     du, dv = deep_positive_pairs(off, targets, n, args.deep_queries, args.deep_steps)
-    if len(du) == 0:
-        print("\n(no deep positives sampled)")
-        return
-    deep = np.stack([du, dv], axis=1)
-    bfs_deep, t_bfs_deep = timed(lambda: [bfs.query(int(u), int(v)) for u, v in deep])
-    g_deep, t_g_deep = timed(lambda: [grail.query(int(u), int(v)) for u, v in deep])
-    gb_deep, t_gb_deep = timed(lambda: [grail_bi.query(int(u), int(v)) for u, v in deep])
-    f_deep, t_f_deep = timed(lambda: [feline.query(int(u), int(v)) for u, v in deep])
-    fb_deep, t_fb_deep = timed(lambda: [feline_b.query(int(u), int(v)) for u, v in deep])
-    disagree = sum(int(a != b) for a, b in zip(bfs_deep, g_deep)) \
-        + sum(int(a != b) for a, b in zip(bfs_deep, gb_deep)) \
-        + sum(int(a != b) for a, b in zip(bfs_deep, f_deep)) \
-        + sum(int(a != b) for a, b in zip(bfs_deep, fb_deep))
-    print(f"\ndeep positives: {len(deep):,} multi-hop reachable pairs "
-          f"({'AGREE ✓' if disagree == 0 else f'{disagree} DISAGREEMENTS ✗'})")
-    print(f"BFSDFS             : {1000 * t_bfs_deep / len(deep):.3f} ms/query")
-    print(f"GRAIL              : {1000 * t_g_deep / len(deep):.3f} ms/query   "
-          f"(x{t_bfs_deep / t_g_deep:.0f} vs BFS)")
-    print(f"GRAIL bidirectional: {1000 * t_gb_deep / len(deep):.3f} ms/query   "
-          f"(x{t_bfs_deep / t_gb_deep:.0f} vs BFS)")
-    print(f"FELINE             : {1000 * t_f_deep / len(deep):.3f} ms/query   "
-          f"(x{t_bfs_deep / t_f_deep:.0f} vs BFS)")
-    print(f"FELINE-B           : {1000 * t_fb_deep / len(deep):.3f} ms/query   "
-          f"(x{t_bfs_deep / t_fb_deep:.0f} vs BFS)")
+    if len(du):
+        report("deep positives", np.stack([du, dv], axis=1))
 
 
 if __name__ == "__main__":

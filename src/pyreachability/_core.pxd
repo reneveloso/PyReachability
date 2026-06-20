@@ -14,7 +14,7 @@ cdef extern from "reachability/csr_graph.hpp" namespace "reachability":
         const vid_t* out_end(vid_t) const
 
 cdef extern from "reachability/bfsdfs.hpp" namespace "reachability":
-    cbool bfs_reaches(const CSRGraph&, vid_t, vid_t)
+    cbool bfs_reaches(const CSRGraph&, vid_t, vid_t) nogil
 
 cdef extern from "reachability/scc.hpp" namespace "reachability":
     cdef cppclass Condensation:
@@ -28,7 +28,7 @@ cdef extern from "reachability/grail.hpp" namespace "reachability":
     cdef cppclass Grail:
         Grail() except +
         void build(const CSRGraph&, int, unsigned int, cbool) except +
-        cbool reaches(vid_t, vid_t)
+        cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()
         int dim()
 
@@ -36,5 +36,5 @@ cdef extern from "reachability/feline.hpp" namespace "reachability":
     cdef cppclass Feline:
         Feline() except +
         void build(const CSRGraph&, cbool) except +
-        cbool reaches(vid_t, vid_t)
+        cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()

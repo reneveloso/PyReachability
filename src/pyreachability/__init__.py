@@ -46,11 +46,9 @@ class BFSDFS(ReachabilityIndex):
         return bool(self._core.query(int(u), int(v)))
 
     def query_batch(self, pairs) -> np.ndarray:
-        p = np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
-        out = np.empty(p.shape[0], dtype=bool)
-        for i in range(p.shape[0]):
-            out[i] = self.query(int(p[i, 0]), int(p[i, 1]))
-        return out
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
 
     @property
     def index_size_bytes(self) -> int:
@@ -111,11 +109,9 @@ class GRAIL(ReachabilityIndex):
         return bool(self._core.query(int(u), int(v)))
 
     def query_batch(self, pairs) -> np.ndarray:
-        p = np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
-        out = np.empty(p.shape[0], dtype=bool)
-        for i in range(p.shape[0]):
-            out[i] = self.query(int(p[i, 0]), int(p[i, 1]))
-        return out
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
 
     @property
     def index_size_bytes(self) -> int:
@@ -175,11 +171,9 @@ class FELINE(ReachabilityIndex):
         return bool(self._core.query(int(u), int(v)))
 
     def query_batch(self, pairs) -> np.ndarray:
-        p = np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
-        out = np.empty(p.shape[0], dtype=bool)
-        for i in range(p.shape[0]):
-            out[i] = self.query(int(p[i, 0]), int(p[i, 1]))
-        return out
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
 
     @property
     def index_size_bytes(self) -> int:
