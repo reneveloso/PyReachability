@@ -112,6 +112,10 @@ A method only enters the library if it has a peer-reviewed publication.
 | `FELINE` | refined online search (2 topological orders) | ✅ implemented | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 |
 | `PLL` | 2-hop labeling | ✅ implemented | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
 
+These six span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
+catalog will grow to cover the survey's full plain-reachability list — see
+[`docs/methods.md`](docs/methods.md) for the source-backed coverage map.
+
 See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together and how to
 add a new method to the catalog, and [`docs/AI_GUIDE.md`](docs/AI_GUIDE.md) for contributor
 conventions, the method inclusion policy, and verified references.
@@ -122,12 +126,16 @@ The library is built in milestones, each producing working, tested software:
 
 1. **Foundation** ✅ — build system, CSR graph, SCC condensation, catalog, `BFSDFS` oracle,
    property-based tests, CI.
-2. **Tree-cover family** ✅ — `GRAIL`, `TC`, `TreeCover`.
-3. **`FELINE`** ✅ **+ `PLL`** ✅.
-4. **Benchmark harness + datasets** — reproducible build/memory/query-time comparisons.
+2. **Representative methods** ✅ — `GRAIL`, `TC`, `TreeCover`, `FELINE`, `PLL` (one+ per index
+   class of the survey, plus the baselines).
+3. **Benchmark harness + datasets** — reproducible build/memory/query-time comparisons.
+4. **Comprehensive catalog** — implement the remaining **plain-reachability indexes of the
+   CSUR 2025 survey** (Table 1). The method list is taken from a peer-reviewed survey, not
+   chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the full coverage map.
 5. **Docs site, PyPI wheels, Zenodo DOI.**
 
-Label-constrained reachability (edge-labeled graphs) is a planned future extension.
+Label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
+is a planned later extension.
 
 ## Development
 
