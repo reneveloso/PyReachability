@@ -20,6 +20,14 @@ method, **read its source paper** and follow the published algorithm; document a
 (engineering optimizations, etc.) in code comments. Consult the author's reference
 implementation when one exists.
 
+**FELINE — canonical reference implementation.** The library's FELINE
+(`src/cpp/feline.{hpp,cpp}`) is authored by a FELINE author (Renê Veloso) and is the
+**current canonical reference implementation** of the method. It was validated against the
+original 2014 C++ code: it reproduces the algorithm exactly (DFS reverse-postorder X, Kahn
+argmax-X Y, dominance cut, level filter, GRAIL-style min-post positive cut) and agrees with
+it on 100% of a 500k-query test on cit-Patents, while being faster (CSR + iterative search).
+The 2014 code is a validation reference only and is not distributed.
+
 ## Correctness gate (required for every method)
 
 Validate each method against ground truth before considering it done:

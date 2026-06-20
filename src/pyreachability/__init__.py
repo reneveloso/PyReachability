@@ -134,7 +134,9 @@ class FELINE(ReachabilityIndex):
     and the topological level filter. Inconclusive pairs fall back to a pruned DFS.
 
     Veloso, Cerf, Meira Jr., Zaki, *Reachability Queries in Very Large Graphs: A Fast
-    Refined Online Search Approach*, EDBT 2014, pp. 511-522.
+    Refined Online Search Approach*, EDBT 2014, pp. 511-522. This is the canonical
+    reference implementation of FELINE (authored by a paper author), validated to agree
+    with the original 2014 code on 100% of a 500k-query test.
 
     Parameters
     ----------
