@@ -101,7 +101,9 @@ registry is what makes the library an **extensible catalog** rather than a fixed
 
 This distinction (from the reachability literature) shapes how `query` is implemented:
 
-- **Complete** indexes (`TreeCover`, `PLL`, `TC`) answer every query by index lookup alone.
+- **Complete** indexes (`PLL`, and the planned `TreeCover`/`TC`) answer every query by index
+  lookup alone. `PLL` (2-hop) keeps per-vertex sorted landmark sets (L_out / L_in), built by
+  pruned BFS in a degree-product order; a query is a sorted-list intersection — no search.
 - **Partial** indexes (`GRAIL`, `FELINE`) have **no false negatives**: a lookup decides many
   queries outright, and the undecided ones fall back to a **guided/pruned DFS**. Their `query`
   therefore combines a lookup with a bounded traversal.

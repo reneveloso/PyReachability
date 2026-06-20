@@ -18,8 +18,9 @@ reproducible benchmark harness (planned). It accompanies a *Software Impacts* ar
 
 > **Status:** v0.1.0 — *Foundation* + indexing methods. The core, the catalog, graph
 > ingestion, SCC condensation, the **BFS/DFS** baseline, **GRAIL** (interval labels +
-> label-guided search), and **FELINE** (2D dominance drawing) are implemented and tested.
-> The remaining methods below land in subsequent releases (see [Roadmap](#roadmap)).
+> label-guided search), **FELINE** (2D dominance drawing), and **PLL** (2-hop labeling) are
+> implemented and tested. The remaining methods below land in subsequent releases (see
+> [Roadmap](#roadmap)).
 
 ---
 
@@ -110,7 +111,7 @@ A method only enters the library if it has a peer-reviewed publication.
 | `TreeCover` | tree / interval cover | 🔜 planned | Agrawal, Borgida, Jagadish, SIGMOD 1989 |
 | `GRAIL` | tree-cover, interval-label pruning | ✅ implemented | Yıldırım, Chaoji, Zaki, PVLDB 2010 |
 | `FELINE` | refined online search (2 topological orders) | ✅ implemented | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 |
-| `PLL` | 2-hop labeling | 🔜 planned | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
+| `PLL` | 2-hop labeling | ✅ implemented | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
 
 See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together and how to
 add a new method to the catalog, and [`docs/AI_GUIDE.md`](docs/AI_GUIDE.md) for contributor
@@ -123,7 +124,7 @@ The library is built in milestones, each producing working, tested software:
 1. **Foundation** *(this release)* — build system, CSR graph, SCC condensation, catalog,
    `BFSDFS` oracle, property-based tests, CI.
 2. **Tree-cover family** — `GRAIL` ✅ (done), plus `TC` and `TreeCover`.
-3. **`FELINE`** ✅ (done) **+ `PLL`.**
+3. **`FELINE`** ✅ **+ `PLL`** ✅ (done).
 4. **Benchmark harness + datasets** — reproducible build/memory/query-time comparisons.
 5. **Docs site, PyPI wheels, Zenodo DOI.**
 
