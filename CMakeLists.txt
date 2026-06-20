@@ -31,7 +31,8 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/minpost.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfsdfs.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/grail.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/feline.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/feline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pll.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE
@@ -48,13 +49,15 @@ add_executable(cpp_tests
   src/cpp/tests/test_bfsdfs.cpp
   src/cpp/tests/test_grail.cpp
   src/cpp/tests/test_feline.cpp
+  src/cpp/tests/test_pll.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
   src/cpp/levels.cpp
   src/cpp/minpost.cpp
   src/cpp/bfsdfs.cpp
   src/cpp/grail.cpp
-  src/cpp/feline.cpp)
+  src/cpp/feline.cpp
+  src/cpp/pll.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)
