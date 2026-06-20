@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['bfsdfs', 'feline', 'grail', 'pll', 'tc', 'treecover']
+catalog.methods()          # ['bfl', 'bfsdfs', 'feline', 'grail', 'pll', 'tc', 'treecover']
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
@@ -111,8 +111,9 @@ A method only enters the library if it has a peer-reviewed publication.
 | `GRAIL` | tree-cover, interval-label pruning | ✅ implemented | Yıldırım, Chaoji, Zaki, PVLDB 2010 |
 | `FELINE` | refined online search (2 topological orders) | ✅ implemented | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 |
 | `PLL` | 2-hop labeling | ✅ implemented | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
+| `BFL` | approximate TC (Bloom filters) | ✅ implemented | Su, Zhu, Wei, Yu, TKDE 2017 |
 
-These six span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
+These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
 catalog will grow to cover the survey's full plain-reachability list — see
 [`docs/methods.md`](docs/methods.md) for the source-backed coverage map.
 

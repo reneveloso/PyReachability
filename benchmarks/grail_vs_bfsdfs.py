@@ -12,7 +12,7 @@ import time
 
 import numpy as np
 
-from pyreachability import Graph, GRAIL, FELINE, PLL, BFSDFS
+from pyreachability import Graph, GRAIL, FELINE, PLL, BFL, BFSDFS
 
 
 def timed(fn):
@@ -92,6 +92,7 @@ def main():
     if not args.skip_bidirectional:
         specs.append(("FELINE-B", FELINE(bidirectional=True)))
     specs.append(("PLL", PLL()))
+    specs.append(("BFL", BFL()))
 
     print(f"\n{'method':18s}  {'build (s)':>9s}  {'index (MB)':>10s}")
     methods = []

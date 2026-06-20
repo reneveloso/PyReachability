@@ -49,7 +49,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ### Approximate TC class
 - ⬜ **IP** (Independent Permutation)
-- ⬜ **BFL** (Bloom Filter Labeling)
+- ✅ **BFL** (Bloom Filter Labeling) — Su, Zhu, Wei, Yu, TKDE 2017.
 
 ### Chain Cover class
 - ⬜ **Chain Cover**
@@ -61,7 +61,8 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ## Status summary
 
-Implemented: 6 (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL) — one+ per major class plus the
-two baselines. The remaining Table-1 methods are the expansion target (phase 2). Exact
-citations for each are taken from CSUR 2025 Table 1 and confirmed against the primary source
-at implementation time.
+Implemented: 7 (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL). Phase 2 has begun: BFL
+(Approximate TC) is the first of the expansion, verified against the author's reference
+implementation (github.com/BoleynSu/bfl) on a 200k-query set. The remaining Table-1 methods
+follow. Exact citations are taken from CSUR 2025 Table 1 and confirmed against the primary
+source at implementation time.
