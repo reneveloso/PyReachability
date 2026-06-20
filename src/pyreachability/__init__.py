@@ -6,7 +6,7 @@ through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
-                    _TCCore, _TreeCoverCore)
+                    _TCCore, _TreeCoverCore, _BFLCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -329,5 +329,62 @@ class TreeCover(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class BFL(ReachabilityIndex):
+    """BFL: Bloom Filter Labeling — an approximate-transitive-closure partial index.
+
+    Each vertex carries a DFS interval label plus two Bloom filters: one for the set it
+    reaches (L_out) and one for the set that reaches it (L_in). The interval gives exact
+    cuts for tree paths; the Bloom subset tests give exact *negative* cuts (no false
+    negatives, but possible false positives), so inconclusive pairs fall back to a guided
+    DFS. General graphs are reduced to a DAG via SCC condensation.
+
+    Su, Zhu, Wei, Yu, *Reachability Querying: Can It Be Even Faster?*, IEEE TKDE 2017.
+
+    Parameters
+    ----------
+    k : int, optional
+        Number of 32-bit Bloom words per vertex per direction (default 5). More words →
+        fewer false positives (less DFS) at the cost of ``2*k`` ints per node.
+    seed : int, optional
+        Seed for the Bloom hashing (default 1), for reproducibility.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, BFL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = BFL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "bfl"
+
+    def __init__(self, k: int = 5, seed: int = 1):
+        self._core = _BFLCore(int(k), int(seed))
+        self._built = False
+        self.k = int(k)
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
-           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover"]
+           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL"]

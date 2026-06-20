@@ -59,3 +59,10 @@ cdef extern from "reachability/treecover.hpp" namespace "reachability":
         void build(const CSRGraph&) except +
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/bfl.hpp" namespace "reachability":
+    cdef cppclass BFL:
+        BFL() except +
+        void build(const CSRGraph&, int, unsigned int) except +
+        cbool reaches(vid_t, vid_t) nogil
+        size_t index_size_bytes()
