@@ -5,7 +5,8 @@ Build a :class:`Graph`, pick a method (e.g. :class:`BFSDFS`), call ``build`` the
 through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
-from ._core import Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore
+from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
+                    _TCCore, _TreeCoverCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -192,6 +193,9 @@ class PLL(ReachabilityIndex):
     sorted-list intersection with **no fallback search** (a complete index). General graphs
     are reduced to a DAG via SCC condensation.
 
+    This implements the 2-hop *pruned landmark labeling* variant only; the 3-hop *pruned path
+    labeling* from the same paper (and its reference implementation) is not included.
+
     Yano, Akiba, Iwata, Yoshida, *Fast and Scalable Reachability Queries on Graphs by Pruned
     Labeling with Landmarks and Paths*, CIKM 2013.
 
@@ -231,5 +235,99 @@ class PLL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class TC(ReachabilityIndex):
+    """TC: full transitive closure materialized as per-vertex bitsets (Warshall-style).
+
+    Query is a single O(1) bit test, but the index is O(V^2 / 64), so this is a baseline
+    for small graphs only. General graphs are reduced to a DAG via SCC condensation.
+
+    Warshall, *A Theorem on Boolean Matrices*, JACM 9(1):11-12, 1962.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TC
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TC(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "tc"
+
+    def __init__(self):
+        self._core = _TCCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
+@catalog.register
+class TreeCover(ReachabilityIndex):
+    """Tree Cover: transitive-closure compression via DFS post-order interval labels.
+
+    A DFS spanning forest numbers vertices in post-order; the post-order numbers reachable
+    from a vertex are stored as merged intervals (tree descendants are contiguous). ``u``
+    reaches ``v`` iff ``post(v)`` lies in one of ``u``'s intervals. A compression baseline
+    (index size depends on the number of non-tree edges). General graphs are reduced to a
+    DAG via SCC condensation.
+
+    Agrawal, Borgida, Jagadish, *Efficient Management of Transitive Relationships in Large
+    Data and Knowledge Bases*, SIGMOD 1989, pp. 253-262.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TreeCover
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TreeCover(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "treecover"
+
+    def __init__(self):
+        self._core = _TreeCoverCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
-           "BFSDFS", "GRAIL", "FELINE", "PLL"]
+           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover"]
