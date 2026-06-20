@@ -6,7 +6,7 @@ through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
-                    _TCCore, _TreeCoverCore, _BFLCore)
+                    _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -386,5 +386,54 @@ class BFL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class ChainCover(ReachabilityIndex):
+    """Chain Cover: transitive-closure compression via chain (path) decomposition.
+
+    The DAG is decomposed into chains (paths); each vertex has a ``(chain, position)``.
+    Because a chain is a path, reaching a position implies reaching every later position on
+    that chain, so each vertex records only the smallest reachable position per chain. ``u``
+    reaches ``v`` iff ``u``'s recorded min position on ``v``'s chain is ≤ ``pos(v)``. A
+    complete index; size depends on the DAG width. General graphs are reduced via SCC
+    condensation.
+
+    Jagadish, *A Compression Technique to Materialize Transitive Closure*, ACM TODS 1990.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, ChainCover
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = ChainCover(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "chaincover"
+
+    def __init__(self):
+        self._core = _ChainCoverCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
-           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL"]
+           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL", "ChainCover"]
