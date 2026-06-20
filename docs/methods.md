@@ -52,8 +52,8 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **BFL** (Bloom Filter Labeling) — Su, Zhu, Wei, Yu, TKDE 2017.
 
 ### Chain Cover class
-- ⬜ **Chain Cover**
-- ⬜ **Optimal Chain Cover**
+- ✅ **Chain Cover** — Jagadish, ACM TODS 1990 (greedy chain decomposition).
+- ⬜ **Optimal Chain Cover** (minimum chains via max matching)
 
 ### Other
 - ✅ **FELINE** — Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 (canonical reference impl).
