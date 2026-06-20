@@ -14,7 +14,7 @@ authors:
 version: 0.1.0
 date-released: "2026-06-19"
 license: MIT
-repository-code: "https://github.com/ReneVeloso/PyReachability"
+repository-code: "https://github.com/reneveloso/PyReachability"
 keywords:
   - graph reachability
   - reachability index

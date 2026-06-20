@@ -1,6 +1,6 @@
 # PyReachability
 
-[![CI](https://github.com/ReneVeloso/PyReachability/actions/workflows/ci.yml/badge.svg)](https://github.com/ReneVeloso/PyReachability/actions/workflows/ci.yml)
+[![CI](https://github.com/reneveloso/PyReachability/actions/workflows/ci.yml/badge.svg)](https://github.com/reneveloso/PyReachability/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -28,7 +28,7 @@ reproducible benchmark harness (planned). It accompanies a *Software Impacts* ar
 From source (a C++17 compiler and CMake ≥ 3.15 are required to build):
 
 ```bash
-git clone https://github.com/ReneVeloso/PyReachability.git
+git clone https://github.com/reneveloso/PyReachability.git
 cd PyReachability
 pip install .
 ```
@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['bfsdfs', 'grail']  (grows as methods are added)
+catalog.methods()          # ['bfsdfs', 'feline', 'grail', 'pll', 'tc', 'treecover']
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
