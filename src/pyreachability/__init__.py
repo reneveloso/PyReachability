@@ -6,7 +6,7 @@ through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
-                    _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore)
+                    _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -435,5 +435,55 @@ class ChainCover(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class PReaCH(ReachabilityIndex):
+    """PReaCH: Pruned Reachability Contraction Hierarchies.
+
+    Builds an RCH ordering by contracting source/sink vertices (smallest input degree first);
+    edges split into forward (order↑) and backward sets. A query is a bidirectional "up"
+    search that must meet, pruned by forward/backward topological levels and single-DFS
+    interval ranges. General graphs are reduced to a DAG via SCC condensation.
+
+    Merz & Sanders, *PReaCH: A Fast Lightweight Reachability Index using Pruning and
+    Contraction Hierarchies*, ESA 2014. (Ported from the paper; the extra empty/full DFS
+    ranges of Lemmas 5-7 are omitted — they sharpen pruning, not correctness.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, PReaCH
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = PReaCH(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "preach"
+
+    def __init__(self):
+        self._core = _PReaCHCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
-           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL", "ChainCover"]
+           "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
+           "ChainCover", "PReaCH"]
