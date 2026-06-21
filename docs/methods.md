@@ -57,7 +57,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ### Other
 - ✅ **FELINE** — Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 (canonical reference impl).
-- ⬜ **Preach**
+- ✅ **PReaCH** — Merz & Sanders, ESA 2014 (ported from paper; oracle-verified).
 
 ## Status summary
 

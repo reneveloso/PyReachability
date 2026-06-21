@@ -12,7 +12,7 @@ import time
 
 import numpy as np
 
-from pyreachability import Graph, GRAIL, FELINE, PLL, BFL, BFSDFS
+from pyreachability import Graph, GRAIL, FELINE, PLL, BFL, PReaCH, BFSDFS
 
 
 def timed(fn):
@@ -93,6 +93,7 @@ def main():
         specs.append(("FELINE-B", FELINE(bidirectional=True)))
     specs.append(("PLL", PLL()))
     specs.append(("BFL", BFL()))
+    specs.append(("PReaCH", PReaCH()))
 
     print(f"\n{'method':18s}  {'build (s)':>9s}  {'index (MB)':>10s}")
     methods = []
