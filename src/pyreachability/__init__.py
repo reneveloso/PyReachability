@@ -6,7 +6,8 @@ through :mod:`~pyreachability.catalog`.
 """
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
-                    _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore)
+                    _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
+                    _TwoHopCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -484,6 +485,58 @@ class PReaCH(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class TwoHop(ReachabilityIndex):
+    """2-Hop labeling: the original near-minimum 2-hop cover.
+
+    Each vertex keeps ``L_out`` (centers it can reach) and ``L_in`` (centers that reach it);
+    ``u`` reaches ``v`` iff the two sets share a center. The cover is built by the greedy
+    set-cover of Cohen et al.: each step adds the *center* whose bipartite "center graph" of
+    still-uncovered pairs has the densest subgraph (found by the linear-time 2-approximation
+    that repeatedly drops the minimum-degree vertex). A complete index with near-minimum label
+    size. Minimum 2-hop is NP-hard, so the build is a (logarithmic-factor) heuristic and is
+    expensive — a small/medium-graph method, like :class:`TC` / :class:`TreeCover`. General
+    graphs are reduced via SCC condensation.
+
+    Cohen, Halperin, Kaplan, Zwick, *Reachability and Distance Queries via 2-Hop Labels*,
+    SIAM J. Comput. 32(5):1338-1355, 2003. (Ported from the paper; verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TwoHop
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TwoHop(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "twohop"
+
+    def __init__(self):
+        self._core = _TwoHopCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH"]
+           "ChainCover", "PReaCH", "TwoHop"]

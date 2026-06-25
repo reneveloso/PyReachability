@@ -35,7 +35,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ### 2-Hop class
 - ✅ **PLL** — Yano, Akiba, Iwata, Yoshida, CIKM 2013.
-- ⬜ **2-Hop** (Cohen et al.)
+- ✅ **2-Hop** — Cohen, Halperin, Kaplan, Zwick, SIAM J. Comput. 2003 (greedy densest-subgraph cover).
 - ⬜ **3-Hop**
 - ⬜ **U2-hop**
 - ⬜ **Path-hop**
