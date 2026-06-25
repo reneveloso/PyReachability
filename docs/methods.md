@@ -42,7 +42,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ⬜ **DL** (Distribution Labeling)
 - ⬜ **HL** (Hierarchical Labeling)
-- ⬜ **TOL** (Total Order Labeling)
+- ✅ **TOL** (Total Order Labeling) — Zhu, Lin, Wang, Xiao, SIGMOD 2014 (contribution-score order).
 - ⬜ **DBL** (dynamic)
 - ⬜ **O'Reach**
 - ⬜ **Ralf et al.** (dynamic 2-hop)

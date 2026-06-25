@@ -94,3 +94,10 @@ cdef extern from "reachability/tflabel.hpp" namespace "reachability":
         void build(const CSRGraph&) except +
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/tol.hpp" namespace "reachability":
+    cdef cppclass TOL:
+        TOL() except +
+        void build(const CSRGraph&) except +
+        cbool query(vid_t, vid_t) nogil
+        size_t index_size_bytes()

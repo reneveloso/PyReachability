@@ -38,4 +38,12 @@ inline bool two_hop_intersects(const TwoHopLabels& L, vid_t u, vid_t v) {
     return false;
 }
 
+// Build the canonical 2-hop labels for a given vertex processing order via pruned BFS — the
+// shared PLL / TOL labeling framework (Zhu et al., SIGMOD 2014: a level order uniquely decides
+// a 2-hop index). `order` lists vertices in processing order (order[0] is processed first / has
+// the highest level); each vertex stores its in/out landmarks as processing ranks (0 = first),
+// so the resulting lists are sorted ascending. The level order is the only thing that
+// distinguishes instances: PLL uses a degree order, TOL a contribution-score order.
+void build_two_hop_labels(const CSRGraph& dag, const std::vector<vid_t>& order, TwoHopLabels& L);
+
 }  // namespace reachability

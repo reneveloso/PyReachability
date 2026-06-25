@@ -7,7 +7,7 @@ through :mod:`~pyreachability.catalog`.
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
-                    _TwoHopCore, _TFLabelCore)
+                    _TwoHopCore, _TFLabelCore, _TOLCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -589,6 +589,58 @@ class TFLabel(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class TOL(ReachabilityIndex):
+    """TOL: Total Order Labeling — the 2-hop framework generalizing PLL.
+
+    A strict total order of the vertices uniquely determines a canonical 2-hop index, built by
+    the shared pruned-BFS labeling. TOL's contribution is the *contribution-score* order:
+    ``f(v) = (a*b + a + b) / (a + b)`` with ``a = |ancestors(v)|`` and ``b = |descendants(v)|``
+    (a vertex covering many reachable pairs ranks highest). The exact scores need transitive
+    closure, so they are approximated by a single linear scan of the DAG, then vertices are
+    ordered by descending ``f``. ``u`` reaches ``v`` iff ``label_out(u)`` and ``label_in(v)``
+    intersect. A complete index. General graphs are reduced via SCC condensation.
+
+    Zhu, Lin, Wang, Xiao, *Reachability Queries on Large Dynamic Graphs: A Total Order
+    Approach*, SIGMOD 2014. (Labeling = shared 2-hop framework; the contribution-score order is
+    TOL-specific. Verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TOL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TOL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "tol"
+
+    def __init__(self):
+        self._core = _TOLCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH", "TwoHop", "TFLabel"]
+           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL"]
