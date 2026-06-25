@@ -36,7 +36,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 ### 2-Hop class
 - ✅ **PLL** — Yano, Akiba, Iwata, Yoshida, CIKM 2013.
 - ✅ **2-Hop** — Cohen, Halperin, Kaplan, Zwick, SIAM J. Comput. 2003 (greedy densest-subgraph cover).
-- ⬜ **3-Hop**
+- ✅ **3-Hop** — Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 (TC contour + greedy factorization).
 - ⬜ **U2-hop**
 - ⬜ **Path-hop**
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.

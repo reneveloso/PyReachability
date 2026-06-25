@@ -7,7 +7,8 @@ through :mod:`~pyreachability.catalog`.
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
-                    _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore)
+                    _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
+                    _ThreeHopCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -758,6 +759,62 @@ class OReach(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class ThreeHop(ReachabilityIndex):
+    """3-Hop: high-compression reachability via chains as highways.
+
+    The DAG is decomposed into chains; ``u`` reaches ``v`` in three hops through an intermediate
+    chain ``C`` — ``u`` -> entry point on ``C``, along ``C`` to an exit point, exit -> ``v`` —
+    i.e. iff some chain ``C`` has an entry recorded for ``u`` preceding an exit recorded for
+    ``v``. Construction follows the paper: the *transitive closure contour* (pseudo-diagonal
+    cells of the chain-pair reachability submatrices) is covered by a greedy *factorization*
+    that repeatedly picks the chain whose chain-center bipartite graph has the densest subgraph,
+    recording entry/exit anchors. Queries resolve a vertex's entry/exit on a highway via its
+    nearest anchor along its own chain. A complete index. General graphs are reduced via SCC
+    condensation.
+
+    Jin, Xiang, Ruan, Fuhry, *3-HOP: A High-Compression Indexing Scheme for Reachability
+    Query*, SIGMOD 2009. (Densest subgraph via the endorsed linear 2-approximation; construction
+    uses transitive-closure bitsets, so this targets small/medium graphs. Verified vs the BFS
+    oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, ThreeHop
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = ThreeHop(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "3hop"
+
+    def __init__(self):
+        self._core = _ThreeHopCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach"]
+           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
+           "ThreeHop"]

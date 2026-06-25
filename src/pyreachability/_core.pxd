@@ -115,3 +115,10 @@ cdef extern from "reachability/oreach.hpp" namespace "reachability":
         void build(const CSRGraph&, int, int, int, unsigned int) except +
         cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/threehop.hpp" namespace "reachability":
+    cdef cppclass ThreeHop:
+        ThreeHop() except +
+        void build(const CSRGraph&) except +
+        cbool query(vid_t, vid_t) nogil
+        size_t index_size_bytes()
