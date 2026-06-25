@@ -39,7 +39,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ⬜ **3-Hop**
 - ⬜ **U2-hop**
 - ⬜ **Path-hop**
-- ⬜ **TFL** (Topological Folding Labeling)
+- ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ⬜ **DL** (Distribution Labeling)
 - ⬜ **HL** (Hierarchical Labeling)
 - ⬜ **TOL** (Total Order Labeling)

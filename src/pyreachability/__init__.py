@@ -7,7 +7,7 @@ through :mod:`~pyreachability.catalog`.
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
-                    _TwoHopCore)
+                    _TwoHopCore, _TFLabelCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -537,6 +537,58 @@ class TwoHop(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class TFLabel(ReachabilityIndex):
+    """TF-Label: 2-hop labeling built by topological folding.
+
+    Vertices are placed on topological levels and the DAG is folded in half repeatedly — each
+    fold removes the odd-level vertices and reconnects their in-neighbours directly to their
+    out-neighbours — so each vertex is processed in O(lg L) folds rather than all L levels.
+    ``label_out``/``label_in`` are then the recursive closures of Definition 5 over the folding
+    graphs, and ``u`` reaches ``v`` iff the two sets intersect. A complete index. Cross-level
+    edges are made level-consecutive by edge subdivision (faithful to the folding scheme, but
+    larger labels than the paper's shared-dummy optimisation), so it targets small/medium
+    graphs. General graphs are reduced via SCC condensation.
+
+    Cheng, Huang, Wu, Fu, *TF-Label: a Topological-Folding Labeling Scheme for Reachability
+    Querying in a Large Graph*, SIGMOD 2013. (Ported from the paper; verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TFLabel
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TFLabel(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "tfl"
+
+    def __init__(self):
+        self._core = _TFLabelCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH", "TwoHop"]
+           "ChainCover", "PReaCH", "TwoHop", "TFLabel"]
