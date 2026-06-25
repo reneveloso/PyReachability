@@ -122,3 +122,10 @@ cdef extern from "reachability/threehop.hpp" namespace "reachability":
         void build(const CSRGraph&) except +
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/pathhop.hpp" namespace "reachability":
+    cdef cppclass PathHop:
+        PathHop() except +
+        void build(const CSRGraph&) except +
+        cbool query(vid_t, vid_t) nogil
+        size_t index_size_bytes()

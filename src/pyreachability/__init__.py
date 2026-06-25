@@ -8,7 +8,7 @@ from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
-                    _ThreeHopCore)
+                    _ThreeHopCore, _PathHopCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -814,7 +814,61 @@ class ThreeHop(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class PathHop(ReachabilityIndex):
+    """Path-Hop: high-compression reachability with trees as highways.
+
+    The tree-cover analogue of :class:`ThreeHop`. A spanning tree (tree cover) is interval-
+    labeled so that tree reachability is interval containment. The *residual transitive closure*
+    (reachable pairs not captured by the tree, as each vertex's reachable non-tree subtree roots)
+    is covered by a greedy set cover of *path-hops* ``x ; y`` (``x`` a tree-ancestor of ``y``):
+    ``x`` is added to ``L_out`` of ``Pred(x)`` and ``y`` to ``L_in`` of ``Succ(y)``. A query
+    ``reach(u, v)`` is true iff ``v`` is in ``u``'s subtree, or some ``x`` in ``L_out(u) U {u}``
+    is a tree-ancestor of some ``y`` drawn from ``L_in`` of ``v`` and its tree ancestors. A
+    complete index. General graphs are reduced via SCC condensation.
+
+    Cai & Poon, *Path-Hop: Efficiently Indexing Large Graphs for Reachability Queries*, CIKM
+    2010. (A DFS spanning forest is used as the tree cover, vs the paper's optimal tree cover;
+    construction materialises reachable-root sets, so this targets small/medium graphs. Verified
+    vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, PathHop
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = PathHop(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "pathhop"
+
+    def __init__(self):
+        self._core = _PathHopCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
-           "ThreeHop"]
+           "ThreeHop", "PathHop"]
