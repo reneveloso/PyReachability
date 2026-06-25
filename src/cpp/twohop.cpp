@@ -7,6 +7,10 @@
 namespace reachability {
 
 namespace {
+// Portable popcount (MSVC lacks __builtin_popcountll); only used in construction, not on the
+// query path, so Kernighan's bit-clearing loop is fine.
+inline int popcount64(uint64_t x) { int c = 0; for (; x; x &= x - 1) ++c; return c; }
+
 // Linear-time 2-approximation for the densest subgraph (Cohen et al., from Kortsarz & Peleg):
 // repeatedly remove the minimum-degree vertex and return the densest snapshot seen. `adj` is an
 // undirected graph on `nv` vertices; returns the kept vertices and their induced density.
@@ -120,7 +124,7 @@ void TwoHop::build(const CSRGraph& dag) {
         const uint64_t* d = &desc[static_cast<std::size_t>(u) * W];
         for (vid_t k = 0; k < W; ++k) row[k] = d[k];
         row[u >> 6] &= ~(static_cast<uint64_t>(1) << (u & 63));   // drop reflexive pair
-        for (vid_t k = 0; k < W; ++k) remaining += __builtin_popcountll(row[k]);
+        for (vid_t k = 0; k < W; ++k) remaining += popcount64(row[k]);
     }
 
     // Greedy set cover: each step adds the best center.
