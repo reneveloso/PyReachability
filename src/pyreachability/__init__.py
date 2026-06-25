@@ -8,7 +8,7 @@ from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
-                    _ThreeHopCore, _PathHopCore)
+                    _ThreeHopCore, _PathHopCore, _FerrariCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -868,7 +868,68 @@ class PathHop(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class Ferrari(ReachabilityIndex):
+    """Ferrari: budgeted exact/approximate interval labels + guided fallback (a partial index).
+
+    A spanning tree is post-order numbered and each vertex's reachable set is encoded as a set of
+    post-order id intervals (computed by merging children in reverse topological order). To stay
+    within ``k`` intervals per vertex, adjacent intervals are merged across the smallest gaps,
+    minimising false positives; an interval is *exact* if it contains no unreachable id, else
+    *approximate*. A query checks the target id against the source's intervals: outside all ->
+    not reachable; inside an exact one -> reachable; inside only approximate ones -> a guided DFS
+    (with a topological level filter) settles it exactly. General graphs are reduced via SCC
+    condensation.
+
+    Seufert, Anand, Bedathur, Weikum, *FERRARI: Flexible and Efficient Reachability Range
+    Assignment for Graph Indexing*, ICDE 2013. (Core Ferrari-L; the optional seed-vertex and
+    global-budget heuristics are omitted. Independent implementation from the paper, verified vs
+    the BFS oracle.)
+
+    Parameters
+    ----------
+    k : int, optional
+        Per-vertex interval budget (default 2). Larger ``k`` means more exact intervals (less
+        DFS fallback) at the cost of more space; ``k=1`` is a single GRAIL-style range.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, Ferrari
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = Ferrari(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "ferrari"
+
+    def __init__(self, k: int = 2):
+        self._core = _FerrariCore(int(k))
+        self._built = False
+        self.k = int(k)
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
-           "ThreeHop", "PathHop"]
+           "ThreeHop", "PathHop", "Ferrari"]

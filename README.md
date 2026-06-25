@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'feline', 'grail', 'hl', 'oreach', 'pathhop', 'pll', 'preach', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
+catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'feline', 'ferrari', 'grail', 'hl', 'oreach', 'pathhop', 'pll', 'preach', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
@@ -121,6 +121,7 @@ A method only enters the library if it has a peer-reviewed publication.
 | `OReach` | constant-time observations + guided fallback | ✅ implemented | Hanauer, Schulz, Trummer, SEA 2021 |
 | `ThreeHop` | 3-hop: chains as highways (TC-contour compression) | ✅ implemented | Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 |
 | `PathHop` | path-hop: trees as highways (residual-TC compression) | ✅ implemented | Cai & Poon, CIKM 2010 |
+| `Ferrari` | budgeted exact/approx intervals + guided search | ✅ implemented | Seufert, Anand, Bedathur, Weikum, ICDE 2013 |
 
 These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
 catalog will grow to cover the survey's full plain-reachability list — see

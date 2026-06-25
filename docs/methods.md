@@ -30,7 +30,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ⬜ **Dual labeling**
 - ⬜ **GRIPP**
 - ⬜ **Path-tree**
-- ⬜ **Ferrari**
+- ✅ **Ferrari** — Seufert, Anand, Bedathur, Weikum, ICDE 2013 (budgeted exact/approx intervals + guided search).
 - ⬜ **DAGGER** (dynamic)
 
 ### 2-Hop class
