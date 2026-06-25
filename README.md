@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['bfl', 'bfsdfs', 'chaincover', 'feline', 'grail', 'hl', 'pll', 'preach', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
+catalog.methods()          # ['bfl', 'bfsdfs', 'chaincover', 'feline', 'grail', 'hl', 'oreach', 'pll', 'preach', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
@@ -118,6 +118,7 @@ A method only enters the library if it has a peer-reviewed publication.
 | `TFLabel` | 2-hop labeling via topological folding | ✅ implemented | Cheng, Huang, Wu, Fu, SIGMOD 2013 |
 | `TOL` | 2-hop labeling, contribution-score order | ✅ implemented | Zhu, Lin, Wang, Xiao, SIGMOD 2014 |
 | `HL` | hierarchical 2-hop (recursive backbone) | ✅ implemented | Jin & Wang, PVLDB 2013 |
+| `OReach` | constant-time observations + guided fallback | ✅ implemented | Hanauer, Schulz, Trummer, SEA 2021 |
 
 These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
 catalog will grow to cover the survey's full plain-reachability list — see

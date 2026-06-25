@@ -42,7 +42,8 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/tflabel.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/two_hop.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/tol.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/hl.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/hl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/oreach.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE
@@ -69,6 +70,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_tflabel.cpp
   src/cpp/tests/test_tol.cpp
   src/cpp/tests/test_hl.cpp
+  src/cpp/tests/test_oreach.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
   src/cpp/levels.cpp
@@ -86,7 +88,8 @@ add_executable(cpp_tests
   src/cpp/tflabel.cpp
   src/cpp/two_hop.cpp
   src/cpp/tol.cpp
-  src/cpp/hl.cpp)
+  src/cpp/hl.cpp
+  src/cpp/oreach.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)

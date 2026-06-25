@@ -44,7 +44,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **HL** (Hierarchical Labeling) — Jin & Wang, PVLDB 2013 (recursive reachability backbone).
 - ✅ **TOL** (Total Order Labeling) — Zhu, Lin, Wang, Xiao, SIGMOD 2014 (contribution-score order).
 - ⬜ **DBL** (dynamic)
-- ⬜ **O'Reach**
+- ✅ **O'Reach** — Hanauer, Schulz, Trummer, SEA 2021 (constant-time observations + guided fallback).
 - ⬜ **Ralf et al.** (dynamic 2-hop)
 
 ### Approximate TC class

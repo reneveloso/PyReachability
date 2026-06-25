@@ -7,7 +7,7 @@ through :mod:`~pyreachability.catalog`.
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
-                    _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore)
+                    _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -693,6 +693,71 @@ class HL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class OReach(ReachabilityIndex):
+    """O'Reach: constant-time observations + guided-search fallback (a partial index).
+
+    A battery of sound constant-time tests resolves most queries: forward/backward topological
+    levels (negative), ``k`` *supportive vertices* with full out/in-reachability stored as
+    bitmasks (one positive and two negative observations), and ``t`` extended topological
+    orderings carrying high/max (or low/min) indices (positive and negative). Inconclusive
+    queries fall back to a guided DFS that prunes on a definitive-negative test and shortcuts on
+    a definitive-positive one, so the answer is always exact. General graphs are reduced via SCC
+    condensation.
+
+    Hanauer, Schulz, Trummer, *O'Reach: Even Faster Reachability in Large Graphs*, SEA 2021.
+    (Supportive-vertex selection is a simplified central-level heuristic; the fallback is a
+    guided DFS rather than a pruned bidirectional BFS. Verified vs the BFS oracle.)
+
+    Parameters
+    ----------
+    k : int, optional
+        Number of supportive vertices (default 16, capped at 64).
+    p : int, optional
+        Candidate multiplier for supportive-vertex selection (default 50).
+    t : int, optional
+        Number of extended topological orderings (default 4; even = forward, odd = reverse).
+    seed : int, optional
+        RNG seed for ordering randomization (default 1), for reproducibility.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, OReach
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = OReach(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "oreach"
+
+    def __init__(self, k: int = 16, p: int = 50, t: int = 4, seed: int = 1):
+        self._core = _OReachCore(int(k), int(p), int(t), int(seed))
+        self._built = False
+        self.k = int(k)
+        self.t = int(t)
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL"]
+           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach"]
