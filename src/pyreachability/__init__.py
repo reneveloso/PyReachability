@@ -7,7 +7,7 @@ through :mod:`~pyreachability.catalog`.
 from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
-                    _TwoHopCore, _TFLabelCore, _TOLCore)
+                    _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -641,6 +641,58 @@ class TOL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class HL(ReachabilityIndex):
+    """HL: Hierarchical Labeling — a 2-hop oracle from a recursive reachability backbone.
+
+    A vertex hierarchy ``V0 ⊃ V1 ⊃ ... ⊃ Vh`` is built where each level is the reachability
+    backbone of the previous one (with ``eps=1`` the backbone is a vertex cover). The core is
+    labeled first and labels propagate down: for ``v`` at level ``i``, ``label_out(v)`` is ``v``
+    plus the union of ``label_out`` of its out-neighbours in ``G_i`` (all of which sit in the
+    backbone), and symmetrically for ``label_in``. ``u`` reaches ``v`` iff the two sets
+    intersect. Unlike PLL/TOL this uses a *hierarchy* rather than a flat vertex order, and needs
+    no transitive closure. A complete index. General graphs are reduced via SCC condensation.
+
+    Jin & Wang, *Simple, Fast, and Scalable Reachability Oracle*, PVLDB 6(14), 2013. (Ported
+    from the paper with locality ``eps=1`` — a vertex-cover backbone, vs the paper's ``eps=2``
+    FastCover; verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, HL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = HL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "hl"
+
+    def __init__(self):
+        self._core = _HLCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
-           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL"]
+           "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL"]

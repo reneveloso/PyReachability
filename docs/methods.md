@@ -41,7 +41,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ⬜ **Path-hop**
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ⬜ **DL** (Distribution Labeling)
-- ⬜ **HL** (Hierarchical Labeling)
+- ✅ **HL** (Hierarchical Labeling) — Jin & Wang, PVLDB 2013 (recursive reachability backbone).
 - ✅ **TOL** (Total Order Labeling) — Zhu, Lin, Wang, Xiao, SIGMOD 2014 (contribution-score order).
 - ⬜ **DBL** (dynamic)
 - ⬜ **O'Reach**
