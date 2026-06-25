@@ -5,21 +5,9 @@
 
 namespace reachability {
 
-bool PLL::intersects(vid_t s, vid_t t) const {
-    const auto& a = reach_to_[s];     // landmarks s reaches
-    const auto& b = reach_from_[t];   // landmarks that reach t
-    std::size_t i = 0, j = 0;
-    while (i < a.size() && j < b.size()) {
-        if (a[i] == b[j]) return true;
-        if (a[i] < b[j]) ++i; else ++j;
-    }
-    return false;
-}
-
 void PLL::build(const CSRGraph& dag) {
     n_ = dag.num_nodes();
-    reach_to_.assign(n_, {});
-    reach_from_.assign(n_, {});
+    L_.resize(n_);
     level_ = topological_levels(dag);
 
     // reverse adjacency (in-edges) for the backward pruned BFS
@@ -50,25 +38,25 @@ void PLL::build(const CSRGraph& dag) {
     for (vid_t i = 0; i < n_; ++i) {
         const vid_t start = ord[i].second;
 
-        // forward pruned BFS over out-edges -> fills L_in (reach_from_)
+        // forward pruned BFS over out-edges -> fills L_in
         vid_t qs = 0, qt = 0;
         q[qt++] = start;
         while (qs != qt) {
             vid_t v = q[qs++];
-            if (intersects(start, v)) continue;          // already decided -> prune
-            reach_from_[v].push_back(i);
+            if (two_hop_intersects(L_, start, v)) continue;   // already decided -> prune
+            L_.Lin[v].push_back(i);
             for (const vid_t* it = dag.out_begin(v); it != dag.out_end(v); ++it)
                 if (!visited[*it]) { visited[*it] = 1; q[qt++] = *it; }
         }
         for (vid_t j = 0; j < qt; ++j) visited[q[j]] = 0;
 
-        // reverse pruned BFS over in-edges -> fills L_out (reach_to_)
+        // reverse pruned BFS over in-edges -> fills L_out
         qs = qt = 0;
         q[qt++] = start;
         while (qs != qt) {
             vid_t v = q[qs++];
-            if (intersects(v, start)) continue;          // already decided -> prune
-            reach_to_[v].push_back(i);
+            if (two_hop_intersects(L_, v, start)) continue;   // already decided -> prune
+            L_.Lout[v].push_back(i);
             for (const vid_t* it = rdag.out_begin(v); it != rdag.out_end(v); ++it)
                 if (!visited[*it]) { visited[*it] = 1; q[qt++] = *it; }
         }
@@ -81,14 +69,11 @@ void PLL::build(const CSRGraph& dag) {
 bool PLL::query(vid_t u, vid_t v) const {
     if (u == v) return true;
     if (level_[u] >= level_[v]) return false;   // topological quick reject
-    return intersects(u, v);
+    return two_hop_intersects(L_, u, v);
 }
 
 std::size_t PLL::index_size_bytes() const {
-    std::size_t bytes = level_.size() * sizeof(vid_t);
-    for (vid_t v = 0; v < n_; ++v)
-        bytes += (reach_to_[v].size() + reach_from_[v].size()) * sizeof(vid_t);
-    return bytes;
+    return L_.size_bytes() + level_.size() * sizeof(vid_t);
 }
 
 }  // namespace reachability
