@@ -1,4 +1,6 @@
 #include "reachability/gripp.hpp"
+#include <algorithm>
+#include <queue>
 #include <vector>
 
 namespace reachability {
@@ -55,18 +57,33 @@ bool GRIPP::reaches(vid_t v, vid_t w) {
     if (v == w) return true;
     ++query_cnt_;
     const int qc = query_cnt_;
-    std::vector<vid_t> st;
-    st.push_back(tree_inst_[v]); stamp_[v] = qc;
-    while (!st.empty()) {
-        vid_t t = st.back(); st.pop_back();
-        const vid_t end = ipost_[t];
-        for (vid_t i = t; i <= end; ++i) {       // RIS(v): instances in the subtree
+    // Process hop nodes by ascending order-tree position (Sec. 4.1) and prune against the set U of
+    // already-processed hop ranges [start, end] (the four cases of Fig. 4):
+    //   (a) h already used as a hop node            -> skip (stamp_)
+    //   (b) h's tree instance lies inside some u in U -> RIS(h) subset RIS(u), skip entirely
+    //   (c) some u in U lies inside RIS(h)           -> skip that sub-range while scanning
+    //   (d) h's tree instance is a sibling of all u  -> no pruning (full scan)
+    std::priority_queue<vid_t, std::vector<vid_t>, std::greater<vid_t>> heap;
+    std::vector<std::pair<vid_t, vid_t>> U;
+    heap.push(tree_inst_[v]); stamp_[v] = qc;
+    while (!heap.empty()) {
+        vid_t th = heap.top(); heap.pop();
+        const vid_t end = ipost_[th];
+        bool covered = false;                                  // case (b)
+        for (const auto& u : U) if (u.first <= th && th <= u.second) { covered = true; break; }
+        if (covered) continue;
+        for (vid_t i = th; i <= end;) {
+            vid_t jump = -1;                                   // case (c): skip nested processed ranges
+            for (const auto& u : U) if (u.first > th && u.first <= i && i <= u.second) jump = std::max(jump, u.second);
+            if (jump >= 0) { i = jump + 1; continue; }
             if (inode_[i] == w) return true;
-            if (!itree_[i]) {                    // non-tree instance -> hop node
+            if (!itree_[i]) {                                  // non-tree instance -> hop node
                 vid_t h = inode_[i];
-                if (stamp_[h] != qc) { stamp_[h] = qc; st.push_back(tree_inst_[h]); }
+                if (stamp_[h] != qc) { stamp_[h] = qc; heap.push(tree_inst_[h]); }   // case (a) via stamp
             }
+            ++i;
         }
+        U.push_back({th, end});
     }
     return false;
 }

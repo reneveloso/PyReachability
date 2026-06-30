@@ -31,7 +31,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | both variants (c-param), max-τ tree cover, seed pruning + topological level filter | faithful |
 | Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(1) gridded TLC query | faithful |
 | Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
-| GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
+| GRIPP | hop technique + advanced 4-case pruning | hop technique + advanced 4-case pruning (ascending-order traversal) | faithful |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
 | IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |
 | PReaCH | contraction hierarchies + Lemmas 2–7 pruning | Lemmas 2–4; Lemmas 5–7 omitted | (B) speed |
@@ -106,8 +106,11 @@ the GRAIL topological level filter and seed-based pruning (`seeds` max-degree se
 but not t ⇒ unreachable"). The only remaining deviation is query-side: the approximate-interval
 fallback is a guided DFS rather than the paper's plain recursive expansion (same answers).
 
-**GRIPP (Trißl & Leser, 2007).** The hop technique is faithful; the paper's advanced relative-position
-pruning (four cases, ascending-preorder traversal) is omitted — a query-speed optimization only.
+**GRIPP (Trißl & Leser, 2007).** Faithful. The hop technique plus the paper's advanced relative-
+position pruning (Sec. 4.2): hop nodes are expanded in ascending order-tree position via a min-heap,
+and each candidate hop node `h` is pruned against the set `U` of already-used hop ranges by the four
+cases of Fig. 4 — (a) already used / (b) `h`'s tree instance inside some `u∈U` ⇒ skip `h`; (c) some
+`u∈U` nested inside `RIS(h)` ⇒ skip that sub-range during the scan; (d) sibling ⇒ full scan.
 
 **IP (Wei, Yu, Lu, 2014).** k-min-wise permutation labels and the topological-level helper are
 implemented; the second helper label (an interval, to further cut DFS) is omitted. Same answers.

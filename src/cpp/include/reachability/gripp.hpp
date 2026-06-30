@@ -17,9 +17,11 @@ namespace reachability {
 // A *complete* index of size O(n + m) with an online guided search (worst case O(m - n)). General
 // graphs are reduced via SCC condensation.
 //
-// Faithful to the hop technique with the basic do-not-re-expand-a-hop-node pruning; the paper's
-// advanced pruning (the four relative-position cases, ascending-preorder traversal) is omitted as
-// a speed optimisation. Verified vs the BFS oracle.
+// Faithful to the hop technique with the paper's advanced pruning (Sec. 4.2): hop nodes are
+// processed in ascending order-tree position, and each is pruned against the set U of already-used
+// hop ranges by the four relative-position cases of Fig. 4 — (a) already used, (b) its tree instance
+// lies inside some u in U (RIS(h) subset RIS(u)) => skip; (c) some u lies inside RIS(h) => skip that
+// sub-range; (d) sibling => full scan. Verified vs the BFS oracle.
 class GRIPP {
 public:
     GRIPP() = default;
