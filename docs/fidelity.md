@@ -35,7 +35,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
 | IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |
 | PReaCH | contraction hierarchies + Lemmas 2–7 pruning | Lemmas 2–4; Lemmas 5–7 omitted | (B) speed |
-| Optimal Chain Cover | minimum chains via **O(n²+bn√b)** stratification + virtual-node matching | minimum chains via textbook **Kuhn** matching | (B) speed (same minimum) |
+| Optimal Chain Cover | minimum chains via **O(n²+bn√b)** stratification + virtual-node matching | minimum chains via **Hopcroft-Karp** matching over full reachability (no stratified bipartite graphs) | (B) speed (same minimum) |
 
 ## Notes per deviation
 
@@ -115,6 +115,7 @@ single-DFS interval cuts (Lemmas 2–4) are implemented; the extra empty/full ra
 omitted — they sharpen pruning, not correctness.
 
 **Optimal Chain Cover (Chen & Chen, 2008).** The produced index is identical to the paper's: the
-*minimum* chain decomposition (verified to equal the Dilworth width). The paper computes it with an
-engineered O(n²+bn√b) stratification + virtual-node matching; we use textbook Kuhn maximum bipartite
-matching over the reachability relation (slower build, same minimum chains).
+*minimum* chain decomposition (verified to equal the Dilworth width). The maximum matching uses the
+**Hopcroft-Karp** algorithm (O(e√n)) — the matching algorithm the authors specify. We run it over
+the full reachability bipartite graph rather than building their stratified bipartite graphs with
+virtual nodes (a construction that reduces the edge count); same minimum number of chains, same index.

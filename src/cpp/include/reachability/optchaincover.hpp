@@ -19,11 +19,12 @@ namespace reachability {
 // recorded min position on v's chain is <= pos(v). A *complete* index. General graphs are reduced
 // via SCC condensation.
 //
-// Faithful to the scheme (minimum chains + the paper's index/index-sequence labeling). The minimum
-// decomposition is computed by textbook maximum bipartite matching (Kuhn) over the reachability
-// relation rather than Chen & Chen's stratification + virtual-node O(n^2 + bn*sqrt(b)) procedure —
-// the same minimum number of chains. Construction uses reachability bitsets, so this targets
-// small/medium graphs. Verified vs the BFS oracle.
+// Faithful to the scheme (minimum chains + the paper's index/index-sequence labeling). The maximum
+// matching uses the Hopcroft-Karp algorithm (O(e*sqrt(n))), as in Chen & Chen, over the full
+// reachability relation; we do not build their stratified bipartite graphs with virtual nodes (an
+// optimisation that reduces the edge count) — the same minimum number of chains, the same index.
+// Construction uses reachability bitsets, so this targets small/medium graphs. Verified vs the BFS
+// oracle.
 class OptimalChainCover {
 public:
     OptimalChainCover() = default;

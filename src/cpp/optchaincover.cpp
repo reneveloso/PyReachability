@@ -1,6 +1,8 @@
 #include "reachability/optchaincover.hpp"
 #include <algorithm>
+#include <climits>
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 namespace reachability {
@@ -39,28 +41,39 @@ void OptimalChainCover::build(const CSRGraph& dag) {
     }
 
     // minimum chain partition = n - maximum bipartite matching, edge u->v iff u reaches v (u!=v)
-    // (Dilworth). Kuhn's augmenting-path matching; matchR[v] = left vertex matched to right v.
+    // (Dilworth). The authors use the Hopcroft-Karp algorithm (O(e*sqrt(n))) for the matching;
+    // matchR[v] = left vertex matched to right v (predecessor of v), matchL[u] = successor of u.
     std::vector<vid_t> matchR(n_, -1), matchL(n_, -1);
-    std::vector<char> seen(n_);
-    for (vid_t s : topo) {
-        std::fill(seen.begin(), seen.end(), 0);
-        // recursive Kuhn augmenting search (graphs here are small/medium)
-        struct Aug {
-            const std::vector<std::uint64_t>& desc; vid_t W, n;
-            std::vector<vid_t>& matchR; std::vector<char>& seen;
-            bool run(vid_t u) {
-                for (vid_t v = 0; v < n; ++v) {
-                    if (v == u || seen[v]) continue;
-                    if (!((desc[(std::size_t)u * W + (v >> 6)] >> (v & 63)) & 1ULL)) continue;  // u !-> v
-                    seen[v] = 1;
-                    if (matchR[v] == -1 || run(matchR[v])) { matchR[v] = u; return true; }
+    {
+        const vid_t NIL = n_;
+        std::vector<int> dist(n_ + 1);
+        auto dget = [&](vid_t u, vid_t v) { return (desc[(std::size_t)u * W + (v >> 6)] >> (v & 63)) & 1ULL; };
+        std::vector<vid_t> Q(n_);
+        auto bfs = [&]() -> bool {                       // build layered graph from free left vertices
+            vid_t qs = 0, qt = 0;
+            for (vid_t u = 0; u < n_; ++u) { if (matchL[u] == -1) { dist[u] = 0; Q[qt++] = u; } else dist[u] = INT_MAX; }
+            dist[NIL] = INT_MAX;
+            while (qs < qt) {
+                vid_t u = Q[qs++];
+                if (dist[u] >= dist[NIL]) continue;
+                for (vid_t v = 0; v < n_; ++v) {
+                    if (v == u || !dget(u, v)) continue;
+                    vid_t wd = (matchR[v] == -1) ? NIL : matchR[v];
+                    if (dist[wd] == INT_MAX) { dist[wd] = dist[u] + 1; if (wd != NIL) Q[qt++] = wd; }
                 }
-                return false;
             }
-        } aug{desc, W, n_, matchR, seen};
-        aug.run(s);
+            return dist[NIL] != INT_MAX;
+        };
+        std::function<bool(vid_t)> dfs = [&](vid_t u) -> bool {   // vertex-disjoint augmenting paths
+            for (vid_t v = 0; v < n_; ++v) {
+                if (v == u || !dget(u, v)) continue;
+                vid_t w = matchR[v]; vid_t wd = (w == -1) ? NIL : w;
+                if (dist[wd] == dist[u] + 1 && (w == -1 || dfs(w))) { matchR[v] = u; matchL[u] = v; return true; }
+            }
+            dist[u] = INT_MAX; return false;
+        };
+        while (bfs()) for (vid_t u = 0; u < n_; ++u) if (matchL[u] == -1) dfs(u);
     }
-    for (vid_t v = 0; v < n_; ++v) if (matchR[v] != -1) matchL[matchR[v]] = v;
 
     // build chains: heads are vertices with no chain predecessor (matchR == -1), follow matchL
     vid_t nchains = 0;
