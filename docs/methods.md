@@ -27,7 +27,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **Tree Cover** — Agrawal, Borgida, Jagadish, SIGMOD 1989.
 - ✅ **GRAIL** — Yıldırım, Chaoji, Zaki, PVLDB 2010 (+ PP, level filter, bidirectional).
 - ⬜ **Tree+SSPI**
-- ⬜ **Dual labeling**
+- ✅ **Dual labeling** — Wang, He, Yang, Yu, Yu, ICDE 2006 (tree intervals + transitive link table).
 - ⬜ **GRIPP**
 - ⬜ **Path-tree**
 - ✅ **Ferrari** — Seufert, Anand, Bedathur, Weikum, ICDE 2013 (budgeted exact/approx intervals + guided search).
