@@ -135,7 +135,8 @@ catalog will grow to cover the survey's full plain-reachability list — see
 [`docs/methods.md`](docs/methods.md) for the source-backed coverage map.
 
 See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together and how to
-add a new method to the catalog, and [`docs/AI_GUIDE.md`](docs/AI_GUIDE.md) for contributor
+add a new method to the catalog, [`docs/fidelity.md`](docs/fidelity.md) for how faithfully each
+method follows its source publication, and [`docs/AI_GUIDE.md`](docs/AI_GUIDE.md) for contributor
 conventions, the method inclusion policy, and verified references.
 
 ## Roadmap
