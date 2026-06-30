@@ -28,23 +28,23 @@ TEST_CASE("IP matches brute force on dags for several params") {
         for (auto& gr : graphs) {
             vid_t n = 5;
             CSRGraph g(n, gr.first, gr.second);
-            IP idx; idx.build(g, k, np, 1);
+            IP idx; idx.build(g, k, np, 5, 100, 1);
             for (vid_t u = 0; u < n; ++u)
                 for (vid_t v = 0; v < n; ++v)
                     CHECK(idx.reaches(u, v) == bfs(g, u, v));
         }
     }
     CSRGraph g(5, graphs[0].first, graphs[0].second);
-    IP idx; idx.build(g, 2, 2, 1);
+    IP idx; idx.build(g, 2, 2, 5, 100, 1);
     CHECK(idx.index_size_bytes() > 0);
 }
 
 TEST_CASE("IP handles empty and disconnected graphs") {
     CSRGraph empty(0, {}, {});
-    IP e; e.build(empty, 2, 2, 1);
+    IP e; e.build(empty, 2, 2, 5, 100, 1);
 
     CSRGraph iso(4, {}, {});
-    IP idx; idx.build(iso, 2, 2, 1);
+    IP idx; idx.build(iso, 2, 2, 5, 100, 1);
     for (vid_t u = 0; u < 4; ++u)
         for (vid_t v = 0; v < 4; ++v)
             CHECK(idx.reaches(u, v) == (u == v));

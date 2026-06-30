@@ -1175,8 +1175,8 @@ class IP(ReachabilityIndex):
     graphs are reduced via SCC condensation.
 
     Wei, Yu, Lu, *Reachability Querying: An Independent Permutation Labeling Approach*, PVLDB 2014.
-    (Core k-min-wise scheme plus the topological-level helper; the interval helper label is
-    omitted. Verified vs the BFS oracle.)
+    The k-min-wise scheme plus both of the paper's additional labels (Sec. 6): the Level label
+    (forward + backward topological levels) and the Huge-Vertex label. Verified vs the BFS oracle.
 
     Parameters
     ----------
@@ -1184,6 +1184,10 @@ class IP(ReachabilityIndex):
         Number of smallest values kept per permutation (default 2).
     np : int, optional
         Number of independent permutations (default 2). More cuts, more space.
+    h : int, optional
+        Max huge vertices stored per Huge-Vertex label (default 5; 0 disables it).
+    mu : int, optional
+        Out-degree threshold above which a vertex is "huge" (default 100, the paper's value).
     seed : int, optional
         RNG seed (default 1), for reproducibility.
 
@@ -1200,8 +1204,8 @@ class IP(ReachabilityIndex):
 
     name = "ip"
 
-    def __init__(self, k: int = 2, np: int = 2, seed: int = 1):
-        self._core = _IPCore(int(k), int(np), int(seed))
+    def __init__(self, k: int = 2, np: int = 2, h: int = 5, mu: int = 100, seed: int = 1):
+        self._core = _IPCore(int(k), int(np), int(h), int(mu), int(seed))
         self._built = False
         self.k = int(k)
 

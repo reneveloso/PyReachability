@@ -33,7 +33,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + advanced 4-case pruning (ascending-order traversal) | faithful |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
-| IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |
+| IP | k-min-wise labels + Level label + Huge-Vertex label | k-min-wise + Level label (Lup+Ldown) + Huge-Vertex label | faithful |
 | PReaCH | contraction hierarchies + Lemmas 2–7 pruning | Lemmas 2–4; Lemmas 5–7 omitted | (B) speed |
 | Optimal Chain Cover | minimum chains via **O(n²+bn√b)** stratification + virtual-node matching | minimum chains via **Hopcroft-Karp** matching over full reachability (no stratified bipartite graphs) | (B) speed (same minimum) |
 
@@ -112,8 +112,12 @@ and each candidate hop node `h` is pruned against the set `U` of already-used ho
 cases of Fig. 4 — (a) already used / (b) `h`'s tree instance inside some `u∈U` ⇒ skip `h`; (c) some
 `u∈U` nested inside `RIS(h)` ⇒ skip that sub-range during the scan; (d) sibling ⇒ full scan.
 
-**IP (Wei, Yu, Lu, 2014).** k-min-wise permutation labels and the topological-level helper are
-implemented; the second helper label (an interval, to further cut DFS) is omitted. Same answers.
+**IP (Wei, Yu, Lu, 2014).** Faithful. The k-min-wise permutation labels plus both additional labels
+of Sec. 6: the **Level label** (forward `Lup` and backward `Ldown` topological levels — negative
+cuts) and the **Huge-Vertex label** `Lhv(v)` (Algorithm 3: up to `h` largest-out-degree vertices
+with out-degree > `µ` that reach `v`). During the DFS, at a huge current vertex `c`: `c∈Lhv(v)` ⇒
+reachable; `c∉Lhv(v)` with `Lhv(v)` not full, or `c` outranking its smallest member by out-degree, ⇒
+unreachable (Algorithm 4 lines 4–7). Defaults `h=5, µ=100` (the paper's).
 
 **PReaCH (Merz & Sanders, 2014).** Contraction-hierarchy ordering, forward/backward levels, and the
 single-DFS interval cuts (Lemmas 2–4) are implemented; the extra empty/full ranges of Lemmas 5–7 are

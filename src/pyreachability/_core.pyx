@@ -1465,13 +1465,17 @@ cdef class _IPCore:
     cdef vector[vid_t] _comp
     cdef int _k
     cdef int _np
+    cdef int _h
+    cdef int _mu
     cdef unsigned int _seed
     cdef bint _built
 
-    def __cinit__(self, int k=2, int np_=2, unsigned int seed=1):
+    def __cinit__(self, int k=2, int np_=2, int h=5, int mu=100, unsigned int seed=1):
         self._ip = new IP()
         self._k = k
         self._np = np_
+        self._h = h
+        self._mu = mu
         self._seed = seed
         self._built = False
 
@@ -1482,7 +1486,7 @@ cdef class _IPCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._ip.build(cond.dag, self._k, self._np, self._seed)
+        self._ip.build(cond.dag, self._k, self._np, self._h, self._mu, self._seed)
         self._built = True
 
     def query(self, int u, int v):

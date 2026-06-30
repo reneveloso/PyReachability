@@ -17,14 +17,18 @@ void keep_topk(std::vector<vid_t>& dst, std::vector<vid_t>& cands, int k) {
 }
 }  // namespace
 
-void IP::build(const CSRGraph& dag, int k, int np, unsigned seed) {
+void IP::build(const CSRGraph& dag, int k, int np, int h, int mu, unsigned seed) {
     n_ = dag.num_nodes();
     k_ = k < 1 ? 1 : k;
     np_ = np < 1 ? 1 : np;
+    h_ = h < 0 ? 0 : h;
+    mu_ = mu < 0 ? 0 : mu;
     fwd_ = dag;
     level_ = topological_levels(dag);
     lout_.assign((std::size_t)np_ * n_, {});
     lin_.assign((std::size_t)np_ * n_, {});
+    lhv_.assign(n_, {});
+    outdeg_.assign(n_, 0);
     stamp_.assign(n_, 0); query_cnt_ = 0;
     if (n_ == 0) return;
 
@@ -34,14 +38,38 @@ void IP::build(const CSRGraph& dag, int k, int np, unsigned seed) {
     for (vid_t u = 0; u < n_; ++u)
         for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it) { ++indeg[*it]; rs.push_back(*it); rd.push_back(u); }
     CSRGraph rev(n_, rs, rd);
+    ldown_ = topological_levels(rev);                 // backward topological level (Ldown)
+    for (vid_t u = 0; u < n_; ++u) outdeg_[u] = (vid_t)(dag.out_end(u) - dag.out_begin(u));
     std::vector<vid_t> topo; topo.reserve(n_);
     {
         std::vector<vid_t> ind = indeg, q;
         for (vid_t u = 0; u < n_; ++u) if (ind[u] == 0) q.push_back(u);
-        std::size_t h = 0;
-        while (h < q.size()) { vid_t u = q[h++]; topo.push_back(u);
+        std::size_t hh = 0;
+        while (hh < q.size()) { vid_t u = q[hh++]; topo.push_back(u);
             for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it)
                 if (--ind[*it] == 0) q.push_back(*it); }
+    }
+
+    // HV-Label (Algorithm 3): Lhv(u) = up to h largest-out-degree huge vertices (out-degree > mu)
+    // that reach u, propagated along in-neighbours in topological order.
+    if (h_ > 0) {
+        for (vid_t u = 0; u < n_; ++u) if (outdeg_[u] > (vid_t)mu_) lhv_[u].push_back(u);
+        std::vector<vid_t> tmp;
+        for (vid_t u : topo) {
+            for (const vid_t* it = rev.out_begin(u); it != rev.out_end(u); ++it) {   // in-neighbours
+                const std::vector<vid_t>& w = lhv_[*it];
+                if (w.empty()) continue;
+                tmp.clear();                              // union (both sorted by id), dedup
+                std::set_union(lhv_[u].begin(), lhv_[u].end(), w.begin(), w.end(), std::back_inserter(tmp));
+                if ((int)tmp.size() > h_) {               // keep the h largest by out-degree
+                    std::nth_element(tmp.begin(), tmp.begin() + h_, tmp.end(),
+                                     [&](vid_t a, vid_t b){ return outdeg_[a] > outdeg_[b]; });
+                    tmp.resize(h_);
+                    std::sort(tmp.begin(), tmp.end());    // restore id order for membership tests
+                }
+                lhv_[u].swap(tmp);
+            }
+        }
     }
 
     for (int p = 0; p < np_; ++p) {
@@ -91,7 +119,8 @@ inline bool not_subset(const std::vector<vid_t>& MA, const std::vector<vid_t>& M
 }  // namespace
 
 int IP::neg_cut(vid_t u, vid_t v) const {
-    if (level_[u] >= level_[v]) return 1;                       // topological level cut
+    if (level_[u] >= level_[v]) return 1;                       // Level label: Lup(u) >= Lup(v)
+    if (ldown_[u] <= ldown_[v]) return 1;                       // Level label: Ldown(u) <= Ldown(v)
     for (int p = 0; p < np_; ++p) {
         const std::size_t o = (std::size_t)p * n_;
         if (not_subset(lout_[o + u], lout_[o + v], k_)) return 1;   // Out(v) !subset Out(u)
@@ -100,9 +129,21 @@ int IP::neg_cut(vid_t u, vid_t v) const {
     return 0;
 }
 
+int IP::hv_cut(vid_t c, vid_t v) const {
+    if (h_ <= 0 || outdeg_[c] <= (vid_t)mu_) return 0;          // c is not a huge vertex
+    const std::vector<vid_t>& L = lhv_[v];
+    if (std::binary_search(L.begin(), L.end(), c)) return 1;    // c reaches v (c in Lhv(v))
+    if ((int)L.size() < h_) return -1;                         // room left, yet c absent -> c !-> v
+    vid_t mind = outdeg_[L[0]];                                 // Lhv(v) is full: compare out-degrees
+    for (vid_t w : L) mind = std::min(mind, outdeg_[w]);
+    if (outdeg_[c] > mind) return -1;                          // c would outrank a member -> c !-> v
+    return 0;
+}
+
 bool IP::reaches(vid_t u, vid_t v) {
     if (u == v) return true;
     if (neg_cut(u, v)) return false;
+    { int hv = hv_cut(u, v); if (hv > 0) return true; if (hv < 0) return false; }
 
     ++query_cnt_;
     const int qc = query_cnt_;
@@ -115,6 +156,9 @@ bool IP::reaches(vid_t u, vid_t v) {
             if (c == v) return true;
             if (stamp_[c] == qc) continue;
             if (neg_cut(c, v)) continue;          // c certainly cannot reach v -> prune
+            int hv = hv_cut(c, v);
+            if (hv > 0) return true;              // c reaches v via the HV-Label
+            if (hv < 0) continue;                 // c certainly cannot reach v -> prune
             stamp_[c] = qc; st.push_back(c);
         }
     }
@@ -122,9 +166,10 @@ bool IP::reaches(vid_t u, vid_t v) {
 }
 
 std::size_t IP::index_size_bytes() const {
-    std::size_t b = level_.size() * sizeof(vid_t);
+    std::size_t b = (level_.size() + ldown_.size() + outdeg_.size()) * sizeof(vid_t);
     for (const auto& l : lout_) b += l.size() * sizeof(vid_t);
     for (const auto& l : lin_) b += l.size() * sizeof(vid_t);
+    for (const auto& l : lhv_) b += l.size() * sizeof(vid_t);
     return b;
 }
 
