@@ -10,8 +10,10 @@ namespace reachability {
 // covering structure is a tree of *paths* (a path-tree cover).
 //
 // Construction: (1) decompose the DAG into paths (Simon's algorithm), giving each vertex (pid,
-// sid); (2) form the path-graph (a node per path, an edge per connected path-pair); (3) take a
-// spanning arborescence (SP-tree) of it; (4) label the path-tree cover with a 3-tuple
+// sid); (2) form the weighted path-graph (a node per path, an edge per connected path-pair, with
+// the MinPathIndex weight w_{Pi->Pj} = |Pi[->u]|, u the last vertex in Pi reaching Pj); (3) take the
+// *maximum-weight* directed spanning tree (SP-tree) by the Chu-Liu/Edmonds algorithm, which
+// minimises the residual index size (Section 2.3); (4) label the path-tree cover with a 3-tuple
 // (X, I.begin, I.end): X by a post-order DFS over the cover (Algorithm 2), I the SP-tree interval
 // of a vertex's path. By Lemma 4, u reaches v *within the cover* iff X(u) <= X(v) and v's path
 // interval is contained in u's. (5) The reachability not captured by the cover is compressed into
@@ -19,11 +21,12 @@ namespace reachability {
 // or coverReach(x, v) for some x in Rc(u). A *complete* index. General graphs are reduced via SCC
 // condensation.
 //
-// Independent implementation from the paper (no public reference code). Documented simplifications
-// (affecting index size, not correctness): the minimal-equivalent-edge-set step is skipped (all
-// edges of an SP-tree path-pair are used — reachability-equivalent); the SP-tree is a greedy
-// spanning arborescence rather than Edmonds' maximum-weight one; the residual is scanned linearly
-// (vs the paper's O(log^2 k)). Verified vs the BFS oracle.
+// Independent implementation from the paper (no public reference code). The SP-tree is the paper's
+// Edmonds maximum arborescence. Remaining deviations affect query speed, not the index or answers:
+// reachability within the cover uses all edges of a tree path-pair rather than the minimal-
+// equivalent edge set (reachability-equivalent, and the residual Rc is domination-minimised either
+// way), and the residual is scanned linearly instead of the paper's O(log^2 k) gridding query.
+// Verified vs the BFS oracle.
 class PathTree {
 public:
     PathTree() = default;

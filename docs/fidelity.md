@@ -32,7 +32,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(t) link-table scan | (B) query speed |
 | Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
-| Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | greedy spanning arborescence; all SP-tree-pair edges; linear residual scan | (A) larger index + (B) speed |
+| Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
 | IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |
 | PReaCH | contraction hierarchies + Lemmas 2–7 pruning | Lemmas 2–4; Lemmas 5–7 omitted | (B) speed |
 | Optimal Chain Cover | minimum chains via **O(n²+bn√b)** stratification + virtual-node matching | minimum chains via textbook **Kuhn** matching | (B) speed (same minimum) |
@@ -80,10 +80,13 @@ BFS. Same observations, same answers.
   use DFS) over the §5 *minimal-equivalent-graph* (the unique transitive reduction of the DAG), which
   we now compute to shrink the non-tree edge set `t`. The remaining deviation is query-side: we scan
   the link table in O(t) instead of the paper's O(1) gridding/snapping counter (same answers).
-- **Path-Tree (Jin et al., 2011)** uses an *Edmonds maximum-weight* SP-tree over the path-graph plus
-  the *minimal equivalent edge set*; we use a greedy spanning arborescence and all SP-tree-pair
-  edges, so the residual/index is larger. Query scans the residual linearly (vs the paper's
-  O(log²k)).
+- **Path-Tree (Jin et al., 2011)** uses an *Edmonds maximum-weight* SP-tree over the weighted
+  path-graph; we build exactly that (Chu-Liu/Edmonds with the paper's MinPathIndex weights
+  `w_{Pi→Pj}=|Pi[→u]|`, virtual-root spanning forest). The remaining deviations are query-side only:
+  cover reachability uses all edges of a tree path-pair instead of the *minimal equivalent edge set*
+  (reachability-equivalent — and the per-vertex residual `Rc` is domination-minimised regardless, so
+  the stored index is unaffected), and the residual is scanned linearly instead of the paper's
+  O(log²k) gridding query.
 
 **Ferrari (Seufert et al., 2013).** We implement the per-vertex-budget variant (Ferrari-L), one of the
 paper's two variants, plus the topological-level filter. The global-budget variant (Ferrari-G) and

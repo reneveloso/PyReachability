@@ -1,8 +1,65 @@
 #include "reachability/pathtree.hpp"
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 namespace reachability {
+
+namespace {
+
+struct PEdge { vid_t u, v; long long w; };
+
+// Chu-Liu/Edmonds *maximum* arborescence rooted at `root`. Returns, for each node v != root, the
+// index into `edges` of its chosen incoming edge (res[root] = -1). Every non-root node must have at
+// least one incoming edge (guaranteed here by the weight-0 virtual-root edges). O(V*E) per phase,
+// with at most V phases — fine since the path-graph is small (K = path-decomposition width).
+std::vector<int> max_arborescence(vid_t V, vid_t root, const std::vector<PEdge>& edges) {
+    std::vector<long long> inw(V, std::numeric_limits<long long>::min());
+    std::vector<int> ine(V, -1);
+    for (int i = 0; i < (int)edges.size(); ++i) {
+        const PEdge& e = edges[i];
+        if (e.v != root && e.w > inw[e.v]) { inw[e.v] = e.w; ine[e.v] = i; }
+    }
+    // detect cycles in the "pick best in-edge" functional graph
+    std::vector<int> id(V, -1), vis(V, -1);
+    int cyc = 0;
+    for (vid_t v = 0; v < V; ++v) {
+        if (v == root) continue;
+        vid_t u = v;
+        while (u != root && vis[u] != (int)v && id[u] == -1) { vis[u] = (int)v; u = edges[ine[u]].u; }
+        if (u != root && id[u] == -1) {                 // new cycle through u
+            vid_t w = u;
+            do { id[w] = cyc; w = edges[ine[w]].u; } while (w != u);
+            ++cyc;
+        }
+    }
+    if (cyc == 0) {                                       // no cycle: best in-edges form the tree
+        std::vector<int> res(V, -1);
+        for (vid_t v = 0; v < V; ++v) if (v != root) res[v] = ine[v];
+        return res;
+    }
+    for (vid_t v = 0; v < V; ++v) if (id[v] == -1) id[v] = cyc++;   // singletons
+    std::vector<PEdge> ne; std::vector<int> orig;        // contracted graph (weights discounted)
+    for (int i = 0; i < (int)edges.size(); ++i) {
+        const PEdge& e = edges[i];
+        int a = id[e.u], b = id[e.v];
+        if (a != b) { ne.push_back({(vid_t)a, (vid_t)b, e.w - inw[e.v]}); orig.push_back(i); }
+    }
+    std::vector<int> sub = max_arborescence((vid_t)cyc, (vid_t)id[root], ne);
+    std::vector<int> res(V, -1);
+    std::vector<char> ext(V, 0);
+    for (int c = 0; c < cyc; ++c) {                       // expand: external edge into each component
+        if (c == id[root]) continue;
+        int se = sub[c];
+        if (se < 0) continue;
+        int oi = orig[se];
+        res[edges[oi].v] = oi; ext[edges[oi].v] = 1;      // the real node the external edge enters
+    }
+    for (vid_t v = 0; v < V; ++v) if (v != root && !ext[v]) res[v] = ine[v];   // rest keep cycle edges
+    return res;
+}
+
+}  // namespace
 
 void PathTree::build(const CSRGraph& dag) {
     n_ = dag.num_nodes();
@@ -49,38 +106,40 @@ void PathTree::build(const CSRGraph& dag) {
     }
     const vid_t K = (vid_t)paths.size();
 
-    // Step 2/3: path-graph + spanning arborescence (SP-tree). Virtual root = K.
-    std::vector<std::vector<vid_t>> padj(K);
+    // Step 2/3: weighted path-graph + maximum-weight SP-tree (Chu-Liu/Edmonds). Each node is a path;
+    // edge Pi->Pj has the MinPathIndex weight w_{Pi->Pj} = |Pi[->u]| where u is the last vertex in Pi
+    // reaching Pj (= max sid among Pi-endpoints of edges into Pj, plus one). A virtual root (id K)
+    // links to every path with weight 0, so the maximum arborescence is a spanning forest that
+    // maximises covered weight = minimises the residual index size (paper Section 2.3).
+    std::vector<PEdge> pedges;
     {
-        // collect distinct path-pairs i->j (i!=j)
-        std::vector<std::vector<vid_t>> tmp(K);
         std::vector<vid_t> mark(K, -1);
-        for (vid_t u = 0; u < n_; ++u) {
-            vid_t i = pid_[u];
-            for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it) {
-                vid_t j = pid_[*it];
-                if (j != i && mark[j] != i) { mark[j] = i; tmp[i].push_back(j); }
-            }
+        std::vector<long long> wbest(K, 0);
+        std::vector<vid_t> touched;
+        for (vid_t i = 0; i < K; ++i) {
+            touched.clear();
+            for (vid_t u : paths[i])
+                for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it) {
+                    vid_t j = pid_[*it];
+                    if (j == i) continue;
+                    long long cand = (long long)sid[u] + 1;          // |Pi[->u]|
+                    if (mark[j] != i) { mark[j] = i; wbest[j] = cand; touched.push_back(j); }
+                    else if (cand > wbest[j]) wbest[j] = cand;
+                }
+            for (vid_t j : touched) pedges.push_back({i, j, wbest[j]});
         }
-        padj.swap(tmp);
+        for (vid_t j = 0; j < K; ++j) pedges.push_back({K, j, 0});   // virtual-root edges
     }
     std::vector<vid_t> ppar(K, -1), plevel(K, 0);
     std::vector<std::vector<vid_t>> pchild(K + 1);     // children in SP-tree (incl. virtual root K)
     {
-        std::vector<char> vis(K, 0);
-        std::vector<vid_t> bfs;
-        for (vid_t p = 0; p < K; ++p) {
-            if (vis[p]) continue;
-            vis[p] = 1; ppar[p] = K; pchild[K].push_back(p); plevel[p] = 1;
-            std::size_t head = bfs.size(); bfs.push_back(p);
-            while (head < bfs.size()) {
-                vid_t i = bfs[head++];
-                for (vid_t j : padj[i]) if (!vis[j]) {
-                    vis[j] = 1; ppar[j] = i; pchild[i].push_back(j); plevel[j] = plevel[i] + 1;
-                    bfs.push_back(j);
-                }
-            }
-        }
+        std::vector<int> sel = max_arborescence(K + 1, K, pedges);
+        for (vid_t j = 0; j < K; ++j) { int ei = sel[j]; ppar[j] = (ei < 0) ? K : pedges[ei].u; }
+        for (vid_t j = 0; j < K; ++j) pchild[ppar[j]].push_back(j);
+        std::vector<vid_t> q;
+        for (vid_t c : pchild[K]) { plevel[c] = 1; q.push_back(c); }
+        std::size_t head = 0;
+        while (head < q.size()) { vid_t i = q[head++]; for (vid_t c : pchild[i]) { plevel[c] = plevel[i] + 1; q.push_back(c); } }
     }
 
     // SP-tree interval labeling (post-order over the tree rooted at virtual root K)
