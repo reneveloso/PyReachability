@@ -27,22 +27,22 @@ TEST_CASE("O'Reach matches brute force on dags") {
     for (auto& gr : graphs) {
         vid_t n = 5;
         CSRGraph g(n, gr.first, gr.second);
-        OReach idx; idx.build(g, 4, 8, 4, 1);
+        OReach idx; idx.build(g, 4, 8, 8, 4, 1);
         for (vid_t u = 0; u < n; ++u)
             for (vid_t v = 0; v < n; ++v)
                 CHECK(idx.reaches(u, v) == bfs(g, u, v));
     }
     CSRGraph g(5, graphs[0].first, graphs[0].second);
-    OReach idx; idx.build(g, 4, 8, 4, 1);
+    OReach idx; idx.build(g, 4, 8, 8, 4, 1);
     CHECK(idx.index_size_bytes() > 0);
 }
 
 TEST_CASE("O'Reach handles empty and disconnected graphs") {
     CSRGraph empty(0, {}, {});
-    OReach e; e.build(empty, 4, 8, 4, 1);
+    OReach e; e.build(empty, 4, 8, 8, 4, 1);
 
     CSRGraph iso(4, {}, {});
-    OReach idx; idx.build(iso, 4, 8, 4, 1);
+    OReach idx; idx.build(iso, 4, 8, 8, 4, 1);
     for (vid_t u = 0; u < 4; ++u)
         for (vid_t v = 0; v < 4; ++v)
             CHECK(idx.reaches(u, v) == (u == v));

@@ -708,24 +708,29 @@ class HL(ReachabilityIndex):
 class OReach(ReachabilityIndex):
     """O'Reach: constant-time observations + guided-search fallback (a partial index).
 
-    A battery of sound constant-time tests resolves most queries: forward/backward topological
-    levels (negative), ``k`` *supportive vertices* with full out/in-reachability stored as
-    bitmasks (one positive and two negative observations), and ``t`` extended topological
-    orderings carrying high/max (or low/min) indices (positive and negative). Inconclusive
-    queries fall back to a guided DFS that prunes on a definitive-negative test and shortcuts on
-    a definitive-positive one, so the answer is always exact. General graphs are reduced via SCC
-    condensation.
+    A battery of sound constant-time tests resolves most queries (in the paper's order):
+    forward/backward topological levels (negative), ``k`` *supportive vertices* with full
+    out/in-reachability stored as bitmasks (one positive and two negative observations), ``t``
+    extended topological orderings carrying high/max (or low/min) indices (positive and negative),
+    and a weakly-connected-component check (negative). Inconclusive queries fall back to a pruning
+    *bidirectional* BFS that applies the same observations to each newly seen vertex — shortcutting
+    on a definitive-positive test and pruning on a definitive-negative one — so the answer is always
+    exact. General graphs are reduced via SCC condensation.
 
     Hanauer, Schulz, Trummer, *O'Reach: Even Faster Reachability in Large Graphs*, SEA 2021.
-    (Supportive-vertex selection is a simplified central-level heuristic; the fallback is a
-    guided DFS rather than a pruned bidirectional BFS. Verified vs the BFS oracle.)
+    Faithful: supportive vertices use the paper's slim-level selection (top-k by |R⁺|·|R⁻|),
+    orderings start from sources, and the fallback is the pruning bidirectional BFS. Verified vs
+    the BFS oracle.
 
     Parameters
     ----------
     k : int, optional
         Number of supportive vertices (default 16, capped at 64).
     p : int, optional
-        Candidate multiplier for supportive-vertex selection (default 50).
+        Candidates-per-support multiplier for selection (default 75; candidate set size ≈ ``kp``).
+    h : int, optional
+        Slim-level threshold (default 8): a topological level with ≤ ``h`` vertices is "slim" and
+        its vertices become supportive-vertex candidates.
     t : int, optional
         Number of extended topological orderings (default 4; even = forward, odd = reverse).
     seed : int, optional
@@ -744,8 +749,8 @@ class OReach(ReachabilityIndex):
 
     name = "oreach"
 
-    def __init__(self, k: int = 16, p: int = 50, t: int = 4, seed: int = 1):
-        self._core = _OReachCore(int(k), int(p), int(t), int(seed))
+    def __init__(self, k: int = 16, p: int = 75, h: int = 8, t: int = 4, seed: int = 1):
+        self._core = _OReachCore(int(k), int(p), int(h), int(t), int(seed))
         self._built = False
         self.k = int(k)
         self.t = int(t)

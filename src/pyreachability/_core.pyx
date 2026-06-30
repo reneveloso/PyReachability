@@ -984,14 +984,16 @@ cdef class _OReachCore:
     cdef vector[vid_t] _comp
     cdef int _k
     cdef int _p
+    cdef int _h
     cdef int _t
     cdef unsigned int _seed
     cdef bint _built
 
-    def __cinit__(self, int k=16, int p=50, int t=4, unsigned int seed=1):
+    def __cinit__(self, int k=16, int p=75, int h=8, int t=4, unsigned int seed=1):
         self._or = new OReach()
         self._k = k
         self._p = p
+        self._h = h
         self._t = t
         self._seed = seed
         self._built = False
@@ -1003,7 +1005,7 @@ cdef class _OReachCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._or.build(cond.dag, self._k, self._p, self._t, self._seed)
+        self._or.build(cond.dag, self._k, self._p, self._h, self._t, self._seed)
         self._built = True
 
     def query(self, int u, int v):

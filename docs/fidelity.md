@@ -26,7 +26,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | linear 2-approx densest (paper's own baseline) + linear segment lookup | (B) speed |
 | TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
 | HL | recursive backbone with ε=2 (FastCover) | recursive FastCover backbone, ε=2 (Formulas 4-5) | faithful |
-| O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
+| O'Reach | slim/central supportive-vertex selection; B2/B4/B5/B6 + T1-T6 + S1-S3; pruned bidirectional BFS | same — slim-level selection, WCC (B2), all observations in the paper's test order, pruning bidirectional BFS | faithful |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | both variants (c-param), max-τ tree cover, seed pruning + topological level filter | faithful |
 | Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(t) link-table scan | (B) query speed |
@@ -61,11 +61,16 @@ pairs within distance ε+1; the core graph is labeled with a vertex-id 2-hop and
 by Formulas 4–5 (the ⌈ε/2⌉-hop neighbours plus the nearest-backbone label sets Bout^ε / Bin^ε). ε is
 exposed as a constructor parameter (`HL(eps=...)`, default 2).
 
-**O'Reach (Hanauer, Schulz, Trummer, 2021).** Topological levels, supportive vertices (full R⁺/R⁻),
-and extended topological orderings are implemented faithfully. The supportive-vertex *selection* uses
-a simplified central-level heuristic (the paper's strategy is tunable), the optional seed-pruning
-labels are omitted, and the fallback is a guided DFS rather than the paper's pruned bidirectional
-BFS. Same observations, same answers.
+**O'Reach (Hanauer, Schulz, Trummer, 2021).** Faithful. Forward/backward topological levels,
+weakly-connected components (Observation B2), `t` extended topological orderings started from
+sources (Observations B4, T1–T6), and `k` supportive vertices with full R⁺/R⁻ (Observations S1–S3)
+are all implemented, and the constant-time tests run in the paper's prescribed order (B5/B6 → S1 →
+first ordering → S2/S3 → remaining orderings → B2). Supportive-vertex selection follows the paper's
+most-successful strategy: candidates are the vertices on slim forward/backward levels (≤ `h` each),
+capped at `kp` and filled at random from central forward levels, then the top-`k` by |R⁺(v)|·|R⁻(v)|.
+The inconclusive-query fallback is the paper's pruning bidirectional BFS (each newly seen vertex is
+tested with the observations: positive ⇒ answer yes, negative ⇒ prune). Defaults match the paper
+(k=16, p=75, h=8, t=4).
 
 **Spanning structure per paper (verified).** The tree-cover-family methods differ in which tree the
 *authors* use, so we follow each one:
