@@ -17,10 +17,12 @@ namespace reachability {
 // pre(v) in [a_u, b_u) (tree) or some link i -> [j, k) in T has i in [a_u, b_u) and pre(v) in
 // [j, k). A *complete* index of size O(n + t^2). General graphs are reduced via SCC condensation.
 //
-// Faithful to the dual-label scheme and Theorem 1. The O(1) TLC counting function N(x, y) with
-// gridding/snapping (paper Sec. 3.2-3.3) is a query-time accelerator and is represented here by a
-// direct scan of the (small, for sparse graphs) link table; a plain DFS spanning tree is used
-// instead of the optimum spanning tree of Sec. 5. Verified vs the BFS oracle.
+// Faithful to the dual-label scheme (Dual-I). Queries run in O(1) via the TLC counting function
+// N(x, y) = #{links i -> [j, k) : i >= x, y in [j, k)} with gridding/snapping (paper Sec. 3.2-3.3):
+// v is reachable from u via non-tree links iff N(a_u, pre_v) - N(b_u, pre_v) > 0, and both counts
+// are O(1) grid look-ups after snapping coordinates to grid cells. The spanning tree is a DFS tree
+// over the minimal equivalent graph (Sec. 5 transitive reduction, to minimise t). Verified vs the
+// BFS oracle.
 class DualLabeling {
 public:
     DualLabeling() = default;
@@ -34,7 +36,10 @@ private:
 
     vid_t n_ = 0;
     std::vector<vid_t> pre_, a_, b_;        // preorder number; interval [a, b)
-    std::vector<Link> tlc_;                 // transitive link table
+    // Dual-I gridded TLC: gridN_[r*(ncols_+1)+c] = #links covering y-cell r with column index >= c.
+    vid_t ncols_ = 0, ncells_ = 0;
+    std::vector<vid_t> colof_, rowof_;      // coordinate -> grid column / y-cell (rowof_ = -1: none)
+    std::vector<vid_t> gridN_;
 };
 
 }  // namespace reachability

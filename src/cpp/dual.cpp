@@ -9,7 +9,7 @@ namespace reachability {
 void DualLabeling::build(const CSRGraph& dag) {
     n_ = dag.num_nodes();
     pre_.assign(n_, 0); a_.assign(n_, 0); b_.assign(n_, 0);
-    tlc_.clear();
+    ncols_ = ncells_ = 0; colof_.clear(); rowof_.clear(); gridN_.clear();
     if (n_ == 0) return;
 
     // Section 5: reduce G to its minimal equivalent graph (the unique transitive reduction of a
@@ -102,20 +102,53 @@ void DualLabeling::build(const CSRGraph& dag) {
             }
         }
     }
-    tlc_.swap(all);
+    // Dual-I gridding/snapping (Sec. 3.2-3.3): precompute the TLC function N(x,y) on a grid so that
+    // each query is O(1). Columns = distinct link x-coordinates i; y-cells = gaps between distinct
+    // link break-points {j, k}. gridN_[r][c] = #{links covering y-cell r with column index >= c}.
+    std::vector<vid_t> X, Yb;
+    X.reserve(all.size()); Yb.reserve(2 * all.size());
+    for (const Link& l : all) { X.push_back(l.i); Yb.push_back(l.j); Yb.push_back(l.k); }
+    std::sort(X.begin(), X.end()); X.erase(std::unique(X.begin(), X.end()), X.end());
+    std::sort(Yb.begin(), Yb.end()); Yb.erase(std::unique(Yb.begin(), Yb.end()), Yb.end());
+    ncols_ = (vid_t)X.size();
+    ncells_ = Yb.empty() ? 0 : (vid_t)Yb.size() - 1;
+
+    colof_.assign(n_ + 1, 0);                 // colof_[x] = #{distinct i < x} = first column with X[c] >= x
+    for (vid_t x = 0; x <= n_; ++x)
+        colof_[x] = (vid_t)(std::lower_bound(X.begin(), X.end(), x) - X.begin());
+    rowof_.assign(n_ + 1, (vid_t)-1);         // rowof_[y] = y-cell containing y, or -1
+    for (vid_t y = 0; y <= n_; ++y) {
+        vid_t idx = (vid_t)(std::upper_bound(Yb.begin(), Yb.end(), y) - Yb.begin());
+        if (idx >= 1 && idx <= ncells_) rowof_[y] = idx - 1;   // cell [Yb[idx-1], Yb[idx])
+    }
+    if (ncells_ > 0) {
+        gridN_.assign((std::size_t)ncells_ * (ncols_ + 1), 0);
+        for (const Link& l : all) {
+            vid_t ci = (vid_t)(std::lower_bound(X.begin(), X.end(), l.i) - X.begin());
+            vid_t rj = (vid_t)(std::lower_bound(Yb.begin(), Yb.end(), l.j) - Yb.begin());
+            vid_t rk = (vid_t)(std::lower_bound(Yb.begin(), Yb.end(), l.k) - Yb.begin());
+            for (vid_t r = rj; r < rk; ++r) ++gridN_[(std::size_t)r * (ncols_ + 1) + ci];
+        }
+        for (vid_t r = 0; r < ncells_; ++r) {            // suffix-sum across columns
+            vid_t* row = &gridN_[(std::size_t)r * (ncols_ + 1)];
+            for (vid_t c = ncols_; c-- > 0;) row[c] += row[c + 1];
+        }
+    }
 }
 
 bool DualLabeling::query(vid_t u, vid_t v) const {
     if (u == v) return true;
     const vid_t c = pre_[v];
     if (a_[u] <= c && c < b_[u]) return true;                 // tree reachability
-    for (const Link& l : tlc_)                                 // Theorem 1: non-tree reachability
-        if (a_[u] <= l.i && l.i < b_[u] && l.j <= c && c < l.k) return true;
-    return false;
+    if (ncells_ == 0) return false;
+    const vid_t r = rowof_[c];                                // Theorem 1 via TLC: N(a_u,c) - N(b_u,c) > 0
+    if (r == (vid_t)-1) return false;
+    const vid_t* row = &gridN_[(std::size_t)r * (ncols_ + 1)];
+    return row[colof_[a_[u]]] > row[colof_[b_[u]]];
 }
 
 std::size_t DualLabeling::index_size_bytes() const {
-    return (pre_.size() + a_.size() + b_.size()) * sizeof(vid_t) + tlc_.size() * sizeof(Link);
+    return (pre_.size() + a_.size() + b_.size() + colof_.size() + rowof_.size() + gridN_.size()) * sizeof(vid_t);
 }
 
 }  // namespace reachability

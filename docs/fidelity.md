@@ -29,7 +29,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | O'Reach | slim/central supportive-vertex selection; B2/B4/B5/B6 + T1-T6 + S1-S3; pruned bidirectional BFS | same — slim-level selection, WCC (B2), all observations in the paper's test order, pruning bidirectional BFS | faithful |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | both variants (c-param), max-τ tree cover, seed pruning + topological level filter | faithful |
-| Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(t) link-table scan | (B) query speed |
+| Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(1) gridded TLC query | faithful |
 | Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
@@ -82,9 +82,11 @@ tested with the observations: positive ⇒ answer yes, negative ⇒ prune). Defa
   tree-cover too. Faithful tree; the only deviation is that we store each vertex's own non-tree
   predecessors and resolve the paper's predecessor *inheritance* at query time (same answers).
 - **Dual-labeling (Wang et al., 2006)** uses "a spanning tree" (no specific algorithm mandated; we
-  use DFS) over the §5 *minimal-equivalent-graph* (the unique transitive reduction of the DAG), which
-  we now compute to shrink the non-tree edge set `t`. The remaining deviation is query-side: we scan
-  the link table in O(t) instead of the paper's O(1) gridding/snapping counter (same answers).
+  use DFS) over the §5 *minimal-equivalent-graph* (the unique transitive reduction of the DAG), to
+  shrink the non-tree edge set `t`. Queries now use the paper's Dual-I O(1) TLC counter: the count
+  function `N(x,y)` is precomputed on a grid (columns = distinct link x-coordinates, rows = gaps
+  between distinct link break-points), and `N(a_u,pre_v) - N(b_u,pre_v) > 0` is evaluated by two O(1)
+  grid look-ups after snapping coordinates (Sec. 3.2-3.3). Faithful.
 - **Path-Tree (Jin et al., 2011)** uses an *Edmonds maximum-weight* SP-tree over the weighted
   path-graph; we build exactly that (Chu-Liu/Edmonds with the paper's MinPathIndex weights
   `w_{Pi→Pj}=|Pi[→u]|`, virtual-root spanning forest). The remaining deviations are query-side only:
