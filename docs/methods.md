@@ -26,7 +26,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 ### Tree Cover class
 - ✅ **Tree Cover** — Agrawal, Borgida, Jagadish, SIGMOD 1989.
 - ✅ **GRAIL** — Yıldırım, Chaoji, Zaki, PVLDB 2010 (+ PP, level filter, bidirectional).
-- ⬜ **Tree+SSPI**
+- ✅ **Tree+SSPI** — Chen, Gupta, Kurul, VLDB 2005 (tree-cover + surrogate/surplus predecessor index).
 - ✅ **Dual labeling** — Wang, He, Yang, Yu, Yu, ICDE 2006 (tree intervals + transitive link table).
 - ⬜ **GRIPP**
 - ⬜ **Path-tree**

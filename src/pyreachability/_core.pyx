@@ -5,7 +5,7 @@ import numpy as np
 import gzip
 import array as _pyarray
 from libcpp.vector cimport vector
-from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling
+from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling, TreeSSPI
 
 cnp.import_array()
 
@@ -1277,3 +1277,61 @@ cdef class _DualLabelingCore:
 
     def index_size_bytes(self):
         return self._dl.index_size_bytes() + self._comp.size() * sizeof(int)
+
+cdef class _TreeSSPICore:
+    cdef TreeSSPI* _ts
+    cdef vector[vid_t] _comp
+    cdef bint _built
+
+    def __cinit__(self):
+        self._ts = new TreeSSPI()
+        self._built = False
+
+    def __dealloc__(self):
+        if self._ts != NULL:
+            del self._ts
+
+    def build(self, Graph graph):
+        cdef Condensation cond = scc_condense(graph._g[0])
+        self._comp = cond.comp
+        self._ts.build(cond.dag)
+        self._built = True
+
+    def query(self, int u, int v):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef int n = <int>self._comp.size()
+        if u < 0 or u >= n or v < 0 or v >= n:
+            raise IndexError("vertex id out of range")
+        cdef vid_t cu = self._comp[u]
+        cdef vid_t cv = self._comp[v]
+        if cu == cv:
+            return True
+        return self._ts.reaches(cu, cv)
+
+    def query_batch(self, pairs):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        cdef int n = <int>self._comp.size()
+        if m and (int(p.min()) < 0 or int(p.max()) >= n):
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef vector[vid_t]* comp = &self._comp
+        cdef TreeSSPI* ts = self._ts
+        cdef vid_t cu, cv
+        with nogil:
+            for i in range(m):
+                cu = comp[0][pv[i, 0]]; cv = comp[0][pv[i, 1]]
+                if cu == cv:
+                    ov[i] = 1
+                else:
+                    ov[i] = 1 if ts.reaches(cu, cv) else 0
+        return out.view(np.bool_)
+
+    def index_size_bytes(self):
+        return self._ts.index_size_bytes() + self._comp.size() * sizeof(int)

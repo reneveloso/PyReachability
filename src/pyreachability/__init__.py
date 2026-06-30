@@ -8,7 +8,8 @@ from ._version import __version__
 from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
-                    _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore)
+                    _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore,
+                    _TreeSSPICore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -982,7 +983,59 @@ class DualLabeling(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class TreeSSPI(ReachabilityIndex):
+    """Tree+SSPI: tree-cover intervals + a Surrogate & Surplus Predecessor Index.
+
+    A spanning tree is preorder interval-labeled, so tree ("ppure") reachability is interval
+    containment. The remaining reachability (paths through non-tree edges) is carried by the SSPI:
+    each vertex keeps a predecessor list of the tails of its non-tree in-edges. ``x`` reaches
+    ``y`` iff ``x`` is a tree-ancestor of ``y``, or — searching the SSPI transitively, with
+    predecessor inheritance along tree ancestors — some predecessor reachable to ``y`` is itself
+    tree-reached by ``x``. A complete index (always exact, via an online guided search for the
+    non-tree paths), compact for sparse graphs. General graphs are reduced via SCC condensation.
+
+    Chen, Gupta, Kurul, *Stack-based Algorithms for Pattern Matching on DAGs*, VLDB 2005. (The
+    SSPI stores own non-tree in-edge tails with inheritance resolved at query time; a plain DFS
+    spanning tree is used. Verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, TreeSSPI
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = TreeSSPI(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "sspi"
+
+    def __init__(self):
+        self._core = _TreeSSPICore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
-           "ThreeHop", "PathHop", "Ferrari", "DualLabeling"]
+           "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI"]
