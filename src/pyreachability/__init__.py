@@ -1204,6 +1204,58 @@ class IP(ReachabilityIndex):
 
 
 @catalog.register
+class DL(ReachabilityIndex):
+    """DL: Distribution Labeling — a 2-hop oracle equivalent to PLL.
+
+    Distribution-Labeling (Jin & Wang, 2013, Algorithm 2) ranks vertices by a total order and
+    then, for each vertex in turn, *distributes* it into the ``L_out``/``L_in`` of the vertices it
+    connects, adding it only where it covers a still-uncovered reachable pair (a pruned reverse/
+    forward BFS). With the paper's recommended rank ``(|N_out(v)|+1)·(|N_in(v)|+1)`` this is exactly
+    the pruned-landmark-labeling construction of :class:`PLL`, and the CSUR 2025 survey proves DL
+    and PLL produce equivalent indexes. It is therefore built on the same shared 2-hop framework as
+    PLL (identical labels); it is exposed as a distinct catalog entry for completeness. A complete
+    index. General graphs are reduced via SCC condensation.
+
+    Jin & Wang, *Simple, Fast, and Scalable Reachability Oracle*, PVLDB 6(14), 2013 (the same paper
+    as :class:`HL`). Verified vs the BFS oracle.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, DL
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = DL(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "dl"
+
+    def __init__(self):
+        self._core = _PLLCore()   # Distribution-Labeling == PLL (survey-proven; identical labels)
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
+@catalog.register
 class OptimalChainCover(ReachabilityIndex):
     """Optimal Chain Cover: chain-cover compression over the *minimum* number of chains.
 
@@ -1258,4 +1310,4 @@ __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
            "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP",
-           "PathTree", "IP", "OptimalChainCover"]
+           "PathTree", "IP", "OptimalChainCover", "DL"]
