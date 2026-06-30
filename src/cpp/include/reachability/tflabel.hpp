@@ -18,13 +18,11 @@ namespace reachability {
 // labelout(u) and labelin(v) intersect (Equation 1) — a *complete* index over the shared
 // TwoHopLabels store.
 //
-// Cross-level edges: the paper keeps the graph compact with lazily-created, shared dummy
-// vertices (Procedure 1). Here they are made level-consecutive by *edge subdivision* (a dummy
-// per intermediate level), which makes the graph L-partite so the basic folding is exact. This
-// is faithful to the folding scheme and Definition 5 / Equation 1 but produces larger labels
-// than the optimised version, so it targets small/medium graphs (like TC / TreeCover). No
-// public reference implementation was available; ported from the paper, verified vs the BFS
-// oracle.
+// Cross-level edges are handled by the paper's transformed topological folding (Procedure 1):
+// for each odd-level vertex, its far out-neighbours (and even far in-neighbours) are rerouted
+// through a single shared dummy vertex created lazily at the adjacent level, so the label size
+// stays compact. No public reference implementation was available; ported from the paper
+// (folding + Procedure 1 + Definition 5 + Equation 1), verified vs the BFS oracle.
 class TFLabel {
 public:
     TFLabel() = default;

@@ -24,7 +24,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 |---|---|---|---|
 | 2-Hop | greedy set cover; densest subgraph by linear 2-approx | same, but center graphs rebuilt each round (no incremental) | (B) speed |
 | 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | linear 2-approx densest (paper's own baseline) + linear segment lookup | (B) speed |
-| TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | folding with **eager edge-subdivision** dummies | (A) larger labels |
+| TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
 | HL | recursive backbone with ε=2 (FastCover) | ε=1 backbone (= vertex cover; ε is a paper parameter) | (A) larger labels |
 | O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | DFS spanning forest tree cover | (A) larger residual + (B) slow build |
@@ -52,12 +52,6 @@ core is a densest-subgraph search. The paper presents the linear 2-approximation
 a faster rank-subgraph search (§4.3) as an optimization; we use the 2-approximation baseline. Queries
 use a per-chain anchor segment lookup rather than the paper's O(log²) structure. The survey notes
 3-Hop's indexing cost is inherently high ("less applicable" to large graphs).
-
-**TFL (Cheng, Huang, Wu, Fu, 2013).** The paper keeps the folding graph compact with lazily-created,
-*shared* dummy vertices for cross-level edges (Procedure 1). We instead make the graph level-
-consecutive by eager edge subdivision (a dummy per intermediate level), which is simpler and exact
-but yields **larger labels** than the paper. Folding scheme, Definition 5 labels, and Equation 1
-query are otherwise identical.
 
 **HL (Jin & Wang, 2013).** The locality threshold ε is a parameter; the paper focuses on ε=2 with the
 FastCover backbone. We use ε=1, for which the backbone is exactly a vertex cover. Same hierarchy +
