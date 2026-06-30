@@ -90,7 +90,7 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dual', 'feline', 'ferrari', 'grail', 'hl', 'oreach', 'pathhop', 'gripp', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
+catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dual', 'feline', 'ferrari', 'grail', 'gripp', 'hl', 'oreach', 'pathhop', 'pathtree', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
 Method = catalog.get("bfsdfs")
 idx = Method()
 ```
