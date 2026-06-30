@@ -1,4 +1,5 @@
 #include "reachability/treecover.hpp"
+#include "reachability/optimal_tree.hpp"
 #include <algorithm>
 
 namespace reachability {
@@ -7,43 +8,47 @@ void TreeCover::build(const CSRGraph& dag) {
     n_ = dag.num_nodes();
     post_.assign(n_, 0);
     intervals_.assign(n_, {});
+    if (n_ == 0) return;
 
-    // DFS spanning forest from the in-degree-0 roots; record post-order (finish) numbers and
-    // the finish sequence. Post-order is a reverse topological order: every successor of v
-    // (tree or non-tree, in a DAG) finishes before v.
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it)
-            ++indeg[*it];
-    std::vector<char> seen(n_, 0);
-    std::vector<vid_t> finish;
-    finish.reserve(n_);
+    // Agrawal's optimum tree cover: pick each node's tree parent to minimise total intervals.
+    std::vector<vid_t> parent = optimal_tree_parent(dag);
+    std::vector<std::vector<vid_t>> children(n_);
+    for (vid_t v = 0; v < n_; ++v) if (parent[v] != -1) children[parent[v]].push_back(v);
+
+    // Post-order numbering over the optimum tree, so each subtree is a contiguous interval.
     {
-        struct F { vid_t v; const vid_t* it; const vid_t* end; };
+        struct F { vid_t v; std::size_t ci; };
         std::vector<F> st;
         vid_t counter = 0;
         for (vid_t r = 0; r < n_; ++r) {
-            if (indeg[r] != 0 || seen[r]) continue;
-            seen[r] = 1;
-            st.push_back({r, dag.out_begin(r), dag.out_end(r)});
+            if (parent[r] != -1) continue;
+            st.push_back({r, 0});
             while (!st.empty()) {
-                std::size_t top = st.size() - 1;
-                if (st[top].it != st[top].end) {
-                    vid_t w = *st[top].it; ++st[top].it;
-                    if (!seen[w]) { seen[w] = 1; st.push_back({w, dag.out_begin(w), dag.out_end(w)}); }
-                } else {
-                    post_[st[top].v] = counter++;
-                    finish.push_back(st[top].v);
-                    st.pop_back();
-                }
+                F& f = st.back();
+                if (f.ci < children[f.v].size()) st.push_back({children[f.v][f.ci++], 0});
+                else { post_[f.v] = counter++; st.pop_back(); }
             }
         }
     }
 
-    // Build reachable-post-order interval sets in finish order (successors first).
-    // I[v] = merge( {[post[v],post[v]]} U over successors w: I[w] ).
+    // Reverse topological order (every successor before v) for merging interval sets.
+    std::vector<vid_t> indeg(n_, 0);
+    for (vid_t u = 0; u < n_; ++u)
+        for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it) ++indeg[*it];
+    std::vector<vid_t> topo; topo.reserve(n_);
+    {
+        std::vector<vid_t> ind = indeg, q;
+        for (vid_t u = 0; u < n_; ++u) if (ind[u] == 0) q.push_back(u);
+        std::size_t h = 0;
+        while (h < q.size()) { vid_t u = q[h++]; topo.push_back(u);
+            for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it)
+                if (--ind[*it] == 0) q.push_back(*it); }
+    }
+
+    // I[v] = merge( {[post[v],post[v]]} U over successors w: I[w] ), in reverse topological order.
     std::vector<std::pair<vid_t, vid_t>> buf;
-    for (vid_t v : finish) {
+    for (std::size_t fi = topo.size(); fi-- > 0;) {
+        vid_t v = topo[fi];
         buf.clear();
         buf.emplace_back(post_[v], post_[v]);
         for (const vid_t* it = dag.out_begin(v); it != dag.out_end(v); ++it)

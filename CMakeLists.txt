@@ -52,7 +52,8 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/gripp.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pathtree.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/ip.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/optchaincover.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/optchaincover.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/optimal_tree.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE
@@ -116,7 +117,8 @@ add_executable(cpp_tests
   src/cpp/gripp.cpp
   src/cpp/pathtree.cpp
   src/cpp/ip.cpp
-  src/cpp/optchaincover.cpp)
+  src/cpp/optchaincover.cpp
+  src/cpp/optimal_tree.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)
