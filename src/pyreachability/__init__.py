@@ -9,7 +9,7 @@ from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
                     _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore,
-                    _TreeSSPICore)
+                    _TreeSSPICore, _GRIPPCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -1035,7 +1035,59 @@ class TreeSSPI(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class GRIPP(ReachabilityIndex):
+    """GRIPP: pre/postorder order-tree instances + the hop technique (online guided search).
+
+    A DFS builds the *order tree*: each node gets one instance per incoming edge — the first is
+    its *tree instance* (recursed), the rest are *non-tree instance* leaves — each with a pre/post
+    interval. The reachable instance set ``RIS(v)`` is the subtree of ``v``'s tree instance. ``v``
+    reaches ``w`` iff some instance of ``w`` falls in ``RIS(v)``; otherwise each non-tree instance
+    in ``RIS(v)`` marks a *hop node* whose own RIS is searched recursively (a guided DFS over hop
+    nodes). A complete index of size ``O(n + m)`` with an online search. General graphs are reduced
+    via SCC condensation.
+
+    Trißl & Leser, *Fast and Practical Indexing and Querying of Very Large Graphs*, SIGMOD 2007.
+    (The hop technique with basic hop-node pruning; the paper's advanced relative-position pruning
+    is omitted as a speed optimisation. Verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, GRIPP
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = GRIPP(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "gripp"
+
+    def __init__(self):
+        self._core = _GRIPPCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
-           "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI"]
+           "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP"]

@@ -150,3 +150,10 @@ cdef extern from "reachability/treesspi.hpp" namespace "reachability":
         void build(const CSRGraph&) except +
         cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/gripp.hpp" namespace "reachability":
+    cdef cppclass GRIPP:
+        GRIPP() except +
+        void build(const CSRGraph&) except +
+        cbool reaches(vid_t, vid_t) nogil
+        size_t index_size_bytes()
