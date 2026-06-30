@@ -51,7 +51,8 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/treesspi.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/gripp.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pathtree.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/ip.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/ip.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/optchaincover.cpp")
 
 python_add_library(_core MODULE ${CORE_SOURCES} WITH_SOABI)
 target_include_directories(_core PRIVATE
@@ -87,6 +88,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_gripp.cpp
   src/cpp/tests/test_pathtree.cpp
   src/cpp/tests/test_ip.cpp
+  src/cpp/tests/test_optchaincover.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
   src/cpp/levels.cpp
@@ -113,7 +115,8 @@ add_executable(cpp_tests
   src/cpp/treesspi.cpp
   src/cpp/gripp.cpp
   src/cpp/pathtree.cpp
-  src/cpp/ip.cpp)
+  src/cpp/ip.cpp
+  src/cpp/optchaincover.cpp)
 target_include_directories(cpp_tests PRIVATE
   src/cpp/include src/cpp/tests)
 add_test(NAME cpp_tests COMMAND cpp_tests)

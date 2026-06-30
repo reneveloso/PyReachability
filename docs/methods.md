@@ -53,7 +53,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ### Chain Cover class
 - ✅ **Chain Cover** — Jagadish, ACM TODS 1990 (greedy chain decomposition).
-- ⬜ **Optimal Chain Cover** (minimum chains via max matching)
+- ✅ **Optimal Chain Cover** — Chen & Chen, ICDE 2008 (minimum chains via max bipartite matching / Dilworth).
 
 ### Other
 - ✅ **FELINE** — Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 (canonical reference impl).

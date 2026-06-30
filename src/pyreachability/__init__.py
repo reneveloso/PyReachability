@@ -9,7 +9,8 @@ from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
                     _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore,
-                    _TreeSSPICore, _GRIPPCore, _PathTreeCore, _IPCore)
+                    _TreeSSPICore, _GRIPPCore, _PathTreeCore, _IPCore,
+                    _OptimalChainCoverCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -1202,8 +1203,59 @@ class IP(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class OptimalChainCover(ReachabilityIndex):
+    """Optimal Chain Cover: chain-cover compression over the *minimum* number of chains.
+
+    Like :class:`ChainCover`, but the DAG is decomposed into the minimum number of chains (the DAG
+    width, by Dilworth's theorem) instead of a greedy decomposition, giving smaller labels. The
+    minimum decomposition is ``n`` minus a maximum bipartite matching over the reachability
+    relation. Each vertex then gets a ``(chain, position)`` and records the smallest reachable
+    position per chain; ``u`` reaches ``v`` iff ``u``'s recorded min position on ``v``'s chain is
+    ``<= pos(v)``. A complete index. General graphs are reduced via SCC condensation.
+
+    Chen & Chen, *An Efficient Algorithm for Answering Graph Reachability Queries*, ICDE 2008.
+    (Minimum decomposition via textbook maximum bipartite matching rather than the paper's
+    stratification + virtual-node procedure — same minimum chain count. Verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, OptimalChainCover
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = OptimalChainCover(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "optchain"
+
+    def __init__(self):
+        self._core = _OptimalChainCoverCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
            "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP",
-           "PathTree", "IP"]
+           "PathTree", "IP", "OptimalChainCover"]

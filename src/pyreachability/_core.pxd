@@ -171,3 +171,10 @@ cdef extern from "reachability/ip.hpp" namespace "reachability":
         void build(const CSRGraph&, int, int, unsigned int) except +
         cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()
+
+cdef extern from "reachability/optchaincover.hpp" namespace "reachability":
+    cdef cppclass OptimalChainCover:
+        OptimalChainCover() except +
+        void build(const CSRGraph&) except +
+        cbool query(vid_t, vid_t) nogil
+        size_t index_size_bytes()
