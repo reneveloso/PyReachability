@@ -29,7 +29,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **Tree+SSPI** — Chen, Gupta, Kurul, VLDB 2005 (tree-cover + surrogate/surplus predecessor index).
 - ✅ **Dual labeling** — Wang, He, Yang, Yu, Yu, ICDE 2006 (tree intervals + transitive link table).
 - ✅ **GRIPP** — Trißl & Leser, SIGMOD 2007 (pre/postorder order-tree instances + hop technique).
-- ⬜ **Path-tree**
+- ✅ **Path-tree** — Jin, Ruan, Xiang, Wang, ACM TODS 2011 (path-tree cover + 3-tuple labeling + residual TC).
 - ✅ **Ferrari** — Seufert, Anand, Bedathur, Weikum, ICDE 2013 (budgeted exact/approx intervals + guided search).
 - ⬜ **DAGGER** (dynamic)
 

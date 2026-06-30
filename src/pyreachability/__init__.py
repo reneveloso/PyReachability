@@ -9,7 +9,7 @@ from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
                     _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore,
-                    _TreeSSPICore, _GRIPPCore)
+                    _TreeSSPICore, _GRIPPCore, _PathTreeCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -1087,7 +1087,61 @@ class GRIPP(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class PathTree(ReachabilityIndex):
+    """Path-Tree: a path-tree cover (generalized tree cover) + residual transitive closure.
+
+    The DAG is decomposed into paths; the paths form a path-graph whose spanning arborescence (the
+    SP-tree) defines the *path-tree cover*. Each vertex gets a 3-tuple ``(X, I.begin, I.end)`` — an
+    X label from a post-order DFS over the cover and the SP-tree interval ``I`` of its path — so
+    that ``u`` reaches ``v`` *within the cover* iff ``X(u) <= X(v)`` and ``v``'s interval is
+    contained in ``u``'s. Reachability not captured by the cover is compressed into a per-vertex
+    residual set ``Rc(u)``; ``u`` reaches ``v`` iff the cover says so or some ``x`` in ``Rc(u)``
+    cover-reaches ``v``. A complete index. General graphs are reduced via SCC condensation.
+
+    Jin, Ruan, Xiang, Wang, *Path-Tree: An Efficient Reachability Indexing Scheme for Large
+    Directed Graphs*, ACM TODS 2011. (Independent implementation; the minimal-equivalent-edge-set
+    step is skipped, the SP-tree is a greedy spanning arborescence vs Edmonds' maximum-weight one,
+    and the residual is scanned linearly. Verified vs the BFS oracle.)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, PathTree
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = PathTree(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "pathtree"
+
+    def __init__(self):
+        self._core = _PathTreeCore()
+        self._built = False
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
-           "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP"]
+           "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP",
+           "PathTree"]

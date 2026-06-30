@@ -125,6 +125,7 @@ A method only enters the library if it has a peer-reviewed publication.
 | `DualLabeling` | tree intervals + transitive link table (sparse graphs) | ✅ implemented | Wang, He, Yang, Yu, Yu, ICDE 2006 |
 | `TreeSSPI` | tree-cover + predecessor index + guided search | ✅ implemented | Chen, Gupta, Kurul, VLDB 2005 |
 | `GRIPP` | pre/postorder order-tree instances + hop technique | ✅ implemented | Trißl & Leser, SIGMOD 2007 |
+| `PathTree` | path-tree cover (3-tuple labels) + residual TC | ✅ implemented | Jin, Ruan, Xiang, Wang, ACM TODS 2011 |
 
 These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
 catalog will grow to cover the survey's full plain-reachability list — see
