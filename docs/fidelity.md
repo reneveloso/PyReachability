@@ -29,8 +29,8 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | Ferrari-L only; topological-level pruning | (A) variant + (B) speed |
-| Dual-labeling | **optimum** spanning tree; O(1) TLC counting via gridding/snapping | Agrawal optimum tree; O(t) link-table scan | (B) query speed |
-| Tree+SSPI | **optimum** tree cover; SSPI | Agrawal optimal tree cover; SSPI (inheritance resolved at query) | (B) query speed |
+| Dual-labeling | **a spanning tree** + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | DFS spanning tree, no minimal-equivalent-graph; O(t) link-table scan | (A) larger t + (B) query speed |
+| Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | greedy spanning arborescence; all SP-tree-pair edges; linear residual scan | (A) larger index + (B) speed |
 | IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |
@@ -63,14 +63,23 @@ a simplified central-level heuristic (the paper's strategy is tunable), the opti
 labels are omitted, and the fallback is a guided DFS rather than the paper's pruned bidirectional
 BFS. Same observations, same answers.
 
-**Path-Hop (Cai & Poon, 2010) / Dual-labeling (Wang et al., 2006) / Tree+SSPI (Chen et al., 2005) /
-Path-Tree (Jin et al., 2011).** These tree-cover-family methods all benefit from a carefully chosen
-spanning structure (optimal tree cover / optimum spanning tree / Edmonds max-weight SP-tree) that
-*minimizes the residual* (non-covered edges). We use a plain DFS spanning tree/forest (and, for
-Path-Tree, a greedy arborescence and all SP-tree-pair edges rather than the minimal equivalent edge
-set). Reachability is exact, but the **residual/index is larger** than with the paper's optimum
-structure, and construction is heavier. Dual-labeling additionally answers queries by an O(t) scan of
-the transitive link table rather than the paper's O(1) gridding/snapping counter.
+**Spanning structure per paper (verified).** The tree-cover-family methods differ in which tree the
+*authors* use, so we follow each one:
+- **Tree Cover (Agrawal, 1989)** and **Path-Hop (Cai & Poon, 2010)** use Agrawal's *optimum tree
+  cover* (Path-Hop reuses Agrawal's multi-interval labeling). We build exactly that (shared
+  `optimal_tree_parent`: each node's tree parent is the in-neighbour with the largest predecessor
+  set). Faithful.
+- **Tree+SSPI (Chen et al., 2005)** builds its tree-cover by a *depth-first traversal*; we use a DFS
+  tree-cover too. Faithful tree; the only deviation is that we store each vertex's own non-tree
+  predecessors and resolve the paper's predecessor *inheritance* at query time (same answers).
+- **Dual-labeling (Wang et al., 2006)** uses "a spanning tree" (no specific algorithm mandated; we
+  use DFS) and a §5 *minimal-equivalent-graph* reduction to shrink the non-tree edge set `t`, which
+  we do **not** apply — so our link table can be larger than the paper's. Queries scan the link
+  table in O(t) instead of the paper's O(1) gridding/snapping counter.
+- **Path-Tree (Jin et al., 2011)** uses an *Edmonds maximum-weight* SP-tree over the path-graph plus
+  the *minimal equivalent edge set*; we use a greedy spanning arborescence and all SP-tree-pair
+  edges, so the residual/index is larger. Query scans the residual linearly (vs the paper's
+  O(log²k)).
 
 **Ferrari (Seufert et al., 2013).** We implement the per-vertex-budget variant (Ferrari-L), one of the
 paper's two variants, plus the topological-level filter. The global-budget variant (Ferrari-G) and
