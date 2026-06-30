@@ -27,22 +27,22 @@ TEST_CASE("hierarchical labeling matches brute force on dags") {
     for (auto& gr : graphs) {
         vid_t n = 5;
         CSRGraph g(n, gr.first, gr.second);
-        HL idx; idx.build(g);
+        HL idx; idx.build(g, 2);
         for (vid_t u = 0; u < n; ++u)
             for (vid_t v = 0; v < n; ++v)
                 CHECK(idx.query(u, v) == bfs(g, u, v));
     }
     CSRGraph g(5, graphs[0].first, graphs[0].second);
-    HL idx; idx.build(g);
+    HL idx; idx.build(g, 2);
     CHECK(idx.index_size_bytes() > 0);
 }
 
 TEST_CASE("hierarchical labeling handles empty and disconnected graphs") {
     CSRGraph empty(0, {}, {});
-    HL e; e.build(empty);
+    HL e; e.build(empty, 2);
 
     CSRGraph iso(4, {}, {});
-    HL idx; idx.build(iso);
+    HL idx; idx.build(iso, 2);
     for (vid_t u = 0; u < 4; ++u)
         for (vid_t v = 0; v < 4; ++v)
             CHECK(idx.query(u, v) == (u == v));

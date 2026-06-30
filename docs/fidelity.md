@@ -25,7 +25,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | 2-Hop | greedy set cover; densest subgraph by linear 2-approx | same, but center graphs rebuilt each round (no incremental) | (B) speed |
 | 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | linear 2-approx densest (paper's own baseline) + linear segment lookup | (B) speed |
 | TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
-| HL | recursive backbone with ε=2 (FastCover) | ε=1 backbone (= vertex cover; ε is a paper parameter) | (A) larger labels |
+| HL | recursive backbone with ε=2 (FastCover) | recursive FastCover backbone, ε=2 (Formulas 4-5) | faithful |
 | O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | Ferrari-L only; topological-level pruning | (A) variant + (B) speed |
@@ -53,9 +53,13 @@ a faster rank-subgraph search (§4.3) as an optimization; we use the 2-approxima
 use a per-chain anchor segment lookup rather than the paper's O(log²) structure. The survey notes
 3-Hop's indexing cost is inherently high ("less applicable" to large graphs).
 
-**HL (Jin & Wang, 2013).** The locality threshold ε is a parameter; the paper focuses on ε=2 with the
-FastCover backbone. We use ε=1, for which the backbone is exactly a vertex cover. Same hierarchy +
-Algorithm 1 propagation; labels are **larger** than the ε=2 version.
+**HL (Jin & Wang, 2013).** Faithful. The recursive reachability backbone is discovered by FastCover
+(Jin, Ruan, Dey & Yu, *SCARAB*, SIGMOD 2012) at the paper's default locality threshold ε=2: the
+one-side condition (SCARAB Lemma 5) covers every distance-ε pair through a backbone member within ε
+hops on each side, with the recommended (in-degree × out-degree) selection order. Backbone edges keep
+pairs within distance ε+1; the core graph is labeled with a vertex-id 2-hop and labels propagate down
+by Formulas 4–5 (the ⌈ε/2⌉-hop neighbours plus the nearest-backbone label sets Bout^ε / Bin^ε). ε is
+exposed as a constructor parameter (`HL(eps=...)`, default 2).
 
 **O'Reach (Hanauer, Schulz, Trummer, 2021).** Topological levels, supportive vertices (full R⁺/R⁻),
 and extended topological orderings are implemented faithfully. The supportive-vertex *selection* uses

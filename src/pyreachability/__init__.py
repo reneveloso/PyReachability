@@ -648,17 +648,25 @@ class TOL(ReachabilityIndex):
 class HL(ReachabilityIndex):
     """HL: Hierarchical Labeling — a 2-hop oracle from a recursive reachability backbone.
 
-    A vertex hierarchy ``V0 ⊃ V1 ⊃ ... ⊃ Vh`` is built where each level is the reachability
-    backbone of the previous one (with ``eps=1`` the backbone is a vertex cover). The core is
-    labeled first and labels propagate down: for ``v`` at level ``i``, ``label_out(v)`` is ``v``
-    plus the union of ``label_out`` of its out-neighbours in ``G_i`` (all of which sit in the
-    backbone), and symmetrically for ``label_in``. ``u`` reaches ``v`` iff the two sets
-    intersect. Unlike PLL/TOL this uses a *hierarchy* rather than a flat vertex order, and needs
-    no transitive closure. A complete index. General graphs are reduced via SCC condensation.
+    A vertex hierarchy ``V0 ⊃ V1 ⊃ ... ⊃ Vh`` is built where each level is the one-side
+    reachability backbone of the previous one, discovered by FastCover (Jin et al., SCARAB,
+    SIGMOD 2012) with locality threshold ``eps``. The core graph is labeled with a 2-hop labeling
+    and labels propagate down (Algorithm 1, Formulas 4-5): for ``v`` at level ``i``,
+    ``label_out(v)`` is its ``ceil(eps/2)``-hop out-neighbours in ``G_i`` plus the union of
+    ``label_out`` of its nearest backbone vertices ``Bout^eps(v)``, and symmetrically for
+    ``label_in``. ``u`` reaches ``v`` iff the two sets intersect. Unlike PLL/TOL this uses a
+    *hierarchy* rather than a flat vertex order. A complete index. General graphs are reduced via
+    SCC condensation.
 
-    Jin & Wang, *Simple, Fast, and Scalable Reachability Oracle*, PVLDB 6(14), 2013. (Ported
-    from the paper with locality ``eps=1`` — a vertex-cover backbone, vs the paper's ``eps=2``
-    FastCover; verified vs the BFS oracle.)
+    Jin & Wang, *Simple, Fast, and Scalable Reachability Oracle*, PVLDB 6(14), 2013, with the
+    FastCover backbone of Jin, Ruan, Dey & Yu, *SCARAB*, SIGMOD 2012. Default ``eps=2`` (the
+    paper's default); verified vs the BFS oracle.
+
+    Parameters
+    ----------
+    eps : int, optional
+        Locality threshold of the backbone (default 2, the paper's default). Smaller ``eps``
+        gives larger but cheaper-to-build labels.
 
     Examples
     --------
@@ -673,8 +681,8 @@ class HL(ReachabilityIndex):
 
     name = "hl"
 
-    def __init__(self):
-        self._core = _HLCore()
+    def __init__(self, eps: int = 2):
+        self._core = _HLCore(eps)
         self._built = False
 
     def build(self, graph) -> None:

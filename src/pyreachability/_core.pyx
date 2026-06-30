@@ -922,10 +922,12 @@ cdef class _HLCore:
     cdef HL* _hl
     cdef vector[vid_t] _comp
     cdef bint _built
+    cdef int _eps
 
-    def __cinit__(self):
+    def __cinit__(self, int eps=2):
         self._hl = new HL()
         self._built = False
+        self._eps = eps
 
     def __dealloc__(self):
         if self._hl != NULL:
@@ -934,7 +936,7 @@ cdef class _HLCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._hl.build(cond.dag)
+        self._hl.build(cond.dag, self._eps)
         self._built = True
 
     def query(self, int u, int v):

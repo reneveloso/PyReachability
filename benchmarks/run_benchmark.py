@@ -36,6 +36,7 @@ NODE_CAP = {
     "pathtree": 25_000,   # path decomposition + residual TC (adding-rule O(m k^2))
     "pathhop": 1_000,     # residual TC over a tree cover (candidate enumeration ~O(n^2) per round)
     "dual": 2_000,        # transitive link table closure (~O(t^3) in non-tree edges t)
+    "hl": 3_000,          # FastCover backbone: per-vertex eps-bounded BFS + domination checks
     "ip": 40_000,         # reachability-set mink labels (n^2 bitset)
     "tc": 60_000,         # n^2 bitset transitive closure
 }
