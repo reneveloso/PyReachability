@@ -9,6 +9,7 @@ namespace reachability {
 
 void OptimalChainCover::build(const CSRGraph& dag) {
     n_ = dag.num_nodes();
+    nchains_ = 0;
     chain_of_.assign(n_, -1); pos_.assign(n_, 0);
     reach_.assign(n_, {});
     if (n_ == 0) return;
@@ -85,6 +86,7 @@ void OptimalChainCover::build(const CSRGraph& dag) {
             cur = matchL[cur];
         }
     }
+    nchains_ = nchains;                            // = minimum #chains = the DAG's width (Dilworth)
 
     // per-vertex reachable min position per chain, in reverse topological order (as in Chain Cover)
     std::vector<std::pair<vid_t, vid_t>> buf;

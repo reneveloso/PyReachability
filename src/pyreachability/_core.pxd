@@ -178,3 +178,4 @@ cdef extern from "reachability/optchaincover.hpp" namespace "reachability":
         void build(const CSRGraph&) except +
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
+        int num_chains()

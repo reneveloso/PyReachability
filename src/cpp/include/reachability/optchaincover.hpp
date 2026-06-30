@@ -32,9 +32,11 @@ public:
     void build(const CSRGraph& dag);
     bool query(vid_t u, vid_t v) const;
     std::size_t index_size_bytes() const;
+    vid_t num_chains() const { return nchains_; }   // = the DAG's width (Dilworth)
 
 private:
     vid_t n_ = 0;
+    vid_t nchains_ = 0;
     std::vector<vid_t> chain_of_, pos_;
     std::vector<std::vector<std::pair<vid_t, vid_t>>> reach_;   // per vertex: sorted (chain, min pos)
 };

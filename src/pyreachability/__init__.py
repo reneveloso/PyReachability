@@ -1330,6 +1330,12 @@ class OptimalChainCover(ReachabilityIndex):
     def index_size_bytes(self) -> int:
         return self._core.index_size_bytes()
 
+    def num_chains(self) -> int:
+        """Number of chains in the decomposition — equals the DAG's width (Dilworth's theorem)."""
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.num_chains()
+
 
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",

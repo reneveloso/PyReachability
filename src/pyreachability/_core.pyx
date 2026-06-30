@@ -1585,3 +1585,8 @@ cdef class _OptimalChainCoverCore:
 
     def index_size_bytes(self):
         return self._oc.index_size_bytes() + self._comp.size() * sizeof(int)
+
+    def num_chains(self):
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._oc.num_chains()
