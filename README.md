@@ -14,7 +14,7 @@ size/memory/query-time trade-off.
 
 The library has a high-performance **C++17 core** exposed through **Cython** (C++ mode), an
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
-reproducible benchmark harness (planned). It accompanies a *Software Impacts* article.
+reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`). It accompanies a *Software Impacts* article.
 
 > **Status:** v0.1.0 — all six v1 methods implemented and tested: the **BFS/DFS** baseline,
 > **GRAIL** (interval labels + label-guided search), **FELINE** (2D dominance drawing),
@@ -146,7 +146,9 @@ The library is built in milestones, each producing working, tested software:
    property-based tests, CI.
 2. **Representative methods** ✅ — `GRAIL`, `TC`, `TreeCover`, `FELINE`, `PLL` (one+ per index
    class of the survey, plus the baselines).
-3. **Benchmark harness + datasets** — reproducible build/memory/query-time comparisons.
+3. **Benchmark harness + datasets** ✅ — `benchmarks/run_benchmark.py` compares build time,
+   index size, and query time across all methods vs the BFS/DFS oracle on standard DAGs
+   (`bash benchmarks/fetch_datasets.sh`).
 4. **Comprehensive catalog** — implement the remaining **plain-reachability indexes of the
    CSUR 2025 survey** (Table 1). The method list is taken from a peer-reviewed survey, not
    chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the full coverage map.
@@ -154,6 +156,18 @@ The library is built in milestones, each producing working, tested software:
 
 Label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
 is a planned later extension.
+
+## Benchmarks
+
+```bash
+bash benchmarks/fetch_datasets.sh                     # standard SIGMOD'08 DAGs -> benchmarks/data/
+python benchmarks/run_benchmark.py benchmarks/data/*.gra --csv results.csv
+```
+
+The harness builds every catalog method on each graph and reports construction time, index size,
+and average query time on random pairs, checking each method against the BFS/DFS oracle. Methods
+with super-linear construction are capped to smaller graphs (shown as `skip`); a tiny all-methods
+graph can be generated with `python benchmarks/make_synthetic.py`.
 
 ## Development
 
