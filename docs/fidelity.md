@@ -28,7 +28,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | HL | recursive backbone with ε=2 (FastCover) | recursive FastCover backbone, ε=2 (Formulas 4-5) | faithful |
 | O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
 | Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
-| Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | Ferrari-L only; topological-level pruning | (A) variant + (B) speed |
+| Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | both variants (c-param), max-τ tree cover, seed pruning + topological level filter | faithful |
 | Dual-labeling | a spanning tree + minimal-equivalent-graph reduction (§5); O(1) TLC counting via gridding/snapping | minimal-equivalent-graph + DFS spanning tree; O(t) link-table scan | (B) query speed |
 | Tree+SSPI | tree-cover via **DFS traversal**; SSPI | DFS tree-cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
@@ -88,9 +88,16 @@ BFS. Same observations, same answers.
   the stored index is unaffected), and the residual is scanned linearly instead of the paper's
   O(log²k) gridding query.
 
-**Ferrari (Seufert et al., 2013).** We implement the per-vertex-budget variant (Ferrari-L), one of the
-paper's two variants, plus the topological-level filter. The global-budget variant (Ferrari-G) and
-the optional seed-vertex pruning are omitted.
+**Ferrari (Seufert et al., 2013).** Faithful. The tree cover uses the paper's heuristic (each
+vertex's parent is the in-neighbour with the highest topological-order number). Both indexing
+variants are implemented, unified by the constant `c≥1`: `c=1` is Ferrari-L (per-vertex budget
+`|I(v)|≤k`); `c>1` is Ferrari-G (Algorithm 2 — deferred merging with a `ck`-interval cover and a
+degree min-heap restricting nodes to a `k`-cover once the global budget `B=kn` is exceeded; default
+`c=4`). The optimal `k`-interval cover keeps the largest gaps as separators (Def. 3). Pruning uses
+the GRAIL topological level filter and seed-based pruning (`seeds` max-degree seeds, default 32; the
+`S⁺/S⁻` bitsets give the positive cut `S⁺(s)∩S⁻(t)≠∅⇒reachable` and negative cut "a seed reaches s
+but not t ⇒ unreachable"). The only remaining deviation is query-side: the approximate-interval
+fallback is a guided DFS rather than the paper's plain recursive expansion (same answers).
 
 **GRIPP (Trißl & Leser, 2007).** The hop technique is faithful; the paper's advanced relative-position
 pruning (four cases, ascending-preorder traversal) is omitted — a query-speed optimization only.

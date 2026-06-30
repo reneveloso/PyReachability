@@ -892,15 +892,23 @@ class Ferrari(ReachabilityIndex):
     condensation.
 
     Seufert, Anand, Bedathur, Weikum, *FERRARI: Flexible and Efficient Reachability Range
-    Assignment for Graph Indexing*, ICDE 2013. (Core Ferrari-L; the optional seed-vertex and
-    global-budget heuristics are omitted. Independent implementation from the paper, verified vs
-    the BFS oracle.)
+    Assignment for Graph Indexing*, ICDE 2013. The tree-cover heuristic (parent = highest-tau
+    in-neighbour), both indexing variants (Ferrari-L / Ferrari-G via ``c``), the GRAIL topological
+    level filter, and seed-based pruning are all implemented. Independent implementation from the
+    paper (reference code github.com/steps/Ferrari consulted); verified vs the BFS oracle.
 
     Parameters
     ----------
     k : int, optional
         Per-vertex interval budget (default 2). Larger ``k`` means more exact intervals (less
         DFS fallback) at the cost of more space; ``k=1`` is a single GRAIL-style range.
+    c : int, optional
+        Deferred-merging constant of the global variant (default 4, the paper's value). ``c=1``
+        gives Ferrari-L (strict per-vertex budget); ``c>1`` gives Ferrari-G (global budget
+        ``B=kn`` with finer labels where space allows).
+    seeds : int, optional
+        Number of max-degree seed vertices for the S+/S- pruning labels (default 32, max 64; 0
+        disables seed pruning).
 
     Examples
     --------
@@ -915,8 +923,8 @@ class Ferrari(ReachabilityIndex):
 
     name = "ferrari"
 
-    def __init__(self, k: int = 2):
-        self._core = _FerrariCore(int(k))
+    def __init__(self, k: int = 2, c: int = 4, seeds: int = 32):
+        self._core = _FerrariCore(int(k), int(c), int(seeds))
         self._built = False
         self.k = int(k)
 

@@ -1166,11 +1166,15 @@ cdef class _FerrariCore:
     cdef Ferrari* _fr
     cdef vector[vid_t] _comp
     cdef int _k
+    cdef int _c
+    cdef int _seeds
     cdef bint _built
 
-    def __cinit__(self, int k=2):
+    def __cinit__(self, int k=2, int c=4, int seeds=32):
         self._fr = new Ferrari()
         self._k = k
+        self._c = c
+        self._seeds = seeds
         self._built = False
 
     def __dealloc__(self):
@@ -1180,7 +1184,7 @@ cdef class _FerrariCore:
     def build(self, Graph graph):
         cdef Condensation cond = scc_condense(graph._g[0])
         self._comp = cond.comp
-        self._fr.build(cond.dag, self._k)
+        self._fr.build(cond.dag, self._k, self._c, self._seeds)
         self._built = True
 
     def query(self, int u, int v):

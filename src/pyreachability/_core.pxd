@@ -133,7 +133,7 @@ cdef extern from "reachability/pathhop.hpp" namespace "reachability":
 cdef extern from "reachability/ferrari.hpp" namespace "reachability":
     cdef cppclass Ferrari:
         Ferrari() except +
-        void build(const CSRGraph&, int) except +
+        void build(const CSRGraph&, int, int, int) except +
         cbool reaches(vid_t, vid_t) nogil
         size_t index_size_bytes()
 

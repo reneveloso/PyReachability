@@ -28,23 +28,23 @@ TEST_CASE("ferrari matches brute force on dags for several budgets") {
         for (auto& gr : graphs) {
             vid_t n = 5;
             CSRGraph g(n, gr.first, gr.second);
-            Ferrari idx; idx.build(g, k);
+            Ferrari idx; idx.build(g, k, 4, 32);
             for (vid_t u = 0; u < n; ++u)
                 for (vid_t v = 0; v < n; ++v)
                     CHECK(idx.reaches(u, v) == bfs(g, u, v));
         }
     }
     CSRGraph g(5, graphs[0].first, graphs[0].second);
-    Ferrari idx; idx.build(g, 2);
+    Ferrari idx; idx.build(g, 2, 4, 32);
     CHECK(idx.index_size_bytes() > 0);
 }
 
 TEST_CASE("ferrari handles empty and disconnected graphs") {
     CSRGraph empty(0, {}, {});
-    Ferrari e; e.build(empty, 2);
+    Ferrari e; e.build(empty, 2, 4, 32);
 
     CSRGraph iso(4, {}, {});
-    Ferrari idx; idx.build(iso, 2);
+    Ferrari idx; idx.build(iso, 2, 4, 32);
     for (vid_t u = 0; u < 4; ++u)
         for (vid_t v = 0; v < 4; ++v)
             CHECK(idx.reaches(u, v) == (u == v));
