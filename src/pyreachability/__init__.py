@@ -9,7 +9,7 @@ from ._core import (Graph, _BFSDFSCore, _GRAILCore, _FelineCore, _PLLCore,
                     _TCCore, _TreeCoverCore, _BFLCore, _ChainCoverCore, _PReaCHCore,
                     _TwoHopCore, _TFLabelCore, _TOLCore, _HLCore, _OReachCore,
                     _ThreeHopCore, _PathHopCore, _FerrariCore, _DualLabelingCore,
-                    _TreeSSPICore, _GRIPPCore, _PathTreeCore)
+                    _TreeSSPICore, _GRIPPCore, _PathTreeCore, _IPCore)
 from .base import ReachabilityIndex
 from . import catalog
 import numpy as np
@@ -1140,8 +1140,70 @@ class PathTree(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
+@catalog.register
+class IP(ReachabilityIndex):
+    """IP: independent-permutation labels (approximate TC) + guided-search fallback.
+
+    A partial index. For each of ``np`` random permutations, every vertex stores the ``k`` smallest
+    permutation values of its reachable set ``Out`` and its reaching set ``In`` (k-min-wise). Since
+    ``u`` reaches ``v`` requires ``Out(v) ⊆ Out(u)`` and ``In(u) ⊆ In(v)``, a permutation whose
+    k-min labels prove one of these containments false answers the query negatively in constant
+    time; a topological level filter adds another sound negative cut. Inconclusive queries fall
+    back to a guided DFS that prunes with the same cuts, so the answer is always exact. General
+    graphs are reduced via SCC condensation.
+
+    Wei, Yu, Lu, *Reachability Querying: An Independent Permutation Labeling Approach*, PVLDB 2014.
+    (Core k-min-wise scheme plus the topological-level helper; the interval helper label is
+    omitted. Verified vs the BFS oracle.)
+
+    Parameters
+    ----------
+    k : int, optional
+        Number of smallest values kept per permutation (default 2).
+    np : int, optional
+        Number of independent permutations (default 2). More cuts, more space.
+    seed : int, optional
+        RNG seed (default 1), for reproducibility.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pyreachability import Graph, IP
+    >>> g = Graph.from_edges(np.array([0, 1], np.int32),
+    ...                      np.array([1, 2], np.int32), num_nodes=3)
+    >>> idx = IP(); idx.build(g)
+    >>> idx.query(0, 2)
+    True
+    """
+
+    name = "ip"
+
+    def __init__(self, k: int = 2, np: int = 2, seed: int = 1):
+        self._core = _IPCore(int(k), int(np), int(seed))
+        self._built = False
+        self.k = int(k)
+
+    def build(self, graph) -> None:
+        self._core.build(graph)
+        self._built = True
+
+    def query(self, u: int, v: int) -> bool:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return bool(self._core.query(int(u), int(v)))
+
+    def query_batch(self, pairs) -> np.ndarray:
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._core.query_batch(pairs)
+
+    @property
+    def index_size_bytes(self) -> int:
+        return self._core.index_size_bytes()
+
+
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog",
            "BFSDFS", "GRAIL", "FELINE", "PLL", "TC", "TreeCover", "BFL",
            "ChainCover", "PReaCH", "TwoHop", "TFLabel", "TOL", "HL", "OReach",
            "ThreeHop", "PathHop", "Ferrari", "DualLabeling", "TreeSSPI", "GRIPP",
-           "PathTree"]
+           "PathTree", "IP"]

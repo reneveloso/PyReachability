@@ -5,7 +5,7 @@ import numpy as np
 import gzip
 import array as _pyarray
 from libcpp.vector cimport vector
-from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling, TreeSSPI, GRIPP, PathTree
+from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling, TreeSSPI, GRIPP, PathTree, IP
 
 cnp.import_array()
 
@@ -1451,3 +1451,67 @@ cdef class _PathTreeCore:
 
     def index_size_bytes(self):
         return self._pt.index_size_bytes() + self._comp.size() * sizeof(int)
+
+cdef class _IPCore:
+    cdef IP* _ip
+    cdef vector[vid_t] _comp
+    cdef int _k
+    cdef int _np
+    cdef unsigned int _seed
+    cdef bint _built
+
+    def __cinit__(self, int k=2, int np_=2, unsigned int seed=1):
+        self._ip = new IP()
+        self._k = k
+        self._np = np_
+        self._seed = seed
+        self._built = False
+
+    def __dealloc__(self):
+        if self._ip != NULL:
+            del self._ip
+
+    def build(self, Graph graph):
+        cdef Condensation cond = scc_condense(graph._g[0])
+        self._comp = cond.comp
+        self._ip.build(cond.dag, self._k, self._np, self._seed)
+        self._built = True
+
+    def query(self, int u, int v):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef int n = <int>self._comp.size()
+        if u < 0 or u >= n or v < 0 or v >= n:
+            raise IndexError("vertex id out of range")
+        cdef vid_t cu = self._comp[u]
+        cdef vid_t cv = self._comp[v]
+        if cu == cv:
+            return True
+        return self._ip.reaches(cu, cv)
+
+    def query_batch(self, pairs):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        cdef int n = <int>self._comp.size()
+        if m and (int(p.min()) < 0 or int(p.max()) >= n):
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef vector[vid_t]* comp = &self._comp
+        cdef IP* ip = self._ip
+        cdef vid_t cu, cv
+        with nogil:
+            for i in range(m):
+                cu = comp[0][pv[i, 0]]; cv = comp[0][pv[i, 1]]
+                if cu == cv:
+                    ov[i] = 1
+                else:
+                    ov[i] = 1 if ip.reaches(cu, cv) else 0
+        return out.view(np.bool_)
+
+    def index_size_bytes(self):
+        return self._ip.index_size_bytes() + self._comp.size() * sizeof(int)

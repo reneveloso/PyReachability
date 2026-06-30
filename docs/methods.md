@@ -48,7 +48,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ⬜ **Ralf et al.** (dynamic 2-hop)
 
 ### Approximate TC class
-- ⬜ **IP** (Independent Permutation)
+- ✅ **IP** (Independent Permutation) — Wei, Yu, Lu, PVLDB 2014 (k-min-wise permutation labels + guided DFS).
 - ✅ **BFL** (Bloom Filter Labeling) — Su, Zhu, Wei, Yu, TKDE 2017.
 
 ### Chain Cover class
