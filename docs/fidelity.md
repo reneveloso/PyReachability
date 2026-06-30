@@ -15,14 +15,21 @@ Where an implementation departs from the paper, the departure is one of three ki
   (queries still exact), because a construction *choice* (which spanning tree, which dummy
   scheme, which parameter) was simplified.
 
-This page documents every (A) and (B) deviation so users know exactly what they get. Methods not
-listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) are faithful.
+This page documents the per-method status. Methods not listed (BFS/DFS, TC, Tree Cover, GRAIL,
+FELINE, PLL, BFL, Chain Cover, TOL, DL) are faithful.
+
+**There are no remaining (A) deviations:** every method now produces the paper's index structure.
+The only remaining deviations are **(B) speed-only** — a construction or query *subroutine* is the
+simpler textbook version (same index, same answers) — and they are confined to query-time data
+structures (e.g. a linear residual/segment scan instead of an O(log²k) structure) and one
+slower-but-equivalent build. The table rows marked *faithful* were aligned to the publications in
+the course of this work.
 
 ## Summary
 
 | Method | Paper's construction / structure | Our implementation | Deviation |
 |---|---|---|---|
-| 2-Hop | greedy set cover; densest subgraph by linear 2-approx | same, but center graphs rebuilt each round (no incremental) | (B) speed |
+| 2-Hop | greedy set cover; densest subgraph by linear 2-approx | greedy set cover; densest subgraph by linear 2-approx | faithful |
 | 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | TC contour + factorization with rank-subgraph search (§4.3, rank-ordered queue); linear segment lookup | (B) query speed |
 | TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
 | HL | recursive backbone with ε=2 (FastCover) | recursive FastCover backbone, ε=2 (Formulas 4-5) | faithful |
@@ -39,13 +46,14 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 
 ## Notes per deviation
 
-**2-Hop (Cohen, Halperin, Kaplan, Zwick, 2003).** The paper casts minimum 2-hop as a set cover and
-selects, each round, the center whose center-graph has the densest subgraph, approximated by the
-linear-time 2-approximation (drop the min-degree vertex, keep the densest snapshot). We implement
-exactly that approximation. We rebuild all center graphs every round instead of maintaining them
-incrementally, so construction is slower — but minimum 2-hop is NP-hard and its construction is
-famously expensive in the literature (PLL/TFL/DL/TOL exist precisely as cheaper heuristics), so this
-is the method's known character, not a change to the produced cover.
+**2-Hop (Cohen, Halperin, Kaplan, Zwick, 2003).** Faithful. The paper casts minimum 2-hop as a set
+cover and, each round, computes for every center `w` the center-graph and its densest subgraph,
+chooses the best ratio, updates the uncovered set, and repeats — exactly the flow we implement. The
+densest subgraph uses the paper's linear-time 2-approximation (drop the min-degree vertex, keep the
+densest snapshot). Minimum 2-hop is NP-hard and this greedy is within a logarithmic factor of
+optimal; construction is inherently expensive (the paper itself states this — recomputing the center
+graphs each round is the published algorithm, not a simplification), so it is a small/medium-graph
+method.
 
 **3-Hop (Jin, Xiang, Ruan, Fuhry, 2009).** Construction = TC contour + greedy factorization whose
 core is a densest-subgraph search. We use the paper's §4.3 method: the densest subgraph is
