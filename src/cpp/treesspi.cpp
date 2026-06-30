@@ -1,4 +1,5 @@
 #include "reachability/treesspi.hpp"
+#include "reachability/optimal_tree.hpp"
 #include <algorithm>
 #include <vector>
 
@@ -11,36 +12,24 @@ void TreeSSPI::build(const CSRGraph& dag) {
     stamp_.assign(n_, 0); query_cnt_ = 0;
     if (n_ == 0) return;
 
-    // roots = in-degree 0 (deterministic spanning-forest seeds)
-    std::vector<vid_t> indeg(n_, 0);
-    for (vid_t u = 0; u < n_; ++u)
-        for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it) ++indeg[*it];
-
-    // DFS spanning forest + preorder numbering + subtree sizes
+    // Agrawal's optimum tree cover, then preorder numbering + subtree sizes over that tree.
+    parent_ = optimal_tree_parent(dag);
+    std::vector<std::vector<vid_t>> children(n_);
+    for (vid_t v = 0; v < n_; ++v) if (parent_[v] != -1) children[parent_[v]].push_back(v);
     std::vector<vid_t> size(n_, 1);
-    std::vector<char> seen(n_, 0);
     {
         vid_t counter = 0;
-        struct F { vid_t v; const vid_t* it; const vid_t* end; };
+        struct F { vid_t v; std::size_t ci; };
         std::vector<F> st;
-        auto run = [&](vid_t r) {
-            if (seen[r]) return;
-            seen[r] = 1; pre_[r] = counter++;
-            st.push_back({r, dag.out_begin(r), dag.out_end(r)});
+        for (vid_t r = 0; r < n_; ++r) {
+            if (parent_[r] != -1) continue;
+            pre_[r] = counter++; st.push_back({r, 0});
             while (!st.empty()) {
                 F& f = st.back();
-                if (f.it != f.end) {
-                    vid_t w = *f.it; ++f.it;
-                    if (!seen[w]) { seen[w] = 1; parent_[w] = f.v; pre_[w] = counter++;
-                                    st.push_back({w, dag.out_begin(w), dag.out_end(w)}); }
-                } else {
-                    if (parent_[f.v] != -1) size[parent_[f.v]] += size[f.v];
-                    st.pop_back();
-                }
+                if (f.ci < children[f.v].size()) { vid_t c = children[f.v][f.ci++]; pre_[c] = counter++; st.push_back({c, 0}); }
+                else { if (parent_[f.v] != -1) size[parent_[f.v]] += size[f.v]; st.pop_back(); }
             }
-        };
-        for (vid_t r = 0; r < n_; ++r) if (indeg[r] == 0) run(r);
-        for (vid_t r = 0; r < n_; ++r) run(r);
+        }
     }
     for (vid_t v = 0; v < n_; ++v) { a_[v] = pre_[v]; b_[v] = pre_[v] + size[v]; }
 

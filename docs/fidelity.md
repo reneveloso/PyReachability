@@ -27,10 +27,10 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
 | HL | recursive backbone with ε=2 (FastCover) | ε=1 backbone (= vertex cover; ε is a paper parameter) | (A) larger labels |
 | O'Reach | supportive-vertex selection (slim/central strategy); seed pruning; pruned bidirectional BFS fallback | central-level selection; no seed pruning; guided-DFS fallback | (A) labels + (B) speed |
-| Path-Hop | **optimal** tree cover + multi-interval labeling | DFS spanning forest tree cover | (A) larger residual + (B) slow build |
+| Path-Hop | **optimal** tree cover + multi-interval labeling | Agrawal optimal tree cover; greedy whole-Pred/Succ hop density | (B) slow build |
 | Ferrari | Ferrari-L **and** Ferrari-G (global budget); seed + topological pruning | Ferrari-L only; topological-level pruning | (A) variant + (B) speed |
 | Dual-labeling | **optimum** spanning tree; O(1) TLC counting via gridding/snapping | DFS spanning tree; O(t) link-table scan | (A) larger t + (B) query speed |
-| Tree+SSPI | **optimum** tree cover; SSPI | DFS spanning tree; SSPI (inheritance resolved at query) | (A) larger index + (B) query speed |
+| Tree+SSPI | **optimum** tree cover; SSPI | Agrawal optimal tree cover; SSPI (inheritance resolved at query) | (B) query speed |
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + basic hop-node pruning | (B) speed |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | greedy spanning arborescence; all SP-tree-pair edges; linear residual scan | (A) larger index + (B) speed |
 | IP | k-min-wise labels + level helper + **interval** helper | k-min-wise + level helper (interval helper omitted) | (B) speed |

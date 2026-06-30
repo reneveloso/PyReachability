@@ -1,4 +1,5 @@
 #include "reachability/pathhop.hpp"
+#include "reachability/optimal_tree.hpp"
 #include <algorithm>
 #include <vector>
 
@@ -31,21 +32,10 @@ void PathHop::build(const CSRGraph& dag) {
                 if (--ind[*it] == 0) q.push_back(*it); }
     }
 
-    // spanning forest (DFS tree): first discovery sets the tree parent
-    std::vector<char> seen(n_, 0);
+    // tree cover = Agrawal's optimum tree cover (minimises the residual transitive closure)
+    parent_ = optimal_tree_parent(dag);
     std::vector<std::vector<vid_t>> children(n_);
-    {
-        std::vector<vid_t> st;
-        for (vid_t s : topo) {
-            if (seen[s]) continue;
-            seen[s] = 1; st.push_back(s);
-            while (!st.empty()) {
-                vid_t u = st.back(); st.pop_back();
-                for (const vid_t* it = dag.out_begin(u); it != dag.out_end(u); ++it)
-                    if (!seen[*it]) { seen[*it] = 1; parent_[*it] = u; children[u].push_back(*it); st.push_back(*it); }
-            }
-        }
-    }
+    for (vid_t v = 0; v < n_; ++v) if (parent_[v] != -1) children[parent_[v]].push_back(v);
 
     // interval labels via iterative post-order: hi = post number, lo = hi - subtree_size + 1
     {
