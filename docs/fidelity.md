@@ -23,7 +23,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | Method | Paper's construction / structure | Our implementation | Deviation |
 |---|---|---|---|
 | 2-Hop | greedy set cover; densest subgraph by linear 2-approx | same, but center graphs rebuilt each round (no incremental) | (B) speed |
-| 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | linear 2-approx densest (paper's own baseline) + linear segment lookup | (B) speed |
+| 3-Hop | TC contour + factorization; rank-subgraph densest search (§4.3); O(log²) segment query | TC contour + factorization with rank-subgraph search (§4.3, rank-ordered queue); linear segment lookup | (B) query speed |
 | TFL | topological folding with lazily-created **shared** dummy vertices (Procedure 1) | Procedure 1 (shared lazy dummies) | faithful |
 | HL | recursive backbone with ε=2 (FastCover) | recursive FastCover backbone, ε=2 (Formulas 4-5) | faithful |
 | O'Reach | slim/central supportive-vertex selection; B2/B4/B5/B6 + T1-T6 + S1-S3; pruned bidirectional BFS | same — slim-level selection, WCC (B2), all observations in the paper's test order, pruning bidirectional BFS | faithful |
@@ -48,10 +48,13 @@ famously expensive in the literature (PLL/TFL/DL/TOL exist precisely as cheaper 
 is the method's known character, not a change to the produced cover.
 
 **3-Hop (Jin, Xiang, Ruan, Fuhry, 2009).** Construction = TC contour + greedy factorization whose
-core is a densest-subgraph search. The paper presents the linear 2-approximation as the baseline and
-a faster rank-subgraph search (§4.3) as an optimization; we use the 2-approximation baseline. Queries
-use a per-chain anchor segment lookup rather than the paper's O(log²) structure. The survey notes
-3-Hop's indexing cost is inherently high ("less applicable" to large graphs).
+core is a densest-subgraph search. We use the paper's §4.3 method: the densest subgraph is
+approximated by the **rank subgraph** (Def. 7 — the l-core/degeneracy core, a 2-approximation by
+Lemma 1), and the per-round selection follows Algorithm 2 / Theorem 3 — the chain-center bipartite
+graphs are held in a rank-ordered max-heap and the maximum-rank one is chosen each round, with ranks
+lazily recomputed over the uncovered contour pairs. The only remaining deviation is query-side: a
+per-chain anchor segment lookup rather than the paper's O(log²) structure. The survey notes 3-Hop's
+indexing cost is inherently high ("less applicable" to large graphs).
 
 **HL (Jin & Wang, 2013).** Faithful. The recursive reachability backbone is discovered by FastCover
 (Jin, Ruan, Dey & Yu, *SCARAB*, SIGMOD 2012) at the paper's default locality threshold ε=2: the

@@ -1,37 +1,36 @@
 #include "reachability/threehop.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <queue>
 #include <unordered_map>
 #include <vector>
 
 namespace reachability {
 
 namespace {
-// Linear 2-approximation for the densest subgraph: drop the minimum-degree vertex repeatedly,
-// keep the densest snapshot. Returns the kept node indices.
-std::vector<vid_t> densest_subgraph(const std::vector<std::vector<vid_t>>& adj) {
+// Rank subgraph (3-Hop Sec. 4.3, Def. 7): peel the minimum-degree vertex repeatedly; the rank l is
+// the largest degree-at-removal seen (the graph's degeneracy), and G_l — the vertices remaining when
+// that maximum is first reached — is the l-core, a 2-approximation of the densest subgraph (Lemma 1).
+// Returns the kept node indices and sets rank_out = l.
+std::vector<vid_t> rank_subgraph(const std::vector<std::vector<vid_t>>& adj, vid_t& rank_out) {
     const vid_t nv = static_cast<vid_t>(adj.size());
     std::vector<vid_t> deg(nv);
-    long long edges = 0;
-    for (vid_t i = 0; i < nv; ++i) { deg[i] = (vid_t)adj[i].size(); edges += deg[i]; }
-    edges /= 2;
+    for (vid_t i = 0; i < nv; ++i) deg[i] = (vid_t)adj[i].size();
     std::vector<char> removed(nv, 0);
     std::vector<vid_t> seq; seq.reserve(nv);
-    long long curEdges = edges; vid_t curNodes = nv;
-    double best = curNodes > 0 ? (double)curEdges / curNodes : 0.0;
-    vid_t bestRemoved = 0;
+    vid_t bestRank = 0; std::size_t bestIdx = 0;
+    vid_t curNodes = nv;
     while (curNodes > 0) {
         vid_t x = -1, md = 0;
         for (vid_t i = 0; i < nv; ++i)
             if (!removed[i] && (x < 0 || deg[i] < md)) { x = i; md = deg[i]; }
-        removed[x] = 1; seq.push_back(x); curEdges -= deg[x];
+        if (md > bestRank) { bestRank = md; bestIdx = seq.size(); }   // remaining from here = md-core
+        removed[x] = 1; seq.push_back(x);
         for (vid_t y : adj[x]) if (!removed[y]) --deg[y];
         --curNodes;
-        if (curNodes > 0) { double d = (double)curEdges / curNodes; if (d > best) { best = d; bestRemoved = (vid_t)seq.size(); } }
     }
-    std::vector<vid_t> kept;
-    for (std::size_t i = bestRemoved; i < seq.size(); ++i) kept.push_back(seq[i]);
-    return kept;
+    rank_out = bestRank;
+    return std::vector<vid_t>(seq.begin() + bestIdx, seq.end());
 }
 }  // namespace
 
@@ -121,60 +120,69 @@ void ThreeHop::build(const CSRGraph& dag) {
         }
     }
 
-    // ---- greedy factorization (set cover via densest subgraph of chain-center bipartite graphs)
+    // ---- greedy factorization (3-Hop Algorithm 2): set cover whose core is the densest subgraph
+    // of the chain-center bipartite graphs. By Theorem 3, the bipartite graph with the largest rank
+    // yields a 2-approximate densest subgraph, so we keep the graphs in a rank-ordered max-heap and
+    // select the maximum-rank one each round, lazily recomputing ranks (which only shrink as pairs
+    // get covered) over the uncovered set.
     std::vector<char> uncov(con.size(), 1);
     long long remaining = (long long)con.size();
-    while (remaining > 0) {
-        double bestDensity = -1.0; vid_t bestChain = -1;
-        std::vector<vid_t> bestX, bestY;
-        for (vid_t m = 0; m < K; ++m) {
-            // bipartite graph over uncovered contour pairs routable through chain m
-            std::unordered_map<vid_t, vid_t> lidx, ridx;   // vertex -> local node id
-            std::vector<vid_t> lvert, rvert;
-            std::vector<std::pair<vid_t, vid_t>> edges;     // (left local, right local)
-            for (std::size_t pi = 0; pi < con.size(); ++pi) {
-                if (!uncov[pi]) continue;
-                vid_t x = con[pi].first, y = con[pi].second;
-                vid_t ex = ENT(x, m), xy = EXT(y, m);
-                if (ex < 0 || xy < 0 || ex > xy) continue;  // not routable via chain m
-                auto li = lidx.find(x); vid_t l;
-                if (li == lidx.end()) { l = (vid_t)lvert.size(); lidx[x] = l; lvert.push_back(x); }
-                else l = li->second;
-                auto ri = ridx.find(y); vid_t r;
-                if (ri == ridx.end()) { r = (vid_t)rvert.size(); ridx[y] = r; rvert.push_back(y); }
-                else r = ri->second;
-                edges.emplace_back(l, r);
-            }
-            if (edges.empty()) continue;
-            vid_t a = (vid_t)lvert.size(), b = (vid_t)rvert.size();
-            std::vector<std::vector<vid_t>> adj(a + b);
-            for (auto& e : edges) { adj[e.first].push_back(a + e.second); adj[a + e.second].push_back(e.first); }
-            std::vector<vid_t> kept = densest_subgraph(adj);
-            double density = 0.0;
-            {
-                std::vector<char> in(a + b, 0); for (vid_t z : kept) in[z] = 1;
-                long long ke = 0; for (auto& e : edges) if (in[e.first] && in[a + e.second]) ++ke;
-                if (!kept.empty()) density = (double)ke / kept.size();
-            }
-            if (density > bestDensity) {
-                bestDensity = density; bestChain = m;
-                bestX.clear(); bestY.clear();
-                for (vid_t z : kept) { if (z < a) bestX.push_back(lvert[z]); else bestY.push_back(rvert[z - a]); }
-            }
-        }
-        if (bestChain < 0) break;   // safety (should not happen: every pair routable via in-anchor's chain)
 
+    // build chain m's bipartite graph over the currently-uncovered contour pairs (adj + vertex maps)
+    auto build_bip = [&](vid_t m, std::vector<vid_t>& lvert, std::vector<vid_t>& rvert) {
+        std::unordered_map<vid_t, vid_t> lidx, ridx;
+        std::vector<std::pair<vid_t, vid_t>> edges;
+        lvert.clear(); rvert.clear();
+        for (std::size_t pi = 0; pi < con.size(); ++pi) {
+            if (!uncov[pi]) continue;
+            vid_t x = con[pi].first, y = con[pi].second;
+            vid_t ex = ENT(x, m), xy = EXT(y, m);
+            if (ex < 0 || xy < 0 || ex > xy) continue;       // not routable via chain m
+            auto li = lidx.find(x); vid_t l;
+            if (li == lidx.end()) { l = (vid_t)lvert.size(); lidx[x] = l; lvert.push_back(x); } else l = li->second;
+            auto ri = ridx.find(y); vid_t r;
+            if (ri == ridx.end()) { r = (vid_t)rvert.size(); ridx[y] = r; rvert.push_back(y); } else r = ri->second;
+            edges.emplace_back(l, r);
+        }
+        vid_t a = (vid_t)lvert.size(), b = (vid_t)rvert.size();
+        std::vector<std::vector<vid_t>> adj(a + b);
+        for (auto& e : edges) { adj[e.first].push_back(a + e.second); adj[a + e.second].push_back(e.first); }
+        return adj;
+    };
+
+    std::priority_queue<std::pair<vid_t, vid_t>> heap;       // (rank, chain) — rank is an upper bound
+    for (vid_t m = 0; m < K; ++m) {
+        std::vector<vid_t> lv, rv; auto adj = build_bip(m, lv, rv);
+        if (adj.empty()) continue;
+        vid_t rk; rank_subgraph(adj, rk);
+        if (rk > 0) heap.push({rk, m});
+    }
+    while (remaining > 0 && !heap.empty()) {
+        vid_t storedR = heap.top().first, m = heap.top().second; heap.pop();
+        std::vector<vid_t> lv, rv;
+        auto adj = build_bip(m, lv, rv);
+        vid_t trueR = 0;
+        std::vector<vid_t> kept;
+        if (!adj.empty()) kept = rank_subgraph(adj, trueR);
+        if (trueR == 0) continue;
+        if (trueR < storedR) { heap.push({trueR, m}); continue; }   // stale upper bound -> reinsert
+
+        const vid_t a = (vid_t)lv.size();                   // select this max-rank graph's rank subgraph
         std::vector<char> inX(n_, 0), inY(n_, 0);
-        for (vid_t x : bestX) { inX[x] = 1; entry_recs_[cid_[x]].push_back({pos_[x], bestChain, ENT(x, bestChain)}); }
-        for (vid_t y : bestY) { inY[y] = 1; exit_recs_[cid_[y]].push_back({pos_[y], bestChain, EXT(y, bestChain)}); }
+        for (vid_t z : kept) {
+            if (z < a) { vid_t x = lv[z]; inX[x] = 1; entry_recs_[cid_[x]].push_back({pos_[x], m, ENT(x, m)}); }
+            else       { vid_t y = rv[z - a]; inY[y] = 1; exit_recs_[cid_[y]].push_back({pos_[y], m, EXT(y, m)}); }
+        }
         for (std::size_t pi = 0; pi < con.size(); ++pi) {
             if (!uncov[pi]) continue;
             vid_t x = con[pi].first, y = con[pi].second;
             if (inX[x] && inY[y]) {
-                vid_t ex = ENT(x, bestChain), xy = EXT(y, bestChain);
+                vid_t ex = ENT(x, m), xy = EXT(y, m);
                 if (ex >= 0 && xy >= 0 && ex <= xy) { uncov[pi] = 0; --remaining; }
             }
         }
+        std::vector<vid_t> lv2, rv2; auto adj2 = build_bip(m, lv2, rv2);   // recompute m's rank, reinsert
+        if (!adj2.empty()) { vid_t rk2; rank_subgraph(adj2, rk2); if (rk2 > 0) heap.push({rk2, m}); }
     }
 
     for (vid_t c = 0; c < K; ++c) {
