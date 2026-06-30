@@ -34,7 +34,7 @@ listed (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL, Chain Cover, TOL, DL) 
 | GRIPP | hop technique + advanced 4-case pruning | hop technique + advanced 4-case pruning (ascending-order traversal) | faithful |
 | Path-Tree | **Edmonds** max-weight SP-tree; minimal-equivalent-edge-set; O(log²k) query | Edmonds max-weight SP-tree (MinPathIndex weights); all SP-tree-pair edges; linear residual scan | (B) query speed |
 | IP | k-min-wise labels + Level label + Huge-Vertex label | k-min-wise + Level label (Lup+Ldown) + Huge-Vertex label | faithful |
-| PReaCH | contraction hierarchies + Lemmas 2–7 pruning | Lemmas 2–4; Lemmas 5–7 omitted | (B) speed |
+| PReaCH | contraction hierarchies + Lemmas 2–7 pruning | contraction hierarchies + Lemmas 2–7 (all single-DFS cuts) | faithful |
 | Optimal Chain Cover | minimum chains via **O(n²+bn√b)** stratification + virtual-node matching | minimum chains via **Hopcroft-Karp** matching over full reachability (no stratified bipartite graphs) | (B) speed (same minimum) |
 
 ## Notes per deviation
@@ -119,9 +119,12 @@ with out-degree > `µ` that reach `v`). During the DFS, at a huge current vertex
 reachable; `c∉Lhv(v)` with `Lhv(v)` not full, or `c` outranking its smallest member by out-degree, ⇒
 unreachable (Algorithm 4 lines 4–7). Defaults `h=5, µ=100` (the paper's).
 
-**PReaCH (Merz & Sanders, 2014).** Contraction-hierarchy ordering, forward/backward levels, and the
-single-DFS interval cuts (Lemmas 2–4) are implemented; the extra empty/full ranges of Lemmas 5–7 are
-omitted — they sharpen pruning, not correctness.
+**PReaCH (Merz & Sanders, 2014).** Faithful. Contraction-hierarchy ordering, forward/backward
+topological levels (Lemma 2), and all of the single-DFS range cuts: the DFS interval `[φ,φ̂]`
+(Lemmas 3–4), the largest reachable range outside the subtree `ptree` (Lemma 5, positive), the
+smallest reachable DFS number `φ_min` (Lemma 6, negative), and the empty range just left of `v`
+`φ_gap` (Lemma 7, negative). All ranges are derived from a single DFS per direction and applied
+aggressively (constant-time block and bidirectional search) for both forward and backward.
 
 **Optimal Chain Cover (Chen & Chen, 2008).** The produced index is identical to the paper's: the
 *minimum* chain decomposition (verified to equal the Dilworth width). The maximum matching uses the
