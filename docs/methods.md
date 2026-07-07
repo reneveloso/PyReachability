@@ -37,7 +37,7 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **PLL** — Yano, Akiba, Iwata, Yoshida, CIKM 2013.
 - ✅ **2-Hop** — Cohen, Halperin, Kaplan, Zwick, SIAM J. Comput. 2003 (greedy densest-subgraph cover).
 - ✅ **3-Hop** — Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 (TC contour + greedy factorization).
-- ⬜ **U2-hop**
+- ⬜ **U2-hop** — planned for v0.2.0.
 - ✅ **Path-hop** — Cai & Poon, CIKM 2010 (residual TC + greedy path-hop set cover; trees as highways).
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ✅ **DL** (Distribution Labeling) — Jin & Wang, PVLDB 2013 (Algorithm 2; survey-proven equivalent to PLL).
@@ -61,8 +61,8 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ## Status summary
 
-Implemented: 7 (BFS/DFS, TC, Tree Cover, GRAIL, FELINE, PLL, BFL). Phase 2 has begun: BFL
-(Approximate TC) is the first of the expansion, verified against the author's reference
-implementation (github.com/BoleynSu/bfl) on a 200k-query set. The remaining Table-1 methods
-follow. Exact citations are taken from CSUR 2025 Table 1 and confirmed against the primary
-source at implementation time.
+Implemented: 24 methods, covering every static index class of the survey's Table 1.
+Pending: U2-hop (static; planned for v0.2.0). Deferred to a future extension: the
+dynamic-graph methods (DAGGER, DBL, Ralf et al.), alongside the label-constrained
+methods of Table 2. Exact citations are taken from CSUR 2025 Table 1 and confirmed
+against the primary source at implementation time.

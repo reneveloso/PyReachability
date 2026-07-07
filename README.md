@@ -16,10 +16,11 @@ The library has a high-performance **C++17 core** exposed through **Cython** (C+
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
 reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`). It accompanies a *Software Impacts* article.
 
-> **Status:** v0.1.0 — all six v1 methods implemented and tested: the **BFS/DFS** baseline,
-> **GRAIL** (interval labels + label-guided search), **FELINE** (2D dominance drawing),
-> **PLL** (2-hop labeling), and the **TC** / **Tree Cover** transitive-closure baselines
-> (for small/medium graphs). See the [Roadmap](#roadmap) for what's next.
+> **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle,
+> covering every static index class of the CSUR 2025 survey (Table 1): traversal and
+> transitive-closure baselines, interval/tree-cover labeling, the 2-hop family,
+> approximate transitive closure, and chain covers. See the [Roadmap](#roadmap) for
+> what's next.
 
 ---
 
@@ -150,13 +151,15 @@ The library is built in milestones, each producing working, tested software:
 3. **Benchmark harness + datasets** ✅ — `benchmarks/run_benchmark.py` compares build time,
    index size, and query time across all methods vs the BFS/DFS oracle on standard DAGs
    (`bash benchmarks/fetch_datasets.sh`).
-4. **Comprehensive catalog** — implement the remaining **plain-reachability indexes of the
-   CSUR 2025 survey** (Table 1). The method list is taken from a peer-reviewed survey, not
-   chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the full coverage map.
-5. **Docs site, PyPI wheels, Zenodo DOI.**
+4. **Comprehensive catalog** ✅ — the static **plain-reachability indexes of the CSUR 2025
+   survey** (Table 1): 24 methods implemented. The method list is taken from a peer-reviewed
+   survey, not chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the coverage map.
+   (U2-hop, the one remaining static method, lands in v0.2.0.)
+5. **First public release** — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
+   in v0.2.0.
 
-Label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
-is a planned later extension.
+Dynamic-graph methods (DAGGER, DBL, Ralf et al.) and label-constrained / path-constrained
+reachability (edge-labeled graphs, the survey's Table 2) are planned later extensions.
 
 ## Benchmarks
 
@@ -182,7 +185,8 @@ cmake --build build-cpp --target cpp_tests
 ./build-cpp/cpp_tests
 ```
 
-CI runs the full suite on Linux/macOS/Windows across Python 3.9–3.13.
+CI runs the suite on Ubuntu for every push to `main`; the full Linux/macOS/Windows ×
+Python 3.9–3.13 matrix runs on pull requests and manual dispatches.
 
 ## Citing
 
