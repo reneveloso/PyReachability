@@ -11,6 +11,28 @@ requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Renê Rodrigues Veloso" }]
 dependencies = ["numpy>=1.21"]
+keywords = ["graph", "reachability", "reachability-index", "transitive-closure", "dag", "graph-algorithms"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Homepage = "https://github.com/reneveloso/PyReachability"
+Repository = "https://github.com/reneveloso/PyReachability"
+Issues = "https://github.com/reneveloso/PyReachability/issues"
 
 [project.optional-dependencies]
 test = ["pytest>=7", "hypothesis>=6"]
@@ -24,3 +46,12 @@ cmake.version = ">=3.15"
 provider = "scikit_build_core.metadata.regex"
 input = "src/pyreachability/_version.py"
 regex = '__version__ = "(?P<value>[^"]+)"'
+
+[tool.cibuildwheel]
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+skip = "*-win32 *_i686"
+test-extras = ["test"]
+test-command = "pytest {project}/tests -q"
+
+[tool.cibuildwheel.macos]
+archs = ["arm64", "x86_64"]
