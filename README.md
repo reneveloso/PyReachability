@@ -1,6 +1,8 @@
 # PyReachability
 
 [![CI](https://github.com/reneveloso/PyReachability/actions/workflows/ci.yml/badge.svg)](https://github.com/reneveloso/PyReachability/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/pyreachability)](https://pypi.org/project/pyreachability/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21251749.svg)](https://doi.org/10.5281/zenodo.21251749)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -14,7 +16,7 @@ size/memory/query-time trade-off.
 
 The library has a high-performance **C++17 core** exposed through **Cython** (C++ mode), an
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
-reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`). It accompanies a *Software Impacts* article.
+reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`).
 
 > **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle,
 > covering every static index class of the CSUR 2025 survey (Table 1): traversal and
@@ -25,6 +27,12 @@ reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`). 
 ---
 
 ## Installation
+
+From PyPI (wheels for Linux/macOS/Windows, Python 3.9–3.13):
+
+```bash
+pip install pyreachability
+```
 
 From source (a C++17 compiler and CMake ≥ 3.15 are required to build):
 
