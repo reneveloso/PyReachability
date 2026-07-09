@@ -112,32 +112,35 @@ Every method implements the same [`ReachabilityIndex`](src/pyreachability/base.p
 (`build` / `query` / `query_batch` / `index_size_bytes`) and is registered in the catalog.
 A method only enters the library if it has a peer-reviewed publication.
 
+Each **Reference** cell names the source and links (`[N]`) to its full citation in
+[References](#references).
+
 | Method | Family | Status | Reference |
 |---|---|---|---|
-| `BFSDFS` | online traversal (baseline / oracle) | ✅ implemented | CLRS, *Introduction to Algorithms* |
-| `TC` | transitive closure (bitset) | ✅ implemented | Warshall, JACM 1962 |
-| `TreeCover` | tree / interval cover | ✅ implemented | Agrawal, Borgida, Jagadish, SIGMOD 1989 |
-| `GRAIL` | tree-cover, interval-label pruning | ✅ implemented | Yıldırım, Chaoji, Zaki, PVLDB 2010 |
-| `FELINE` | refined online search (2 topological orders) | ✅ implemented | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 |
-| `PLL` | 2-hop labeling | ✅ implemented | Yano, Akiba, Iwata, Yoshida, CIKM 2013 |
-| `BFL` | approximate TC (Bloom filters) | ✅ implemented | Su, Zhu, Wei, Yu, TKDE 2017 |
-| `ChainCover` | chain-decomposition TC compression | ✅ implemented | Jagadish, ACM TODS 1990 |
-| `PReaCH` | contraction hierarchies + bidirectional search | ✅ implemented | Merz & Sanders, ESA 2014 |
-| `TwoHop` | 2-hop labeling (near-minimum greedy cover) | ✅ implemented | Cohen, Halperin, Kaplan, Zwick, SICOMP 2003 |
-| `TFLabel` | 2-hop labeling via topological folding | ✅ implemented | Cheng, Huang, Wu, Fu, SIGMOD 2013 |
-| `TOL` | 2-hop labeling, contribution-score order | ✅ implemented | Zhu, Lin, Wang, Xiao, SIGMOD 2014 |
-| `HL` | hierarchical 2-hop (recursive backbone) | ✅ implemented | Jin & Wang, PVLDB 2013 |
-| `OReach` | constant-time observations + guided fallback | ✅ implemented | Hanauer, Schulz, Trummer, SEA 2021 |
-| `ThreeHop` | 3-hop: chains as highways (TC-contour compression) | ✅ implemented | Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 |
-| `PathHop` | path-hop: trees as highways (residual-TC compression) | ✅ implemented | Cai & Poon, CIKM 2010 |
-| `Ferrari` | budgeted exact/approx intervals + guided search | ✅ implemented | Seufert, Anand, Bedathur, Weikum, ICDE 2013 |
-| `DualLabeling` | tree intervals + transitive link table (sparse graphs) | ✅ implemented | Wang, He, Yang, Yu, Yu, ICDE 2006 |
-| `TreeSSPI` | tree-cover + predecessor index + guided search | ✅ implemented | Chen, Gupta, Kurul, VLDB 2005 |
-| `GRIPP` | pre/postorder order-tree instances + hop technique | ✅ implemented | Trißl & Leser, SIGMOD 2007 |
-| `PathTree` | path-tree cover (3-tuple labels) + residual TC | ✅ implemented | Jin, Ruan, Xiang, Wang, ACM TODS 2011 |
-| `IP` | independent-permutation labels (approx TC) + guided search | ✅ implemented | Wei, Yu, Lu, PVLDB 2014 |
-| `OptimalChainCover` | minimum-chain decomposition (Dilworth) + chain labels | ✅ implemented | Chen & Chen, ICDE 2008 |
-| `DL` | distribution labeling (2-hop, equivalent to PLL) | ✅ implemented | Jin & Wang, PVLDB 2013 |
+| `BFSDFS` | online traversal (baseline / oracle) | ✅ implemented | CLRS, *Introduction to Algorithms* [[1]](#ref-1) |
+| `TC` | transitive closure (bitset) | ✅ implemented | Warshall, JACM 1962 [[2]](#ref-2) |
+| `TreeCover` | tree / interval cover | ✅ implemented | Agrawal, Borgida, Jagadish, SIGMOD 1989 [[3]](#ref-3) |
+| `GRAIL` | tree-cover, interval-label pruning | ✅ implemented | Yıldırım, Chaoji, Zaki, PVLDB 2010 [[4]](#ref-4) |
+| `FELINE` | refined online search (2 topological orders) | ✅ implemented | Veloso, Cerf, Meira Jr., Zaki, EDBT 2014 [[5]](#ref-5) |
+| `PLL` | 2-hop labeling | ✅ implemented | Yano, Akiba, Iwata, Yoshida, CIKM 2013 [[6]](#ref-6) |
+| `BFL` | approximate TC (Bloom filters) | ✅ implemented | Su, Zhu, Wei, Yu, TKDE 2017 [[7]](#ref-7) |
+| `ChainCover` | chain-decomposition TC compression | ✅ implemented | Jagadish, ACM TODS 1990 [[8]](#ref-8) |
+| `PReaCH` | contraction hierarchies + bidirectional search | ✅ implemented | Merz & Sanders, ESA 2014 [[9]](#ref-9) |
+| `TwoHop` | 2-hop labeling (near-minimum greedy cover) | ✅ implemented | Cohen, Halperin, Kaplan, Zwick, SICOMP 2003 [[10]](#ref-10) |
+| `TFLabel` | 2-hop labeling via topological folding | ✅ implemented | Cheng, Huang, Wu, Fu, SIGMOD 2013 [[11]](#ref-11) |
+| `TOL` | 2-hop labeling, contribution-score order | ✅ implemented | Zhu, Lin, Wang, Xiao, SIGMOD 2014 [[12]](#ref-12) |
+| `HL` | hierarchical 2-hop (recursive backbone) | ✅ implemented | Jin & Wang, PVLDB 2013 [[13]](#ref-13) |
+| `OReach` | constant-time observations + guided fallback | ✅ implemented | Hanauer, Schulz, Trummer, ACM JEA 2022 [[14]](#ref-14) |
+| `ThreeHop` | 3-hop: chains as highways (TC-contour compression) | ✅ implemented | Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 [[15]](#ref-15) |
+| `PathHop` | path-hop: trees as highways (residual-TC compression) | ✅ implemented | Cai & Poon, CIKM 2010 [[16]](#ref-16) |
+| `Ferrari` | budgeted exact/approx intervals + guided search | ✅ implemented | Seufert, Anand, Bedathur, Weikum, ICDE 2013 [[17]](#ref-17) |
+| `DualLabeling` | tree intervals + transitive link table (sparse graphs) | ✅ implemented | Wang, He, Yang, Yu, Yu, ICDE 2006 [[18]](#ref-18) |
+| `TreeSSPI` | tree-cover + predecessor index + guided search | ✅ implemented | Chen, Gupta, Kurul, VLDB 2005 [[19]](#ref-19) |
+| `GRIPP` | pre/postorder order-tree instances + hop technique | ✅ implemented | Trißl & Leser, SIGMOD 2007 [[20]](#ref-20) |
+| `PathTree` | path-tree cover (3-tuple labels) + residual TC | ✅ implemented | Jin, Ruan, Xiang, Wang, ACM TODS 2011 [[21]](#ref-21) |
+| `IP` | independent-permutation labels (approx TC) + guided search | ✅ implemented | Wei, Yu, Lu, Jin, PVLDB 2014 [[22]](#ref-22) |
+| `OptimalChainCover` | minimum-chain decomposition (Dilworth) + chain labels | ✅ implemented | Chen & Chen, ICDE 2008 [[23]](#ref-23) |
+| `DL` | distribution labeling (2-hop, equivalent to PLL) | ✅ implemented | Jin & Wang, PVLDB 2013 [[13]](#ref-13) |
 
 These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
 catalog will grow to cover the survey's full plain-reachability list — see
@@ -201,6 +204,57 @@ Python 3.9–3.13 matrix runs on pull requests and manual dispatches.
 If you use PyReachability in academic work, please cite it via [`CITATION.cff`](CITATION.cff)
 (GitHub renders a "Cite this repository" button). The accompanying *Software Impacts* article
 reference will be added on publication.
+
+## References
+
+Every catalog method follows a peer-reviewed publication. The [Methods](#methods) table
+links each method to its entry below.
+
+<a id="ref-1"></a>[1] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein. *Introduction to Algorithms*, 3rd ed. MIT Press, 2009.
+
+<a id="ref-2"></a>[2] S. Warshall. A theorem on Boolean matrices. *Journal of the ACM*, 9(1):11–12, 1962. doi:10.1145/321105.321107
+
+<a id="ref-3"></a>[3] R. Agrawal, A. Borgida, and H. V. Jagadish. Efficient management of transitive relationships in large data and knowledge bases. In *ACM SIGMOD*, pp. 253–262, 1989. doi:10.1145/67544.66950
+
+<a id="ref-4"></a>[4] H. Yıldırım, V. Chaoji, and M. J. Zaki. GRAIL: Scalable reachability index for large graphs. *PVLDB*, 3(1):276–284, 2010. doi:10.14778/1920841.1920879
+
+<a id="ref-5"></a>[5] R. R. Veloso, L. Cerf, W. Meira Jr., and M. J. Zaki. Reachability queries in very large graphs: A fast refined online search approach. In *EDBT*, pp. 511–522, 2014. doi:10.5441/002/edbt.2014.46
+
+<a id="ref-6"></a>[6] Y. Yano, T. Akiba, Y. Iwata, and Y. Yoshida. Fast and scalable reachability queries on graphs by pruned labeling with landmarks and paths. In *CIKM*, pp. 1601–1606, 2013. doi:10.1145/2505515.2505724
+
+<a id="ref-7"></a>[7] J. Su, Q. Zhu, H. Wei, and J. X. Yu. Reachability querying: Can it be even faster? *IEEE TKDE*, 29(3):683–697, 2017. doi:10.1109/TKDE.2016.2631160
+
+<a id="ref-8"></a>[8] H. V. Jagadish. A compression technique to materialize transitive closure. *ACM TODS*, 15(4):558–598, 1990. doi:10.1145/99935.99944
+
+<a id="ref-9"></a>[9] F. Merz and P. Sanders. PReaCH: A fast lightweight reachability index using pruning and contraction hierarchies. In *ESA*, LNCS 8737, pp. 701–712, 2014. doi:10.1007/978-3-662-44777-2_58
+
+<a id="ref-10"></a>[10] E. Cohen, E. Halperin, H. Kaplan, and U. Zwick. Reachability and distance queries via 2-hop labels. *SIAM Journal on Computing*, 32(5):1338–1355, 2003. doi:10.1137/S0097539702403098
+
+<a id="ref-11"></a>[11] J. Cheng, S. Huang, H. Wu, and A. W.-C. Fu. TF-Label: A topological-folding labeling scheme for reachability querying in a large graph. In *ACM SIGMOD*, pp. 193–204, 2013. doi:10.1145/2463676.2465286
+
+<a id="ref-12"></a>[12] A. D. Zhu, W. Lin, S. Wang, and X. Xiao. Reachability queries on large dynamic graphs: A total order approach. In *ACM SIGMOD*, pp. 1323–1334, 2014. doi:10.1145/2588555.2612181
+
+<a id="ref-13"></a>[13] R. Jin and G. Wang. Simple, fast, and scalable reachability oracle. *PVLDB*, 6(14):1978–1989, 2013. doi:10.14778/2556549.2556578 *(introduces both HL and DL)*
+
+<a id="ref-14"></a>[14] K. Hanauer, C. Schulz, and J. Trummer. O'Reach: Even faster reachability in large graphs. *ACM Journal of Experimental Algorithmics*, 27:1–27, 2022. doi:10.1145/3556540
+
+<a id="ref-15"></a>[15] R. Jin, Y. Xiang, N. Ruan, and D. Fuhry. 3-HOP: A high-compression indexing scheme for reachability query. In *ACM SIGMOD*, pp. 813–826, 2009. doi:10.1145/1559845.1559930
+
+<a id="ref-16"></a>[16] J. Cai and C. K. Poon. Path-Hop: Efficiently indexing large graphs for reachability queries. In *CIKM*, pp. 119–128, 2010. doi:10.1145/1871437.1871457
+
+<a id="ref-17"></a>[17] S. Seufert, A. Anand, S. Bedathur, and G. Weikum. FERRARI: Flexible and efficient reachability range assignment for graph indexing. In *IEEE ICDE*, pp. 1009–1020, 2013. doi:10.1109/ICDE.2013.6544893
+
+<a id="ref-18"></a>[18] H. Wang, H. He, J. Yang, P. S. Yu, and J. X. Yu. Dual labeling: Answering graph reachability queries in constant time. In *IEEE ICDE*, p. 75, 2006. doi:10.1109/ICDE.2006.53
+
+<a id="ref-19"></a>[19] L. Chen, A. Gupta, and M. E. Kurul. Stack-based algorithms for pattern matching on DAGs. In *VLDB*, pp. 493–504, 2005.
+
+<a id="ref-20"></a>[20] S. Trißl and U. Leser. Fast and practical indexing and querying of very large graphs. In *ACM SIGMOD*, pp. 845–856, 2007. doi:10.1145/1247480.1247573
+
+<a id="ref-21"></a>[21] R. Jin, N. Ruan, Y. Xiang, and H. Wang. Path-Tree: An efficient reachability indexing scheme for large directed graphs. *ACM TODS*, 36(1):7:1–7:44, 2011. doi:10.1145/1929934.1929941
+
+<a id="ref-22"></a>[22] H. Wei, J. X. Yu, C. Lu, and R. Jin. Reachability querying: An independent permutation labeling approach. *PVLDB*, 7(12):1191–1202, 2014. doi:10.14778/2732977.2732992
+
+<a id="ref-23"></a>[23] Y. Chen and Y. Chen. An efficient algorithm for answering graph reachability queries. In *IEEE ICDE*, pp. 893–902, 2008. doi:10.1109/ICDE.2008.4497498
 
 ## License
 
