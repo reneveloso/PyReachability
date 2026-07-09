@@ -123,7 +123,7 @@ and each candidate hop node `h` is pruned against the set `U` of already-used ho
 cases of Fig. 4 — (a) already used / (b) `h`'s tree instance inside some `u∈U` ⇒ skip `h`; (c) some
 `u∈U` nested inside `RIS(h)` ⇒ skip that sub-range during the scan; (d) sibling ⇒ full scan.
 
-**IP (Wei, Yu, Lu, 2014).** Faithful. The k-min-wise permutation labels plus both additional labels
+**IP (Wei, Yu, Lu, Jin, 2014).** Faithful. The k-min-wise permutation labels plus both additional labels
 of Sec. 6: the **Level label** (forward `Lup` and backward `Ldown` topological levels — negative
 cuts) and the **Huge-Vertex label** `Lhv(v)` (Algorithm 3: up to `h` largest-out-degree vertices
 with out-degree > `µ` that reach `v`). During the DFS, at a huge current vertex `c`: `c∈Lhv(v)` ⇒

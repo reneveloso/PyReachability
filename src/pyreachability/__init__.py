@@ -1174,7 +1174,7 @@ class IP(ReachabilityIndex):
     back to a guided DFS that prunes with the same cuts, so the answer is always exact. General
     graphs are reduced via SCC condensation.
 
-    Wei, Yu, Lu, *Reachability Querying: An Independent Permutation Labeling Approach*, PVLDB 2014.
+    Wei, Yu, Lu, Jin, *Reachability Querying: An Independent Permutation Labeling Approach*, PVLDB 2014.
     The k-min-wise scheme plus both of the paper's additional labels (Sec. 6): the Level label
     (forward + backward topological levels) and the Huge-Vertex label. Verified vs the BFS oracle.
 

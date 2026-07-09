@@ -44,11 +44,11 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **HL** (Hierarchical Labeling) — Jin & Wang, PVLDB 2013 (recursive reachability backbone).
 - ✅ **TOL** (Total Order Labeling) — Zhu, Lin, Wang, Xiao, SIGMOD 2014 (contribution-score order).
 - ⬜ **DBL** (dynamic)
-- ✅ **O'Reach** — Hanauer, Schulz, Trummer, SEA 2021 (constant-time observations + guided fallback).
+- ✅ **O'Reach** — Hanauer, Schulz, Trummer, ACM JEA 2022 (constant-time observations + guided fallback).
 - ⬜ **Ralf et al.** (dynamic 2-hop)
 
 ### Approximate TC class
-- ✅ **IP** (Independent Permutation) — Wei, Yu, Lu, PVLDB 2014 (k-min-wise permutation labels + guided DFS).
+- ✅ **IP** (Independent Permutation) — Wei, Yu, Lu, Jin, PVLDB 2014 (k-min-wise permutation labels + guided DFS).
 - ✅ **BFL** (Bloom Filter Labeling) — Su, Zhu, Wei, Yu, TKDE 2017.
 
 ### Chain Cover class
