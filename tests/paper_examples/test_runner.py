@@ -60,6 +60,12 @@ def check_answers(example: PaperExample) -> None:
         assert got == expected, (
             f"[{example.method}] highlighted query({u},{v}) = {got}, "
             f"paper says {expected}")
+    # Layer 3: the paper's printed labels
+    if example.labels is not None:
+        from _comparators import compare
+        introspect = {"two_hop": "two_hop_labels"}[example.labels.kind]
+        built = getattr(idx, introspect)()
+        compare(example, built)
 
 
 _STUBS = iter_stub_files()
