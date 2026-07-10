@@ -1,13 +1,14 @@
 # =============================================================================
-# COMO PREENCHER (aluno) — Tree Cover (Agrawal)
-# Artigo: docs/agrawal.pdf — abrir em: página 3, "Figure 3.3" (two different tree-covers for the same graph).
-#  1. edges: transcreva o grafo da Figure 3.3.
-#  2. num_nodes: maior id + 1 (mapeie letras -> inteiros se preciso; anote).
-#  3. queries: pares que o texto usa ao explicar a compressão por intervalos.
-#  (labels=None por ora: comparador "intervals" ainda não existe — ver README.)
-#  Valide:  pytest tests/paper_examples/test_runner.py -k treecover -v
-#  Se falhar com "transcription error", o erro está na SUA transcrição
-#  (grafo ou rótulos), não na biblioteca — reconfira a figura.
+# HOW TO FILL IN (student) — Tree Cover (Agrawal)
+# Paper: docs/agrawal.pdf — open at: page 3, "Figure 3.3" (two different tree-covers for the same graph).
+#  1. edges: transcribe the graph of Figure 3.3.
+#  2. num_nodes: highest id + 1 (map letters -> integers if needed; note it).
+#  3. queries: pairs the text uses when explaining interval compression.
+#  (labels=None for now: an "intervals" comparator does not exist yet — see README.)
+#  Validate:  pytest tests/paper_examples/test_runner.py -k treecover -v
+#  If it fails with "transcription error", the error is in YOUR transcription
+#  (graph or labels), not in the library — re-check the figure.
+#  Portuguese guide: README_pt.md in this folder.
 # =============================================================================
 from _schema import PaperExample
 
@@ -16,8 +17,8 @@ EXAMPLE = PaperExample(
     source="Agrawal, Borgida, Jagadish, SIGMOD 1989 — Efficient Management of Transitive Relationships",
     figure="Figure 3.3, p. 3",
     doi="10.1145/67544.66950",
-    num_nodes=None,                       # <- ALUNO
-    edges=[],                             # <- ALUNO (verbatim da figura)
-    queries=[],                           # <- ALUNO (pares destacados no texto)
+    num_nodes=None,                       # <- STUDENT
+    edges=[],                             # <- STUDENT (verbatim from the figure)
+    queries=[],                           # <- STUDENT (pairs highlighted in the text)
     labels=None,
 )

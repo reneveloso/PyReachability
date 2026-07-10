@@ -1,13 +1,14 @@
 # =============================================================================
-# COMO PREENCHER (aluno) — Path-Tree
-# Artigo: docs/path-tree.pdf — abrir em: páginas 13–15, "Fig. 5" e "Fig. 6" (complete labeling for the path-tree).
-#  1. edges: transcreva o grafo dos exemplos (Fig. 4a/5).
-#  2. num_nodes: maior id + 1.
-#  3. queries: pares que o texto resolve com os rótulos 3-tupla.
-#  (labels=None por ora: rótulos 3-tupla teriam comparador próprio no futuro.)
-#  Valide:  pytest tests/paper_examples/test_runner.py -k pathtree -v
-#  Se falhar com "transcription error", o erro está na SUA transcrição
-#  (grafo ou rótulos), não na biblioteca — reconfira a figura.
+# HOW TO FILL IN (student) — Path-Tree
+# Paper: docs/path-tree.pdf — open at: pages 13–15, "Fig. 5" and "Fig. 6" (complete labeling for the path-tree).
+#  1. edges: transcribe the graph of the examples (Fig. 4a/5).
+#  2. num_nodes: highest id + 1.
+#  3. queries: pairs the text resolves with the 3-tuple labels.
+#  (labels=None for now: 3-tuple labels would get their own comparator kind.)
+#  Validate:  pytest tests/paper_examples/test_runner.py -k pathtree -v
+#  If it fails with "transcription error", the error is in YOUR transcription
+#  (graph or labels), not in the library — re-check the figure.
+#  Portuguese guide: README_pt.md in this folder.
 # =============================================================================
 from _schema import PaperExample
 
@@ -16,8 +17,8 @@ EXAMPLE = PaperExample(
     source="Jin, Ruan, Xiang, Wang, ACM TODS 2011 — Path-Tree",
     figure="Figs. 5–6, pp. 13–15",
     doi="10.1145/1929934.1929941",
-    num_nodes=None,                       # <- ALUNO
-    edges=[],                             # <- ALUNO (verbatim da figura)
-    queries=[],                           # <- ALUNO (pares destacados no texto)
+    num_nodes=None,                       # <- STUDENT
+    edges=[],                             # <- STUDENT (verbatim from the figure)
+    queries=[],                           # <- STUDENT (pairs highlighted in the text)
     labels=None,
 )

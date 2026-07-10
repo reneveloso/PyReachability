@@ -1,13 +1,14 @@
 # =============================================================================
-# COMO PREENCHER (aluno) — PReaCH
-# Artigo: docs/preach.pdf — abrir em: página 6, "Figure 1" (example RCH) e página 7, "Figure 2" (níveis topológicos).
-#  1. edges: transcreva o grafo de exemplo (Figure 1/2).
-#  2. num_nodes: maior id + 1.
-#  3. queries: pares que o texto decide por níveis/intervalos.
-#  (labels=None por ora.)
-#  Valide:  pytest tests/paper_examples/test_runner.py -k preach -v
-#  Se falhar com "transcription error", o erro está na SUA transcrição
-#  (grafo ou rótulos), não na biblioteca — reconfira a figura.
+# HOW TO FILL IN (student) — PReaCH
+# Paper: docs/preach.pdf — open at: page 6, "Figure 1" (example RCH) and page 7, "Figure 2" (topological levels).
+#  1. edges: transcribe the example graph (Figure 1/2).
+#  2. num_nodes: highest id + 1.
+#  3. queries: pairs the text decides via levels/intervals.
+#  (labels=None for now.)
+#  Validate:  pytest tests/paper_examples/test_runner.py -k preach -v
+#  If it fails with "transcription error", the error is in YOUR transcription
+#  (graph or labels), not in the library — re-check the figure.
+#  Portuguese guide: README_pt.md in this folder.
 # =============================================================================
 from _schema import PaperExample
 
@@ -16,8 +17,8 @@ EXAMPLE = PaperExample(
     source="Merz & Sanders, ESA 2014 — PReaCH",
     figure="Figures 1–2, pp. 6–7",
     doi="10.1007/978-3-662-44777-2_58",
-    num_nodes=None,                       # <- ALUNO
-    edges=[],                             # <- ALUNO (verbatim da figura)
-    queries=[],                           # <- ALUNO (pares destacados no texto)
+    num_nodes=None,                       # <- STUDENT
+    edges=[],                             # <- STUDENT (verbatim from the figure)
+    queries=[],                           # <- STUDENT (pairs highlighted in the text)
     labels=None,
 )

@@ -1,55 +1,58 @@
-# Exemplos verbatim dos artigos (suíte de fidelidade)
+# Verbatim paper examples (fidelity suite)
 
-Cada arquivo `<metodo>.py` desta pasta transcreve o *running example* do artigo
-original do método: o grafo da figura, as consultas que o texto destaca e, quando
-o artigo os imprime, os rótulos do índice. O runner (`test_runner.py`) valida que
-a implementação da biblioteca reproduz tudo isso, em três camadas:
+*Guia em português: [README_pt.md](README_pt.md).*
 
-1. **Respostas** — todo par `(u, v)` do grafo transcrito;
-2. **Consultas destacadas** — os pares que o texto do artigo discute;
-3. **Rótulos impressos** — o índice construído bate com a figura (quando houver).
+Each `<method>.py` file in this folder transcribes the running example from the
+method's original paper: the figure's graph, the queries the text highlights
+and, when the paper prints them, the index labels. The runner
+(`test_runner.py`) validates that the library's implementation reproduces all
+of it, in three layers:
 
-## Como preencher um stub
+1. **Answers** — every pair `(u, v)` of the transcribed graph;
+2. **Highlighted queries** — the pairs the paper's text discusses;
+3. **Printed labels** — the built index matches the figure (when available).
 
-1. Abra o PDF e a figura indicados no cabeçalho do arquivo.
-2. Siga os passos numerados do cabeçalho (arestas → num_nodes → consultas → rótulos).
-3. Rode `pytest tests/paper_examples/test_runner.py -k <metodo> -v`.
-4. Interprete a falha:
-   - **"transcription error"** = grafo/rótulos mal copiados — reconfira a figura;
-   - **qualquer outra falha** = possível bug de fidelidade na biblioteca (reporte!).
+## How to fill in a stub
 
-Dica: quando a figura rotula vértices por letras, mapeie letras → inteiros
-(ordem alfabética) e anote o mapeamento em comentário no próprio stub.
+1. Open the PDF and figure named in the file's header.
+2. Follow the header's numbered steps (edges → num_nodes → queries → labels).
+3. Run `pytest tests/paper_examples/test_runner.py -k <method> -v`.
+4. Interpret a failure:
+   - **"transcription error"** = graph/labels mis-copied — re-check the figure;
+   - **any other failure** = a possible fidelity bug in the library (report it!).
 
-## Como criar um stub para um método ainda sem arquivo
+Tip: when the figure labels vertices with letters, map letters → integers
+(alphabetical order) and note the mapping in a comment inside the stub.
 
-Copie `hl.py`, ajuste `method` (a chave no `catalog`), a proveniência (`source`,
-`figure`, `doi`) e o cabeçalho de instruções. Stubs não preenchidos (`edges`
-vazio) aparecem como SKIP — nunca quebram a CI. Métodos ainda sem stub:
-GRAIL, PLL, TOL, TFLabel, BFL, ChainCover, TreeSSPI e as linhas de base
-(TC, BFSDFS — livros-texto, sem figura de running example).
+## How to create a stub for a method without one
 
-## Rótulos (Camada 3)
+Copy `hl.py` (the filled reference example), adjust `method` (the `catalog`
+key), the provenance (`source`, `figure`, `doi`) and the instruction header.
+Unfilled stubs (empty `edges`) show up as SKIP — they never break CI. Methods
+still without a stub: GRAIL, PLL, TOL, TFLabel, BFL, ChainCover, TreeSSPI and
+the baselines (TC, BFSDFS — textbook methods without a running-example figure).
 
-Só métodos com introspecção implementada suportam `labels` (hoje: `hl`, com
-`kind="two_hop"` via `HL.two_hop_labels()`). Se o índice do seu método não
-couber em nenhum `kind` existente, as saídas são (nesta ordem):
+## Labels (Layer 3)
 
-1. novo `kind` + comparador em `_comparators.py`;
-2. `mode="invariant"` (os rótulos construídos precisam apenas induzir a mesma
-   alcançabilidade que os do artigo);
-3. omitir `labels` — as Camadas 1–2 já validam o método.
+Only methods with introspection implemented support `labels` (today: `hl`, with
+`kind="two_hop"` via `HL.two_hop_labels()`). If your method's index does not
+fit any existing `kind`, the escape hatches are (in order):
 
-Todo comparador roda antes o **cross-check de transcrição**: a alcançabilidade
-implicada pelos rótulos copiados do artigo deve bater com a derivada das
-arestas copiadas. Divergência = erro de digitação na transcrição, e a mensagem
-de erro aponta exatamente os pares em conflito.
+1. a new `kind` + comparator in `_comparators.py`;
+2. `mode="invariant"` (the built labels only need to induce the same
+   reachability as the paper's);
+3. omit `labels` — Layers 1–2 already validate the method.
 
-## Notas de proveniência
+Every comparator first runs the **transcription cross-check**: the reachability
+implied by the labels copied from the paper must match the one derived from the
+copied edges. A mismatch means a data-entry error in the transcription, and the
+failure message points at the exact conflicting pairs.
 
-- `docs/paper_166.pdf` é o paper do FELINE (EDBT 2014); `docs/reneveloso.pdf`
-  é a tese (144 pp.) — use o paper.
-- `docs/scarab.pdf` (SCARAB, SIGMOD 2012) é referência de apoio do HL
-  (backbone FastCover), não tem stub próprio.
-- No `docs/ferrari.pdf` as legendas das figuras são extraídas na p. 10 desta
-  versão do PDF; as figuras em si aparecem antes.
+## Provenance notes
+
+- `docs/paper_166.pdf` is the FELINE paper (EDBT 2014); `docs/reneveloso.pdf`
+  is the thesis (144 pp.) — use the paper.
+- `docs/scarab.pdf` (SCARAB, SIGMOD 2012) is a supporting reference for HL
+  (the FastCover backbone); it has no stub of its own.
+- In `docs/ferrari.pdf` the figure captions extract on p. 10 of this PDF
+  version; the figures themselves appear earlier.

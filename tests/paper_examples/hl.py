@@ -1,22 +1,22 @@
 # =============================================================================
-# HL (Hierarchical Labeling) — EXEMPLO DE REFERÊNCIA (preenchido)
-# Artigo: docs/DL.pdf — página 5 (numerada 1982), "Figure 1".
+# HL (Hierarchical Labeling) — REFERENCE EXAMPLE (filled)
+# Paper: docs/DL.pdf — page 5 (numbered 1982), "Figure 1".
 #
-# Transcrição: Claude (leitura da figura renderizada a 600 dpi, por quadrantes),
-# 2026-07-10. O cross-check de transcrição valida a consistência entre o grafo
-# (Figure 1a) e a tabela de rótulos (Figure 1d) em todos os pares dos vértices
-# transcritos da tabela — os dois foram copiados de fontes independentes da
-# mesma figura, então a concordância é uma evidência forte de leitura correta.
+# Transcription: Claude (reading the figure rendered at 600 dpi, quadrant by
+# quadrant), 2026-07-10. The transcription cross-check validates consistency
+# between the graph (Figure 1a) and the label table (Figure 1d) on every pair
+# of the table's transcribed vertices — the two were copied independently from
+# the same figure, so their agreement is strong evidence of a correct reading.
 #
-# ATENÇÃO (revisão humana bem-vinda):
-#  - Arestas de leitura mais difícil na figura: 6->13 e 11->12 (na região
-#    congestionada entre 6, 11 e 13). O cross-check não as discrimina porque
-#    nenhum par transcrito da tabela passa exclusivamente por elas.
-#  - A tabela da Figure 1d é PARCIAL (linha "..."), por isso labels.expected
-#    tem só os vértices impressos e mode="invariant" (o FastCover do backbone
-#    tem liberdade de desempate, então os rótulos construídos podem diferir
-#    dos impressos e ainda estar corretos; o invariante exige que induzam a
-#    MESMA alcançabilidade nos vértices transcritos).
+# CAUTION (human review welcome):
+#  - Hardest-to-read edges in the figure: 6->13 and 11->12 (in the congested
+#    region between 6, 11 and 13). The cross-check cannot discriminate them
+#    because no transcribed table pair passes exclusively through them.
+#  - The Figure 1d table is PARTIAL ("..." row), hence labels.expected holds
+#    only the printed vertices and mode="invariant" (the backbone's FastCover
+#    has tie-breaking freedom, so the built labels may differ from the printed
+#    ones while still being correct; the invariant requires them to induce the
+#    SAME reachability over the transcribed vertices).
 # =============================================================================
 from _schema import PaperExample, LabelCheck
 
@@ -33,12 +33,12 @@ EXAMPLE = PaperExample(
         (3, 7), (3, 9),
         (4, 9),
         (5, 6), (5, 10), (5, 11),
-        (6, 7), (6, 13),          # 6->13: ver ATENÇÃO acima
+        (6, 7), (6, 13),          # 6->13: see CAUTION above
         (7, 11), (7, 13), (7, 15),
         (8, 7), (8, 15),
         (9, 8), (9, 16),
         (10, 12),
-        (11, 12),                 # 11->12: ver ATENÇÃO acima
+        (11, 12),                 # 11->12: see CAUTION above
         (12, 17), (12, 18),
         (13, 12), (13, 14), (13, 18),
         (14, 19),
@@ -68,16 +68,16 @@ EXAMPLE = PaperExample(
         (39, 40),
         (40, 37),
     ],
-    # Fatos deriváveis da tabela 1(d) (interseção Lout/Lin), conferidos à mão:
+    # Facts derivable from table 1(d) (Lout/Lin intersection), checked by hand:
     queries=[
-        (0, 8, True),    # Lout(0) contém 9, e 9 está em Lin(8): 0 -> 3 -> 9 -> 8
-        (2, 6, True),    # Lout(2) contém 5, e 5 está em Lin(6): 2 -> 5 -> 6
-        (2, 8, False),   # Lout(2) e Lin(8) não se intersectam
-        (3, 6, False),   # Lout(3) e Lin(6) não se intersectam
-        (6, 38, True),   # {7,25,35} em comum: 6 -> 7 -> 15 -> 20 -> 25 -> 34 -> 38
-        (38, 0, False),  # Lout(38) = {33,38,39,40} não intersecta Lin(0)
+        (0, 8, True),    # Lout(0) contains 9, and 9 is in Lin(8): 0 -> 3 -> 9 -> 8
+        (2, 6, True),    # Lout(2) contains 5, and 5 is in Lin(6): 2 -> 5 -> 6
+        (2, 8, False),   # Lout(2) and Lin(8) do not intersect
+        (3, 6, False),   # Lout(3) and Lin(6) do not intersect
+        (6, 38, True),   # {7,25,35} in common: 6 -> 7 -> 15 -> 20 -> 25 -> 34 -> 38
+        (38, 0, False),  # Lout(38) = {33,38,39,40} does not intersect Lin(0)
     ],
-    # Figure 1(d), "Hop Labeling for V0" — tabela parcial (linha "..."):
+    # Figure 1(d), "Hop Labeling for V0" — partial table ("..." row):
     labels=LabelCheck(
         kind="two_hop",
         mode="invariant",
