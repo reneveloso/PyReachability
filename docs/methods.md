@@ -37,7 +37,8 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **PLL** — Yano, Akiba, Iwata, Yoshida, CIKM 2013.
 - ✅ **2-Hop** — Cohen, Halperin, Kaplan, Zwick, SIAM J. Comput. 2003 (greedy densest-subgraph cover).
 - ✅ **3-Hop** — Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 (TC contour + greedy factorization).
-- ⬜ **U2-hop** — planned for v0.2.0.
+- ⬜ **U2-hop** (dynamic — incremental maintenance of 2-hop labels; Bramandia, Choi, Ng, TKDE 2010.
+  The survey discusses it under dynamic graphs and notes it does not scale to large graphs.)
 - ✅ **Path-hop** — Cai & Poon, CIKM 2010 (residual TC + greedy path-hop set cover; trees as highways).
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ✅ **DL** (Distribution Labeling) — Jin & Wang, PVLDB 2013 (Algorithm 2; survey-proven equivalent to PLL).
@@ -61,8 +62,9 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ## Status summary
 
-Implemented: 24 methods, covering every static index class of the survey's Table 1.
-Pending: U2-hop (static; planned for v0.2.0). Deferred to a future extension: the
-dynamic-graph methods (DAGGER, DBL, Ralf et al.), alongside the label-constrained
-methods of Table 2. Exact citations are taken from CSUR 2025 Table 1 and confirmed
-against the primary source at implementation time.
+Implemented: 24 methods — **all static plain-reachability techniques of the survey's
+Table 1**. Deferred to a future extension: the dynamic-graph methods (DAGGER, U2-hop,
+DBL, Ralf et al. — U2-hop is incremental 2-hop maintenance, discussed by the survey
+under dynamic graphs), alongside the label-constrained methods of Table 2. Exact
+citations are taken from CSUR 2025 Table 1 and confirmed against the primary source
+at implementation time.

@@ -162,15 +162,16 @@ The library is built in milestones, each producing working, tested software:
 3. **Benchmark harness + datasets** ✅ — `benchmarks/run_benchmark.py` compares build time,
    index size, and query time across all methods vs the BFS/DFS oracle on standard DAGs
    (`bash benchmarks/fetch_datasets.sh`).
-4. **Comprehensive catalog** ✅ — the static **plain-reachability indexes of the CSUR 2025
+4. **Comprehensive catalog** ✅ — **all static plain-reachability indexes of the CSUR 2025
    survey** (Table 1): 24 methods implemented. The method list is taken from a peer-reviewed
    survey, not chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the coverage map.
-   (U2-hop, the one remaining static method, lands in v0.2.0.)
-5. **First public release** — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
+5. **First public release** ✅ — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
    in v0.2.0.
 
-Dynamic-graph methods (DAGGER, DBL, Ralf et al.) and label-constrained / path-constrained
-reachability (edge-labeled graphs, the survey's Table 2) are planned later extensions.
+Dynamic-graph methods (DAGGER, U2-hop, DBL, Ralf et al. — U2-hop is incremental 2-hop
+maintenance, which the survey discusses under dynamic graphs) and label-constrained /
+path-constrained reachability (edge-labeled graphs, the survey's Table 2) are planned later
+extensions.
 
 ## Benchmarks
 
