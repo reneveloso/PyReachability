@@ -57,3 +57,31 @@ def test_hl_matches_oracle(g):
     for u in range(n):
         for v in range(n):
             assert idx.query(u, v) == oracle_query(reach, u, v)
+
+
+def test_two_hop_labels_introspection_dag():
+    import numpy as np
+    from pyreachability import Graph, HL
+    # diamond DAG
+    g = Graph.from_edges(np.array([0, 0, 1, 2], np.int32),
+                         np.array([1, 2, 3, 3], np.int32), num_nodes=4)
+    idx = HL(); idx.build(g)
+    labels = idx.two_hop_labels()
+    assert set(labels.keys()) == {0, 1, 2, 3}
+    for v, lab in labels.items():
+        assert set(lab.keys()) == {"Lin", "Lout"}
+    # the labels must DECIDE reachability: Lout(u) intersects Lin(v) iff u reaches v
+    def reaches(u, v):
+        return bool(labels[u]["Lout"] & labels[v]["Lin"])
+    assert reaches(0, 3) and reaches(1, 3) and not reaches(3, 0) and not reaches(1, 2)
+
+
+def test_two_hop_labels_raises_on_cycle():
+    import numpy as np
+    import pytest
+    from pyreachability import Graph, HL
+    g = Graph.from_edges(np.array([0, 1], np.int32),
+                         np.array([1, 0], np.int32), num_nodes=2)
+    idx = HL(); idx.build(g)
+    with pytest.raises(NotImplementedError):
+        idx.two_hop_labels()

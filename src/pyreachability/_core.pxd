@@ -102,12 +102,18 @@ cdef extern from "reachability/tol.hpp" namespace "reachability":
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
 
+cdef extern from "reachability/two_hop.hpp" namespace "reachability":
+    cdef cppclass TwoHopLabels:
+        vector[vector[vid_t]] Lout
+        vector[vector[vid_t]] Lin
+
 cdef extern from "reachability/hl.hpp" namespace "reachability":
     cdef cppclass HL:
         HL() except +
         void build(const CSRGraph&, int) except +
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
+        const TwoHopLabels& labels()
 
 cdef extern from "reachability/oreach.hpp" namespace "reachability":
     cdef cppclass OReach:

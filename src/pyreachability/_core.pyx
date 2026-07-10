@@ -978,6 +978,19 @@ cdef class _HLCore:
     def index_size_bytes(self):
         return self._hl.index_size_bytes() + self._comp.size() * sizeof(int)
 
+    def labels(self):
+        """(comp, Lin_lists, Lout_lists) — labels are in condensed-DAG id space."""
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef const TwoHopLabels* L = &self._hl.labels()
+        cdef Py_ssize_t n_comp = L.Lout.size()
+        cdef Py_ssize_t c
+        lin = [set(L.Lin[c]) for c in range(n_comp)]
+        lout = [set(L.Lout[c]) for c in range(n_comp)]
+        comp = np.asarray([self._comp[i] for i in range(self._comp.size())],
+                          dtype=np.int32)
+        return comp, lin, lout
+
 
 cdef class _OReachCore:
     cdef OReach* _or

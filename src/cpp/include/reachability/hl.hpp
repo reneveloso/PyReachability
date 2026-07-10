@@ -28,6 +28,9 @@ public:
     bool query(vid_t u, vid_t v) const;
     std::size_t index_size_bytes() const;
 
+    // Read-only view of the built 2-hop labels (entries are condensed-DAG ids).
+    const TwoHopLabels& labels() const { return L_; }
+
 private:
     vid_t n_ = 0;
     TwoHopLabels L_;

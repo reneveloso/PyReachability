@@ -703,6 +703,26 @@ class HL(ReachabilityIndex):
     def index_size_bytes(self) -> int:
         return self._core.index_size_bytes()
 
+    def two_hop_labels(self):
+        """The built Lin/Lout labels per original vertex (DAG inputs only).
+
+        Only defined when every SCC is a singleton (the input is a DAG), so
+        condensed-DAG ids map 1:1 back to original vertices. Used by the
+        paper-example fidelity suite (``tests/paper_examples/``)."""
+        if not self._built:
+            raise RuntimeError("index not built")
+        comp, lin, lout = self._core.labels()
+        n = len(comp)
+        if len(set(comp.tolist())) != n:
+            raise NotImplementedError("two_hop_labels() requires a DAG input")
+        # comp[v] = condensed id of vertex v; invert to translate label entries back
+        rep = {int(c): v for v, c in enumerate(comp.tolist())}
+        return {
+            v: {"Lin": {rep[int(e)] for e in lin[comp[v]]},
+                "Lout": {rep[int(e)] for e in lout[comp[v]]}}
+            for v in range(n)
+        }
+
 
 @catalog.register
 class OReach(ReachabilityIndex):
