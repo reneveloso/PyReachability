@@ -7,20 +7,22 @@ from __future__ import annotations
 from _schema import PaperExample
 
 
-def _pairs_from_two_hop(expected: dict, n: int):
+def _pairs_from_two_hop(labels: dict, verts) -> set:
+    """Ordered pairs (u, v), u != v, decided reachable by Lout(u) ∩ Lin(v),
+    restricted to `verts` — papers often print only part of the label table."""
     out = set()
-    for u in range(n):
-        for v in range(n):
-            if u != v and (expected[u]["Lout"] & expected[v]["Lin"]):
+    for u in verts:
+        for v in verts:
+            if u != v and (labels[u]["Lout"] & labels[v]["Lin"]):
                 out.add((u, v))
     return out
 
 
 def cross_check_two_hop(example: PaperExample) -> None:
-    n = example.num_nodes
+    verts = sorted(example.labels.expected.keys())
     reach = example.ground_truth()
-    from_graph = {(u, v) for u in range(n) for v in reach[u] if u != v}
-    from_labels = _pairs_from_two_hop(example.labels.expected, n)
+    from_graph = {(u, v) for u in verts for v in verts if u != v and v in reach[u]}
+    from_labels = _pairs_from_two_hop(example.labels.expected, verts)
     assert from_graph == from_labels, (
         f"[{example.method}] {example.figure}: transcription error (graph or "
         f"labels mis-copied from the paper). Reachability from the transcribed "
@@ -30,14 +32,15 @@ def cross_check_two_hop(example: PaperExample) -> None:
 
 def _compare_two_hop(example: PaperExample, built: dict) -> None:
     cross_check_two_hop(example)
+    verts = sorted(example.labels.expected.keys())
     if example.labels.mode == "exact":
-        assert built == example.labels.expected, (
+        got = {v: built[v] for v in verts}
+        assert got == example.labels.expected, (
             f"[{example.method}] built Lin/Lout differ from the paper's "
             f"{example.figure}")
     else:  # invariant: the built labels must induce the same reachability
-        n = example.num_nodes
-        assert _pairs_from_two_hop(built, n) == _pairs_from_two_hop(
-            example.labels.expected, n), (
+        assert _pairs_from_two_hop(built, verts) == _pairs_from_two_hop(
+            example.labels.expected, verts), (
             f"[{example.method}] built labels induce a different reachability "
             f"than the paper's {example.figure}")
 

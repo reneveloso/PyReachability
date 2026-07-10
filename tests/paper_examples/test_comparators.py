@@ -41,3 +41,22 @@ def test_compare_exact_matches_built_labels():
     # still correct; this test asserts the INVARIANT path instead:
     ex.labels.mode = "invariant"
     compare(ex, built)                       # no raise
+
+
+def test_cross_check_supports_partial_tables():
+    # only vertices 0 and 2 transcribed from a hypothetical partial table
+    partial = {
+        0: {"Lin": {0}, "Lout": {0, 1, 2}},
+        2: {"Lin": {2}, "Lout": {2}},
+    }
+    cross_check_two_hop(_example(partial))   # restricted to {0, 2}: 0->2 only
+
+
+def test_partial_table_flags_transcription_error():
+    partial = {
+        0: {"Lin": {0}, "Lout": {0}},        # claims 0 does NOT reach 2
+        2: {"Lin": {2}, "Lout": {2}},
+    }
+    import pytest as _pytest
+    with _pytest.raises(AssertionError, match="transcription error"):
+        cross_check_two_hop(_example(partial))
