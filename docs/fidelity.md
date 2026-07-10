@@ -5,6 +5,11 @@ idea, same index semantics, same query answers. **Every method is validated for 
 against the BFS/DFS oracle** (property-based tests, hundreds of random graphs each), so no method
 ever returns a wrong reachability answer.
 
+> **Executable counterpart:** `tests/paper_examples/` transcribes each paper's
+> running example (graph, highlighted queries and, where printed, the index
+> labels) and asserts the implementation reproduces them. Method files still
+> unfilled are reported as skipped tests.
+
 Where an implementation departs from the paper, the departure is one of three kinds:
 
 - **Faithful** — the construction and the produced index match the paper (up to tie-breaking).

@@ -10,10 +10,10 @@ diamond/poset that 2-hop & dual-labeling target, non-tree "hop" edges, multiple 
 SCC condensation that every method relies on). This gives a single, reviewer-checkable place that
 shows the library answers the textbook reachability scenarios from the source publications exactly.
 
-NOTE on verbatim paper figures: the exact edge lists of the papers' figures are not transcribed here
-because they cannot be read from the PDFs with the certainty a published claim requires. The DAGs
-below are hand-constructed to mirror the *structures* used as running examples in the literature; to
-add a paper's figure verbatim, drop its edge list into EXAMPLES with the expected reachability.
+NOTE on verbatim paper figures: the verbatim transcriptions now live in
+``tests/paper_examples/`` (one data file per method, filled from each paper's
+running-example figure, with a transcription cross-check). This module keeps the
+hand-built structural DAGs as a fast, always-on complement.
 """
 import numpy as np
 import pytest
