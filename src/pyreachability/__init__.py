@@ -705,8 +705,6 @@ class PathHop(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
-
-
 @catalog.register
 class IP(ReachabilityIndex):
     """IP: independent-permutation labels (approximate TC) + guided-search fallback.

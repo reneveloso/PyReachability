@@ -5,6 +5,8 @@ from .._core import (_TreeCoverCore, _GRAILCore, _TreeSSPICore, _DualLabelingCor
                      _GRIPPCore, _PathTreeCore, _FerrariCore)
 from ..base import ReachabilityIndex
 from .. import catalog
+
+
 @catalog.register
 class GRAIL(ReachabilityIndex):
     """GRAIL: scalable reachability via d randomized interval labels + guided search.
@@ -68,8 +70,6 @@ class GRAIL(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
-
-
 @catalog.register
 class TreeCover(ReachabilityIndex):
     """Tree Cover: transitive-closure compression via DFS post-order interval labels.
@@ -117,8 +117,6 @@ class TreeCover(ReachabilityIndex):
     @property
     def index_size_bytes(self) -> int:
         return self._core.index_size_bytes()
-
-
 
 
 @catalog.register
@@ -190,8 +188,6 @@ class Ferrari(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
-
-
 @catalog.register
 class DualLabeling(ReachabilityIndex):
     """Dual Labeling: spanning-tree intervals + a transitive link table (best for sparse graphs).
@@ -243,8 +239,6 @@ class DualLabeling(ReachabilityIndex):
     @property
     def index_size_bytes(self) -> int:
         return self._core.index_size_bytes()
-
-
 
 
 @catalog.register
@@ -299,7 +293,6 @@ class TreeSSPI(ReachabilityIndex):
         return self._core.index_size_bytes()
 
 
-
 @catalog.register
 class GRIPP(ReachabilityIndex):
     """GRIPP: pre/postorder order-tree instances + the hop technique (online guided search).
@@ -350,7 +343,6 @@ class GRIPP(ReachabilityIndex):
     @property
     def index_size_bytes(self) -> int:
         return self._core.index_size_bytes()
-
 
 
 @catalog.register
