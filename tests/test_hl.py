@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 from hypothesis import given, settings, strategies as st
-from pyreachability import Graph, HL, catalog
+from pyreachability import Graph, catalog
+from pyreachability.static import HL
 from pyreachability._oracle import reachable_set, oracle_query
 
 
@@ -61,7 +62,8 @@ def test_hl_matches_oracle(g):
 
 def test_two_hop_labels_introspection_dag():
     import numpy as np
-    from pyreachability import Graph, HL
+    from pyreachability import Graph
+    from pyreachability.static import HL
     # diamond DAG
     g = Graph.from_edges(np.array([0, 0, 1, 2], np.int32),
                          np.array([1, 2, 3, 3], np.int32), num_nodes=4)
@@ -79,7 +81,8 @@ def test_two_hop_labels_introspection_dag():
 def test_two_hop_labels_raises_on_cycle():
     import numpy as np
     import pytest
-    from pyreachability import Graph, HL
+    from pyreachability import Graph
+    from pyreachability.static import HL
     g = Graph.from_edges(np.array([0, 1], np.int32),
                          np.array([1, 0], np.int32), num_nodes=2)
     idx = HL(); idx.build(g)
