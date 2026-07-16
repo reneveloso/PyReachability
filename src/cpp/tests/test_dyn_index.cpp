@@ -38,3 +38,15 @@ TEST_CASE("build_suborder: ranks only the induced sub-DAG") {
     CHECK(ord.x_rank.size() == 2);
     CHECK(ord.y_rank.size() == 2);
 }
+
+TEST_CASE("build_suborder: an edge inside the set constrains the order") {
+    // The case above only exercises the filter's *rejection* path: with {0,2} the
+    // sub-DAG comes out edgeless. This one exercises the *acceptance* path — 0->1 is
+    // internal to `reps` and must be respected on both axes. Nothing covered that.
+    DynamicGraph g;
+    for (unsigned v = 0; v < 3; ++v) g.dag_add_vertex(v);
+    g.dag_add_edge(0, 1);
+    auto ord = build_suborder(g, {0, 1});   // ranks are positional by `reps`
+    CHECK(ord.x_rank[0] < ord.x_rank[1]);
+    CHECK(ord.y_rank[0] < ord.y_rank[1]);
+}
