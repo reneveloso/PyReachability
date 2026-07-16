@@ -32,6 +32,7 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/bfsdfs.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/grail.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/feline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/representative.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pll.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/tc.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/treecover.cpp"
@@ -90,6 +91,8 @@ add_executable(cpp_tests
   src/cpp/tests/test_pathtree.cpp
   src/cpp/tests/test_ip.cpp
   src/cpp/tests/test_optchaincover.cpp
+  src/cpp/tests/test_dyn_representative.cpp
+  src/cpp/dynamic/representative.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp
   src/cpp/levels.cpp
