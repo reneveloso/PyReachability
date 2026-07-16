@@ -94,6 +94,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_optchaincover.cpp
   src/cpp/tests/test_dyn_representative.cpp
   src/cpp/tests/test_dyn_graph.cpp
+  src/cpp/tests/test_dyn_xy_ordering.cpp
   src/cpp/dynamic/representative.cpp
   src/cpp/dynamic/graph.cpp
   src/cpp/csr_graph.cpp
