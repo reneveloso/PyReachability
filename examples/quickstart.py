@@ -5,7 +5,8 @@ queries (single and batched), plus dynamic method discovery via the catalog.
 """
 import numpy as np
 
-from pyreachability import Graph, BFSDFS, catalog
+from pyreachability import Graph, catalog
+from pyreachability.static import BFSDFS
 
 
 def main() -> None:

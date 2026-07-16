@@ -55,7 +55,8 @@ later milestone.
 
 ```python
 import numpy as np
-from pyreachability import Graph, BFSDFS
+from pyreachability import Graph
+from pyreachability.static import BFSDFS
 
 # Build a graph from a NumPy edge list: edges 0->1, 1->2, 2->0 (a cycle), 3 isolated.
 src = np.array([0, 1, 2], dtype=np.int32)

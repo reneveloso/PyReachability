@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
 from hypothesis import given, settings, strategies as st
-from pyreachability import Graph, TC, TreeCover, catalog
+from pyreachability import Graph, catalog
+from pyreachability.static import TC, TreeCover
 from pyreachability._oracle import reachable_set, oracle_query
 
 METHODS = [TC, TreeCover]

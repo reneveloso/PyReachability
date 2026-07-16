@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from pyreachability import Graph, BFSDFS, catalog
+from pyreachability import Graph, catalog
+from pyreachability.static import BFSDFS
 
 
 def make_g():

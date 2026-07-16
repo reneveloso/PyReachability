@@ -1,6 +1,7 @@
 import numpy as np
 from hypothesis import given, settings, strategies as st
-from pyreachability import Graph, BFSDFS
+from pyreachability import Graph
+from pyreachability.static import BFSDFS
 from pyreachability._oracle import reachable_set, oracle_query
 
 

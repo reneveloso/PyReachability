@@ -22,7 +22,8 @@ import time
 
 import numpy as np
 
-from pyreachability import Graph, BFSDFS, catalog
+from pyreachability import Graph, catalog
+from pyreachability.static import BFSDFS
 
 # Per-method cap on #nodes: methods with super-linear construction skip larger graphs.
 # Anything not listed runs on all sizes (linear / near-linear construction).
