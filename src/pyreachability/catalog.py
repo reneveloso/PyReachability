@@ -17,9 +17,25 @@ def register(cls: type[ReachabilityIndex]) -> type[ReachabilityIndex]:
     return cls
 
 
-def methods() -> list[str]:
-    """Sorted list of registered method names."""
-    return sorted(_REGISTRY)
+def methods(kind: str = "all") -> list[str]:
+    """Sorted list of registered method names.
+
+    kind: "all" (default), "static", or "dynamic". A catalog that hid half its
+    contents by default would be a worse lie than one that lists everything, so
+    the default is "all" — callers that must not mix the two halves (benchmarks,
+    whose build-once cost has no dynamic counterpart) ask for "static" explicitly.
+    """
+    from .dynamic.base import DynamicReachabilityIndex
+
+    if kind == "all":
+        return sorted(_REGISTRY)
+    if kind == "dynamic":
+        return sorted(n for n, c in _REGISTRY.items()
+                      if issubclass(c, DynamicReachabilityIndex))
+    if kind == "static":
+        return sorted(n for n, c in _REGISTRY.items()
+                      if not issubclass(c, DynamicReachabilityIndex))
+    raise ValueError(f"kind must be 'all', 'static' or 'dynamic', not {kind!r}")
 
 
 def get(name: str) -> type[ReachabilityIndex]:

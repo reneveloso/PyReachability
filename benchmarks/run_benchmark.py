@@ -66,7 +66,7 @@ def run_dataset(path, n_queries, seed, rows):
     print(f"|{'-'*14}|{'-'*11}|{'-'*12}|{'-'*12}|{'-'*7}|")
     print(f"| {'BFSDFS*':12s} | {'-':>9s} | {'-':>10s} | {1e6 * t_truth / n_queries:10.3f} | oracle |")
 
-    for name in catalog.methods():
+    for name in catalog.methods(kind="static"):
         if name == "bfsdfs":
             continue
         cap = NODE_CAP.get(name)
