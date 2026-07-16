@@ -30,7 +30,7 @@ def test_params_and_registration():
     with pytest.raises(RuntimeError):
         IP().query(0, 1)
     g = Graph.from_edges(np.array([0], np.int32), np.array([1], np.int32), num_nodes=2)
-    idx = IP(k=1, np=1, seed=3); idx.build(g)
+    idx = IP(k=1, num_perm=1, seed=3); idx.build(g)
     with pytest.raises(IndexError):
         idx.query(0, 99)
     assert "ip" in catalog.methods()
@@ -53,7 +53,7 @@ def test_ip_matches_oracle(g, k, npn):
     src = np.array([e[0] for e in edges], dtype=np.int32)
     dst = np.array([e[1] for e in edges], dtype=np.int32)
     graph = Graph.from_edges(src, dst, num_nodes=n)
-    idx = IP(k=k, np=npn, seed=1); idx.build(graph)
+    idx = IP(k=k, num_perm=npn, seed=1); idx.build(graph)
     reach = reachable_set(n, edges)
     for u in range(n):
         for v in range(n):

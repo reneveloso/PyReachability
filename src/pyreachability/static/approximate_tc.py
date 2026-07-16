@@ -68,7 +68,7 @@ class BFL(ReachabilityIndex):
 class IP(ReachabilityIndex):
     """IP: independent-permutation labels (approximate TC) + guided-search fallback.
 
-    A partial index. For each of ``np`` random permutations, every vertex stores the ``k`` smallest
+    A partial index. For each of ``num_perm`` random permutations, every vertex stores the ``k`` smallest
     permutation values of its reachable set ``Out`` and its reaching set ``In`` (k-min-wise). Since
     ``u`` reaches ``v`` requires ``Out(v) ⊆ Out(u)`` and ``In(u) ⊆ In(v)``, a permutation whose
     k-min labels prove one of these containments false answers the query negatively in constant
@@ -84,7 +84,7 @@ class IP(ReachabilityIndex):
     ----------
     k : int, optional
         Number of smallest values kept per permutation (default 2).
-    np : int, optional
+    num_perm : int, optional
         Number of independent permutations (default 2). More cuts, more space.
     h : int, optional
         Max huge vertices stored per Huge-Vertex label (default 5; 0 disables it).
@@ -107,8 +107,8 @@ class IP(ReachabilityIndex):
 
     name = "ip"
 
-    def __init__(self, k: int = 2, np: int = 2, h: int = 5, mu: int = 100, seed: int = 1):
-        self._core = _IPCore(int(k), int(np), int(h), int(mu), int(seed))
+    def __init__(self, k: int = 2, num_perm: int = 2, h: int = 5, mu: int = 100, seed: int = 1):
+        self._core = _IPCore(int(k), int(num_perm), int(h), int(mu), int(seed))
         self._built = False
         self.k = int(k)
 
