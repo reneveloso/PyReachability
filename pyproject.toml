@@ -37,6 +37,13 @@ Issues = "https://github.com/reneveloso/PyReachability/issues"
 [project.optional-dependencies]
 test = ["pytest>=7", "hypothesis>=6"]
 
+[tool.pytest.ini_options]
+# Run the docstring examples as tests. Every method's docstring carries a runnable
+# Examples block; without this nothing executes them, and they rot silently — as
+# happened when the import contract changed and all 24 kept teaching the old form.
+addopts = "--doctest-modules"
+testpaths = ["tests", "src/pyreachability"]
+
 [tool.scikit-build]
 wheel.packages = ["src/pyreachability"]
 minimum-version = "0.8"
