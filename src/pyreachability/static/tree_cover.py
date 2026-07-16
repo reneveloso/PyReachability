@@ -35,7 +35,8 @@ class GRAIL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, GRAIL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import GRAIL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = GRAIL(); idx.build(g)
@@ -86,7 +87,8 @@ class TreeCover(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TreeCover
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TreeCover
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TreeCover(); idx.build(g)
@@ -154,7 +156,8 @@ class Ferrari(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, Ferrari
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import Ferrari
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = Ferrari(); idx.build(g)
@@ -208,7 +211,8 @@ class DualLabeling(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, DualLabeling
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import DualLabeling
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = DualLabeling(); idx.build(g)
@@ -260,7 +264,8 @@ class TreeSSPI(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TreeSSPI
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TreeSSPI
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TreeSSPI(); idx.build(g)
@@ -312,7 +317,8 @@ class GRIPP(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, GRIPP
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import GRIPP
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = GRIPP(); idx.build(g)
@@ -365,7 +371,8 @@ class PathTree(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, PathTree
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import PathTree
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = PathTree(); idx.build(g)

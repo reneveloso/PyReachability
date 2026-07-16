@@ -26,7 +26,8 @@ class PLL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, PLL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import PLL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = PLL(); idx.build(g)
@@ -78,7 +79,8 @@ class TwoHop(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TwoHop
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TwoHop
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TwoHop(); idx.build(g)
@@ -130,7 +132,8 @@ class TFLabel(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TFLabel
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TFLabel
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TFLabel(); idx.build(g)
@@ -182,7 +185,8 @@ class TOL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TOL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TOL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TOL(); idx.build(g)
@@ -242,7 +246,8 @@ class HL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, HL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import HL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = HL(); idx.build(g)
@@ -330,7 +335,8 @@ class OReach(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, OReach
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import OReach
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = OReach(); idx.build(g)
@@ -387,7 +393,8 @@ class ThreeHop(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, ThreeHop
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import ThreeHop
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = ThreeHop(); idx.build(g)
@@ -441,7 +448,8 @@ class PathHop(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, PathHop
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import PathHop
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = PathHop(); idx.build(g)
@@ -493,7 +501,8 @@ class DL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, DL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import DL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = DL(); idx.build(g)

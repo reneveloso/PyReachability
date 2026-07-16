@@ -29,7 +29,8 @@ class BFL(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, BFL
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import BFL
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = BFL(); idx.build(g)
@@ -95,7 +96,8 @@ class IP(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, IP
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import IP
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = IP(); idx.build(g)

@@ -36,7 +36,8 @@ class FELINE(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, FELINE
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import FELINE
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = FELINE(); idx.build(g)
@@ -86,7 +87,8 @@ class PReaCH(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, PReaCH
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import PReaCH
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = PReaCH(); idx.build(g)

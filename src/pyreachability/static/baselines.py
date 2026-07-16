@@ -17,7 +17,8 @@ class BFSDFS(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, BFSDFS
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import BFSDFS
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = BFSDFS(); idx.build(g)
@@ -62,7 +63,8 @@ class TC(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, TC
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import TC
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = TC(); idx.build(g)

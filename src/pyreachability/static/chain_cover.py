@@ -22,7 +22,8 @@ class ChainCover(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, ChainCover
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import ChainCover
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = ChainCover(); idx.build(g)
@@ -73,7 +74,8 @@ class OptimalChainCover(ReachabilityIndex):
     Examples
     --------
     >>> import numpy as np
-    >>> from pyreachability import Graph, OptimalChainCover
+    >>> from pyreachability import Graph
+    >>> from pyreachability.static import OptimalChainCover
     >>> g = Graph.from_edges(np.array([0, 1], np.int32),
     ...                      np.array([1, 2], np.int32), num_nodes=3)
     >>> idx = OptimalChainCover(); idx.build(g)
