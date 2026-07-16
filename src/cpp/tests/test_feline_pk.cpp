@@ -44,10 +44,20 @@ TEST_CASE("FelinePK: closing a cycle folds it into one component") {
     pk.insert_edge(2, 0);           // closes the cycle: {0,1,2} is now one SCC
     CHECK(pk.rep().find(0) == pk.rep().find(1));
     CHECK(pk.rep().find(1) == pk.rep().find(2));
-    // Everything in an SCC reaches everything else, both ways.
-    for (unsigned a = 0; a < 3; ++a)
-        for (unsigned b = 0; b < 3; ++b)
-            CHECK(pk.reachable(a, b));
+
+    // No all-pairs loop here: reachable() short-circuits on `a == b` once the
+    // representatives coincide, which the two CHECKs above already established. Such a
+    // loop would pass over a completely corrupted index — it asserts nothing.
+    //
+    // What the fold must ALSO do is collapse the three DAG nodes into one. Check the DAG
+    // vertex SET, not the edges: fold_cycle strips every edge touching a folded rep before
+    // it removes the vertices, so an assertion on dag_succ() being empty holds either way
+    // and proves nothing. Membership is what dag_remove_vertex actually changes.
+    const auto r = pk.rep().find(0);
+    CHECK(pk.graph().dag_out_all().count(r) == 1);    // the representative survives
+    for (unsigned v = 0; v < 3; ++v)
+        if (v != r) CHECK(pk.graph().dag_out_all().count(v) == 0);   // members left E_DAG
+    CHECK(pk.graph().dag_succ(r).count(r) == 0);      // no self-loop was rewired in
 }
 
 TEST_CASE("FelinePK: a fold keeps outside reachability intact") {

@@ -16,14 +16,19 @@ public:
     // Alg. 8: remove a disconnected vertex (O(1)); v must be isolated in E.
     void remove_vertex(vertex_t v);
 
-    // Alg. 10: insert edge (u, v). Defined in Tasks 8 (SCC unchanged) and 9 (SCC changed).
+    // Alg. 10: insert edge (u, v). Two branches: if the edge closes no cycle the X/Y order
+    // is repaired in place; if it closes one, the cycle is folded into a single component.
+    //
+    // The repair deliberately departs from the thesis's Alg. 10 in two coupled ways — the
+    // thesis's line 11 is unsound as written. See feline_pk.cpp and docs/fidelity.md.
     void insert_edge(vertex_t u, vertex_t v);
 
     // Remove edge (u, v) from the digraph, updating r, E_DAG and the index. If (u,v) is
     // internal to a component, the component may split. No-op if the edge is absent.
     void remove_edge(vertex_t u, vertex_t v);
 
-    // Dynamic reachability query (defined in Task 7).
+    // Dynamic reachability query. Maps both endpoints through r_ and asks the index about
+    // their representatives; same representative means reachable (one SCC).
     bool reachable(vertex_t u, vertex_t v);
 
     // Estimated resident size of the index structures (DynIndex's coordinate maps plus
