@@ -103,6 +103,7 @@ add_executable(cpp_tests
   src/cpp/tests/test_dyn_query.cpp
   src/cpp/tests/test_dyn_scc.cpp
   src/cpp/tests/test_feline_pk.cpp
+  src/cpp/tests/test_dyn_stress.cpp
   src/cpp/dynamic/representative.cpp
   src/cpp/dynamic/graph.cpp
   src/cpp/dynamic/index.cpp
