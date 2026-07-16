@@ -7,7 +7,10 @@ package mirrors `docs/methods.md` section for section.
 from .baselines import BFSDFS, TC
 from .tree_cover import (TreeCover, GRAIL, TreeSSPI, DualLabeling, GRIPP,
                          PathTree, Ferrari)
+from .two_hop import PLL, TwoHop, ThreeHop, PathHop, TFLabel, DL, HL, TOL, OReach
 
 __all__ = ["BFSDFS", "TC",
            "TreeCover", "GRAIL", "TreeSSPI", "DualLabeling", "GRIPP",
-           "PathTree", "Ferrari"]
+           "PathTree", "Ferrari",
+           "PLL", "TwoHop", "ThreeHop", "PathHop", "TFLabel", "DL", "HL",
+           "TOL", "OReach"]
