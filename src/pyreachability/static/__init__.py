@@ -8,9 +8,15 @@ from .baselines import BFSDFS, TC
 from .tree_cover import (TreeCover, GRAIL, TreeSSPI, DualLabeling, GRIPP,
                          PathTree, Ferrari)
 from .two_hop import PLL, TwoHop, ThreeHop, PathHop, TFLabel, DL, HL, TOL, OReach
+from .approximate_tc import IP, BFL
+from .chain_cover import ChainCover, OptimalChainCover
+from .other import FELINE, PReaCH
 
 __all__ = ["BFSDFS", "TC",
            "TreeCover", "GRAIL", "TreeSSPI", "DualLabeling", "GRIPP",
            "PathTree", "Ferrari",
            "PLL", "TwoHop", "ThreeHop", "PathHop", "TFLabel", "DL", "HL",
-           "TOL", "OReach"]
+           "TOL", "OReach",
+           "IP", "BFL",
+           "ChainCover", "OptimalChainCover",
+           "FELINE", "PReaCH"]
