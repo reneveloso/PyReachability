@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -28,6 +29,10 @@ public:
     // re-united under its FIRST element, which becomes that partition's representative.
     // Postcondition: for each partition p, find(m) == p[0] for every m in p.
     void repartition(const std::vector<std::vector<vertex_t>>& partitions);
+
+    // Estimated resident size of parent_ and rank_ (new code, not in the reference; see
+    // FelinePK::index_size_bytes for the estimate's caveats).
+    std::size_t size_bytes() const;
 
 private:
     std::unordered_map<vertex_t, vertex_t> parent_;

@@ -80,4 +80,14 @@ XYOrdering build_suborder(const DynamicGraph& g,
     return ord; // ranks positional by reps
 }
 
+std::size_t DynIndex::size_bytes() const {
+    // Estimate only: per-entry key+value bytes plus one bucket pointer per bucket-array
+    // slot. Does not model unordered_map's internal per-node allocation overhead
+    // (control block, next-pointer), which libstdc++/libc++ add on top of this.
+    return x_coord_.size() * (sizeof(vertex_t) + sizeof(int64_t))
+         + x_coord_.bucket_count() * sizeof(void*)
+         + y_coord_.size() * (sizeof(vertex_t) + sizeof(int64_t))
+         + y_coord_.bucket_count() * sizeof(void*);
+}
+
 } // namespace reachability::dynamic

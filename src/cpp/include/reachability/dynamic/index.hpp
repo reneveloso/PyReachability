@@ -3,6 +3,7 @@
 #include "reachability/dynamic/xy_ordering.hpp"
 #include "reachability/dynamic/graph.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
@@ -45,6 +46,10 @@ public:
     // as the slot set, ordered by the new relative ranks in `sub` (indexed positionally
     // by `delta`). Vertices outside `delta` keep their coordinates.
     void permute(const std::vector<vertex_t>& delta, const XYOrdering& sub);
+
+    // Estimated resident size of x_coord_ and y_coord_ (new code, not in the reference; see
+    // FelinePK::index_size_bytes for the estimate's caveats).
+    std::size_t size_bytes() const;
 
 private:
     std::unordered_map<vertex_t, int64_t> x_coord_, y_coord_; // rep -> gap-tolerant coord

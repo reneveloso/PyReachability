@@ -65,4 +65,14 @@ void Representative::repartition(const std::vector<std::vector<vertex_t>>& parti
         if (!part.empty()) unite(part, part[0]);
 }
 
+std::size_t Representative::size_bytes() const {
+    // Estimate only: per-entry key+value bytes plus one bucket pointer per bucket-array
+    // slot. Does not model unordered_map's internal per-node allocation overhead
+    // (control block, next-pointer), which libstdc++/libc++ add on top of this.
+    return parent_.size() * (sizeof(vertex_t) + sizeof(vertex_t))
+         + parent_.bucket_count() * sizeof(void*)
+         + rank_.size() * (sizeof(vertex_t) + sizeof(uint32_t))
+         + rank_.bucket_count() * sizeof(void*);
+}
+
 } // namespace reachability::dynamic
