@@ -18,11 +18,11 @@ The library has a high-performance **C++17 core** exposed through **Cython** (C+
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
 reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`).
 
-> **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle,
-> covering every static index class of the CSUR 2025 survey (Table 1): traversal and
-> transitive-closure baselines, interval/tree-cover labeling, the 2-hop family,
-> approximate transitive closure, and chain covers. See the [Roadmap](#roadmap) for
-> what's next.
+> **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle:
+> **all 22 static plain-reachability indexes of the CSUR 2025 survey (Table 1)** plus the
+> two baselines, spanning every static index class — traversal and transitive-closure
+> baselines, interval/tree-cover labeling, the 2-hop family, approximate transitive
+> closure, and chain covers. See the [Roadmap](#roadmap) for what's next.
 
 ---
 
@@ -142,9 +142,9 @@ Each **Reference** cell names the source and links (`[N]`) to its full citation 
 | `OptimalChainCover` | minimum-chain decomposition (Dilworth) + chain labels | ✅ implemented | Chen & Chen, ICDE 2008 [[23]](#ref-23) |
 | `DL` | distribution labeling (2-hop, equivalent to PLL) | ✅ implemented | Jin & Wang, PVLDB 2013 [[13]](#ref-13) |
 
-These span one+ method per index class of the CSUR 2025 survey, plus the baselines. The
-catalog will grow to cover the survey's full plain-reachability list — see
-[`docs/methods.md`](docs/methods.md) for the source-backed coverage map.
+Together these cover all 22 static plain-reachability indexes of the CSUR 2025 survey's
+Table 1, plus the two baselines — see [`docs/methods.md`](docs/methods.md) for the
+source-backed coverage map (including why the four dynamic-only rows are deferred).
 
 See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together and how to
 add a new method to the catalog, [`docs/fidelity.md`](docs/fidelity.md) for how faithfully each
@@ -162,16 +162,18 @@ The library is built in milestones, each producing working, tested software:
 3. **Benchmark harness + datasets** ✅ — `benchmarks/run_benchmark.py` compares build time,
    index size, and query time across all methods vs the BFS/DFS oracle on standard DAGs
    (`bash benchmarks/fetch_datasets.sh`).
-4. **Comprehensive catalog** ✅ — **all static plain-reachability indexes of the CSUR 2025
-   survey** (Table 1): 24 methods implemented. The method list is taken from a peer-reviewed
-   survey, not chosen ad hoc — see [`docs/methods.md`](docs/methods.md) for the coverage map.
+4. **Comprehensive catalog** ✅ — **all 22 static plain-reachability indexes of the CSUR 2025
+   survey** (Table 1) plus the two baselines: 24 methods implemented. The method list is
+   taken from a peer-reviewed survey, not chosen ad hoc — see
+   [`docs/methods.md`](docs/methods.md) for the coverage map.
 5. **First public release** ✅ — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
    in v0.2.0.
 
-Dynamic-graph methods (DAGGER, U2-hop, DBL, Ralf et al. — U2-hop is incremental 2-hop
-maintenance, which the survey discusses under dynamic graphs) and label-constrained /
-path-constrained reachability (edge-labeled graphs, the survey's Table 2) are planned later
-extensions.
+Dynamic-graph methods (DAGGER, U2-hop, DBL, and HOPI — the row CSUR 2025 lists as "Ralf et al.")
+and label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
+are planned later extensions. All four are fully dynamic (edge insertions **and** deletions)
+except DBL, which is insertion-only. See [`docs/methods.md`](docs/methods.md) for per-method
+citations and caveats.
 
 ## Benchmarks
 

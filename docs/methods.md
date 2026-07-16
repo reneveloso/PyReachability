@@ -31,22 +31,47 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 - ✅ **GRIPP** — Trißl & Leser, SIGMOD 2007 (pre/postorder order-tree instances + hop technique).
 - ✅ **Path-tree** — Jin, Ruan, Xiang, Wang, ACM TODS 2011 (path-tree cover + 3-tuple labeling + residual TC).
 - ✅ **Ferrari** — Seufert, Anand, Bedathur, Weikum, ICDE 2013 (budgeted exact/approx intervals + guided search).
-- ⬜ **DAGGER** (dynamic)
+- ⬜ **DAGGER** (dynamic, I&D) — Yıldırım, Chaoji, Zaki, arXiv:1301.0977, 2013. GRAIL extended to
+  dynamic graphs: k-dimensional *relaxed* interval labels (deliberately loose, so a split SCC can
+  share its parent's interval), over an SCC condensation maintained incrementally by union-find.
+  Two caveats verified against the paper and the reference code, both of which affect porting:
+  **(a)** it is a preprint — no peer-reviewed venue found — so it does not meet the inclusion rule
+  above and would enter, like Feline-PK, with its provenance declared; **(b)** the reference code
+  (<https://github.com/zakimjz/dagger-index>) is **GPL v3**, incompatible with this project's MIT
+  licence, so it must be implemented from the paper alone, not ported.
 
 ### 2-Hop class
 - ✅ **PLL** — Yano, Akiba, Iwata, Yoshida, CIKM 2013.
 - ✅ **2-Hop** — Cohen, Halperin, Kaplan, Zwick, SIAM J. Comput. 2003 (greedy densest-subgraph cover).
 - ✅ **3-Hop** — Jin, Xiang, Ruan, Fuhry, SIGMOD 2009 (TC contour + greedy factorization).
-- ⬜ **U2-hop** (dynamic — incremental maintenance of 2-hop labels; Bramandia, Choi, Ng, TKDE 2010.
-  The survey discusses it under dynamic graphs and notes it does not scale to large graphs.)
+- ⬜ **U2-hop** (dynamic, I&D) — Bramandia, Choi, Ng, TKDE 22(5):682–698, 2010 (earlier version:
+  WWW 2008, 845–854). Maintains 2-hop labels under updates; its primitives are node-centric
+  (node deletion is the paper's central algorithm). Note the false friend: "incremental
+  maintenance" in the title means *without rebuilding*, **not** insertion-only — the survey marks
+  it I&D. It condenses SCCs **once** on input (Tarjan, one scan) and assumes insertions never
+  create a cycle, so it never maintains the condensation. The survey notes it does not scale to
+  large graphs.
 - ✅ **Path-hop** — Cai & Poon, CIKM 2010 (residual TC + greedy path-hop set cover; trees as highways).
 - ✅ **TFL** (Topological Folding Labeling) — Cheng, Huang, Wu, Fu, SIGMOD 2013.
 - ✅ **DL** (Distribution Labeling) — Jin & Wang, PVLDB 2013 (Algorithm 2; survey-proven equivalent to PLL).
 - ✅ **HL** (Hierarchical Labeling) — Jin & Wang, PVLDB 2013 (recursive reachability backbone).
 - ✅ **TOL** (Total Order Labeling) — Zhu, Lin, Wang, Xiao, SIGMOD 2014 (contribution-score order).
-- ⬜ **DBL** (dynamic)
+- ⬜ **DBL** (dynamic, **I — insertion-only**) — Lyu, Li, He, Gong, DASFAA 2021, 761–777
+  (`10.1007/978-3-030-73197-7_52`; full version arXiv:2101.09441). The only insertion-only row of
+  Table 1: deletions are future work by the authors' own statement. Two complementary partial
+  indexes — Dynamic Landmark (DL, top-k degree landmarks; decides True) and Bidirectional Leaf
+  (BL, a hash set over leaf nodes in bit vectors; decides False) — with a pruned BFS in between.
+  Explicitly **DAG-free**: its stated contribution is avoiding SCC maintenance, which it argues is
+  prohibitively expensive. (The survey describes DBL as adding *BFL*; the paper never mentions BFL
+  or Bloom filters — the component is **BL**. Follow the paper.)
 - ✅ **O'Reach** — Hanauer, Schulz, Trummer, ACM JEA 2022 (constant-time observations + guided fallback).
-- ⬜ **Ralf et al.** (dynamic 2-hop)
+- ⬜ **HOPI** (dynamic 2-hop, I&D) — Schenkel, Theobald, Weikum, *Efficient creation and incremental
+  maintenance of the HOPI index for complex XML document collections*, ICDE 2005, 360–371
+  (`10.1109/ICDE.2005.57`). 2-hop labels over a general graph (no DAG assumption, so no SCC
+  maintenance). The survey notes it does not scale to large graphs.
+  <a id="fn-ralf"></a>**Naming:** CSUR 2025 lists this row as *"Ralf et al. [78]"* — the survey
+  mistakes Schenkel's **first** name for his surname. We use the correct name; the footnote exists
+  so this entry can still be matched to its Table 1 row.
 
 ### Approximate TC class
 - ✅ **IP** (Independent Permutation) — Wei, Yu, Lu, Jin, PVLDB 2014 (k-min-wise permutation labels + guided DFS).
@@ -62,9 +87,35 @@ Status: ✅ implemented · ⬜ planned. Each method is classified by the survey'
 
 ## Status summary
 
-Implemented: 24 methods — **all static plain-reachability techniques of the survey's
-Table 1**. Deferred to a future extension: the dynamic-graph methods (DAGGER, U2-hop,
-DBL, Ralf et al. — U2-hop is incremental 2-hop maintenance, discussed by the survey
-under dynamic graphs), alongside the label-constrained methods of Table 2. Exact
-citations are taken from CSUR 2025 Table 1 and confirmed against the primary source
-at implementation time.
+Implemented: 24 methods — **all 22 static plain-reachability techniques of the
+survey's Table 1** (26 rows total), plus the two baselines the survey discusses
+(online BFS/DFS and materialized TC). The four Table-1 rows not implemented are
+exactly those whose contribution is dynamic index maintenance: DAGGER, U2-hop, DBL,
+and HOPI (listed by the survey as "Ralf et al." — [see the naming note](#fn-ralf)).
+
+Note on the survey's *Dynamic* column: Table 1 also flags Path-tree, TOL, IP, Chain
+Cover, and Optimal Chain Cover as dynamic (I&D). Those are static indexes with
+additional dynamic-maintenance support; PyReachability implements their static form.
+"Deferred" above means *dynamic-only*: methods whose novelty is the maintenance
+procedure itself.
+
+Deferred to a future extension alongside the dynamic methods: the path-constrained
+(label-constrained) indexes of the survey's Table 2. Exact citations are taken from
+CSUR 2025 Table 1 and confirmed against the primary source at implementation time.
+
+### Where we diverge from the survey
+
+Confirming the four dynamic rows against their primary sources turned up two errors in
+CSUR 2025. We follow the primary source and record the divergence here, so that this
+catalog stays checkable against Table 1:
+
+- **"Ralf et al." is Schenkel et al.** — the survey uses the first author's given name as
+  a surname ([above](#fn-ralf)).
+- **DBL uses BL, not BFL** — the survey states DBL "also adds BFL"; the paper (including
+  the full arXiv version) never mentions BFL or Bloom filters. The component is the
+  Bidirectional Leaf label, which is Bloom-*like* but is not Su et al.'s BFL.
+
+One further caveat, not an error but a reading trap: the *Dynamic* column is defined purely
+over **edge** insertions/deletions (I / I&D). It says nothing about vertex operations, which
+Feline-PK, U2-hop, and DBL all support. Do not read a row's I&D as describing its full update
+API.
