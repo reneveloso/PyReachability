@@ -42,3 +42,27 @@ TEST_CASE("Representative: unite re-points when `chosen` is not the current root
     CHECK(r.find(1) == 0);       // the old root now resolves to `chosen`
     CHECK(r.find(2) == 0);
 }
+
+TEST_CASE("Representative: repartition splits a component and leaves no stale state") {
+    // Ported from the reference's own test (test/test_dynamic.cpp:438-451), which Task 1
+    // omitted. split_component depends on this contract: it re-elects representatives among
+    // a folded component's members, so a repartition that left stale parent/rank behind
+    // would surface as a randomised-stress failure, far from its cause.
+    Representative r;
+    for (unsigned v = 0; v < 5; ++v) r.make_set(v);
+    r.unite({0, 1, 2, 3, 4}, 2);            // one component, representative 2
+    REQUIRE(r.find(0) == 2);
+    REQUIRE(r.find(4) == 2);
+
+    r.repartition({{0, 1}, {2, 3, 4}});     // split into two components
+    CHECK(r.find(0) == 0);                  // a partition's rep is its first member
+    CHECK(r.find(1) == 0);
+    CHECK(r.find(2) == 2);
+    CHECK(r.find(3) == 2);
+    CHECK(r.find(4) == 2);
+    CHECK(r.find(0) != r.find(2));          // the partitions are distinct components
+
+    // Splitting again, into singletons, must work: no stale parent/rank state.
+    r.repartition({{0}, {1}, {2}, {3}, {4}});
+    for (unsigned v = 0; v < 5; ++v) CHECK(r.find(v) == v);
+}
