@@ -14,7 +14,8 @@ PyReachability is three thin layers over one C++ core:
 │  • Graph            — load from NumPy / file   │
 │  • ReachabilityIndex — common interface (ABC)  │
 │  • catalog          — name -> method registry  │
-│  • BFSDFS, ...      — method wrappers           │
+│  • static/          — the 24 method wrappers,  │
+│                       grouped by index class   │
 ├─────────────────────────────────────────────┤
 │  Cython  (_core.pyx / _core.pxd, C++ mode)     │
 │  • Graph cdef class wrapping CSRGraph*          │
@@ -158,7 +159,10 @@ on top of `Graph` (and `scc_condense` when the method needs a DAG).
 in `CMakeLists.txt`.
 
 **6. Write the Python wrapper** implementing `ReachabilityIndex`, decorate it with
-`@catalog.register`, give it a `name`, and export it from `__init__.py`:
+`@catalog.register`, give it a `name`, place it in the `static/` module matching
+the method's survey index class (`tree_cover.py`, `two_hop.py`, `approximate_tc.py`,
+`chain_cover.py`, `other.py`, or `baselines.py`), and add it to the re-exports in
+`static/__init__.py`:
 ```python
 @catalog.register
 class GRAIL(ReachabilityIndex):
