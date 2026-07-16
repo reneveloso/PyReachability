@@ -36,6 +36,7 @@ set(CORE_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/graph.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/index.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/query.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/scc.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/dynamic/feline_pk.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/pll.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/tc.cpp"
@@ -100,11 +101,13 @@ add_executable(cpp_tests
   src/cpp/tests/test_dyn_index.cpp
   src/cpp/tests/test_dyn_xy_ordering.cpp
   src/cpp/tests/test_dyn_query.cpp
+  src/cpp/tests/test_dyn_scc.cpp
   src/cpp/tests/test_feline_pk.cpp
   src/cpp/dynamic/representative.cpp
   src/cpp/dynamic/graph.cpp
   src/cpp/dynamic/index.cpp
   src/cpp/dynamic/query.cpp
+  src/cpp/dynamic/scc.cpp
   src/cpp/dynamic/feline_pk.cpp
   src/cpp/csr_graph.cpp
   src/cpp/scc.cpp

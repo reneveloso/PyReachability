@@ -72,3 +72,142 @@ TEST_CASE("FelinePK: a fold keeps outside reachability intact") {
     CHECK(pk.reachable(3, 1));
     CHECK_FALSE(pk.reachable(4, 3));
 }
+
+TEST_CASE("FelinePK: removing the only link between components cuts reachability") {
+    FelinePK pk;
+    for (unsigned v = 0; v < 3; ++v) pk.insert_vertex(v);
+    pk.insert_edge(0, 1);
+    pk.insert_edge(1, 2);
+    const int64_t x0 = pk.index().x(0), y0 = pk.index().y(0);
+    const int64_t x1 = pk.index().x(1), y1 = pk.index().y(1);
+    const int64_t x2 = pk.index().x(2), y2 = pk.index().y(2);
+    CHECK(pk.reachable(0, 2));
+
+    pk.remove_edge(1, 2);
+    CHECK_FALSE(pk.reachable(0, 2));
+    CHECK_FALSE(pk.reachable(1, 2));
+    CHECK(pk.reachable(0, 1));
+
+    // Removing an edge never invalidates a topological order: nothing moves.
+    CHECK((pk.index().x(0) == x0 && pk.index().y(0) == y0));
+    CHECK((pk.index().x(1) == x1 && pk.index().y(1) == y1));
+    CHECK((pk.index().x(2) == x2 && pk.index().y(2) == y2));
+}
+
+TEST_CASE("FelinePK: a parallel edge keeps the DAG edge alive") {
+    // Two distinct E edges between the same pair of components: removing one must NOT
+    // remove the E_DAG edge. Removing the second one must.
+    FelinePK pk;
+    for (unsigned v = 0; v < 4; ++v) pk.insert_vertex(v);
+    pk.insert_edge(0, 1); pk.insert_edge(1, 0);   // component {0,1}
+    pk.insert_edge(2, 3); pk.insert_edge(3, 2);   // component {2,3}
+    pk.insert_edge(0, 2);                         // first link between the components
+    pk.insert_edge(1, 3);                         // second link between the SAME components
+    CHECK(pk.reachable(0, 3));
+
+    pk.remove_edge(0, 2);
+    CHECK(pk.reachable(0, 3));      // still linked through the parallel edge (1,3)
+    pk.remove_edge(1, 3);
+    CHECK_FALSE(pk.reachable(0, 3)); // unreachable once both links are gone
+    CHECK(pk.reachable(0, 1));       // the components themselves are intact
+    CHECK(pk.reachable(2, 3));
+}
+
+TEST_CASE("FelinePK: removing an edge inside a component splits it") {
+    FelinePK pk;
+    for (unsigned v = 0; v < 3; ++v) pk.insert_vertex(v);
+    pk.insert_edge(0, 1);
+    pk.insert_edge(1, 2);
+    pk.insert_edge(2, 0);           // fold {0,1,2}
+    CHECK(pk.rep().find(0) == pk.rep().find(2));
+    for (unsigned v = 0; v < 3; ++v)
+        CHECK(pk.index().has(v));   // folded members keep their coordinates
+
+    pk.remove_edge(2, 0);           // the cycle breaks: back to a 0 -> 1 -> 2 chain
+    CHECK(pk.rep().find(0) != pk.rep().find(2));
+    CHECK(pk.reachable(0, 1));
+    CHECK(pk.reachable(1, 2));
+    CHECK(pk.reachable(0, 2));
+    CHECK_FALSE(pk.reachable(2, 0));
+    CHECK_FALSE(pk.reachable(1, 0));
+    CHECK_FALSE(pk.reachable(2, 1));
+    for (unsigned v = 0; v < 3; ++v)
+        CHECK(pk.index().has(v));   // every re-elected representative has a coordinate
+}
+
+TEST_CASE("FelinePK: an internal edge whose removal does not split the component") {
+    FelinePK pk;
+    for (unsigned v = 0; v < 3; ++v) pk.insert_vertex(v);
+    pk.insert_edge(0, 1);
+    pk.insert_edge(1, 2);
+    pk.insert_edge(2, 0);
+    pk.insert_edge(1, 0);           // redundant back edge inside the SCC
+
+    pk.remove_edge(1, 0);           // still strongly connected through 1->2->0
+    CHECK(pk.reachable(1, 0));
+    CHECK(pk.reachable(0, 1));
+    CHECK(pk.reachable(2, 1));
+    CHECK(pk.reachable(0, 2));
+}
+
+TEST_CASE("FelinePK: a split keeps the component's external boundary intact") {
+    // 0 -> 1 (external predecessor into the component)
+    // SCC {1,2,3}: 1->2, 2->3, 3->1
+    // 3 -> 4 (external successor out of the component)
+    FelinePK pk;
+    for (unsigned v = 0; v < 5; ++v) pk.insert_vertex(v);
+    pk.insert_edge(0, 1);
+    pk.insert_edge(1, 2); pk.insert_edge(2, 3); pk.insert_edge(3, 1);
+    pk.insert_edge(3, 4);
+    CHECK(pk.reachable(0, 4));
+    CHECK(pk.reachable(3, 1));
+    CHECK(pk.reachable(1, 3));
+
+    pk.remove_edge(3, 1);           // breaks the cycle -> chain 1->2->3
+
+    // The chain survives.
+    CHECK(pk.reachable(1, 2));
+    CHECK(pk.reachable(2, 3));
+    CHECK(pk.reachable(1, 3));
+
+    // The cycle is gone.
+    CHECK_FALSE(pk.reachable(3, 1));
+    CHECK_FALSE(pk.reachable(2, 1));
+    CHECK_FALSE(pk.reachable(3, 2));
+
+    // The inbound boundary still works (pins split_component's pred(w) reinsertion loop).
+    CHECK(pk.reachable(0, 1));
+    CHECK(pk.reachable(0, 2));
+    CHECK(pk.reachable(0, 3));
+    CHECK(pk.reachable(0, 4));
+
+    // The outbound boundary still works (pins its succ(w) reinsertion loop).
+    CHECK(pk.reachable(1, 4));
+    CHECK(pk.reachable(2, 4));
+    CHECK(pk.reachable(3, 4));
+
+    // Nothing spurious appeared.
+    CHECK_FALSE(pk.reachable(4, 0));
+    CHECK_FALSE(pk.reachable(4, 3));
+    CHECK_FALSE(pk.reachable(1, 0));
+}
+
+TEST_CASE("FelinePK: remove_edge no-ops on absent edges and unknown vertices") {
+    FelinePK pk;
+    pk.insert_vertex(0);
+    pk.insert_vertex(1);
+    pk.insert_edge(0, 1);
+
+    pk.remove_edge(1, 0);           // this edge never existed
+    CHECK(pk.reachable(0, 1));
+    pk.remove_edge(5, 6);           // unknown vertices must not crash
+    CHECK(pk.reachable(0, 1));
+
+    pk.insert_edge(0, 0);           // self-loop
+    pk.remove_edge(0, 0);           // must be a clean no-op
+    CHECK(pk.reachable(0, 0));
+    CHECK(pk.reachable(0, 1));      // the real edge was left alone
+
+    pk.remove_edge(0, 1);           // the real removal still works afterwards
+    CHECK_FALSE(pk.reachable(0, 1));
+}
