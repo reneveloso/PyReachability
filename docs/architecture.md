@@ -248,4 +248,34 @@ point to.
 - **Property-based:** `hypothesis` generates random digraphs and cross-checks each method's
   answers against the oracle for all vertex pairs.
 - **C++ unit tests:** `doctest` covers core components (CSR construction, Tarjan, traversal).
+- **Doctests:** every method's docstring `Examples` block runs as a test (`--doctest-modules`
+  is wired into `pyproject.toml`). They are executable documentation, so nothing else would
+  notice them going stale.
 - **CI:** the full suite runs on Linux/macOS/Windows across Python 3.9–3.13.
+
+### Dynamic methods need a time axis
+
+A static index is a function of its input: build once, check the answers. A dynamic one is a
+*state machine*, and a wrong state can keep answering correctly for a while. Two additions
+carry that weight, and neither is optional for a dynamic method:
+
+- **All-pairs check after *every* update, not at the end.** `tests/test_feline_pk.py`
+  generates update sequences with `hypothesis` and re-checks every pair against the oracle
+  after each one; `src/cpp/tests/test_dyn_stress.cpp` does the same in C++ against an
+  *independent* `DynamicGraph` fed the same operations. Checking only at the end names the
+  wrong culprit — the operation that broke the invariant may be dozens of steps back.
+  The oracle must be independent: reading the index's own graph would make it share a
+  failure mode with the subject, and both would agree while both were wrong.
+- **The index invariant, checked directly.** The dominance cut is *conservative* — a corrupted
+  X/Y order degrades into extra traversal, not wrong answers, so a reachability oracle alone
+  can stay green over a broken index on small graphs. The C++ stress asserts every `E_DAG`
+  edge is increasing in both coordinates after each operation.
+
+This is not belt-and-braces. Both of the corrections in
+[`fidelity.md`](fidelity.md#feline-pk--the-thesiss-alg-10-reorder-is-not-implemented-as-written)
+are invisible to inspection and pass every small fixed example; they surface only under
+randomised all-pairs stress. Porting Feline-PK reproduced that independently: a mutation to
+`fold_cycle`'s rewiring slipped past a hand-written test and was caught by the per-update
+oracle with a three-operation counterexample — because folded members keep their pre-fold
+coordinates, so a `build()`-then-`query()` snapshot still looks right by coordinate dominance
+alone. Only a *subsequent* structural change exposes it.

@@ -137,3 +137,14 @@ the Table 1 coverage claim above.
   of the inclusion rule above, and this is the library author's own method. It is
   listed here, separately from the survey's techniques, so that neither the rule
   nor the Table 1 coverage claim is quietly stretched to cover it.
+  **Fidelity note:** the implementation deliberately departs from the thesis's
+  Alg. 10 in two coupled ways, because the text's reorder is unsound as written —
+  see [`fidelity.md`](fidelity.md). Being faithful to that text would be a bug.
+  **Known limits, both inherited from the reference implementation:**
+  *(a)* **batch insertion is future work** — `insert_edges` works, but it is the
+  ABC's default loop over `insert_edge`, which is why `FelinePK.supports` does not
+  declare `edge_insert_batch`; *(b)* **`remove_edge` scans the vertex set**, so it
+  is linear in |V| on both of its branches, while `insert_edge` is local. The
+  trade-off and the two known fixes are in
+  [`architecture.md`](architecture.md#dynamic-methods-what-differs); neither is
+  implemented until profiling says it matters.
