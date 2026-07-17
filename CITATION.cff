@@ -11,9 +11,9 @@ authors:
     given-names: Renê Rodrigues
     email: rene.veloso@unimontes.br
     affiliation: Universidade Estadual de Montes Claros (Unimontes)
-version: 0.1.0
+version: 0.2.0
 doi: 10.5281/zenodo.21251750
-date-released: "2026-07-07"
+date-released: "2026-07-17"
 license: MIT
 repository-code: "https://github.com/reneveloso/PyReachability"
 keywords:
