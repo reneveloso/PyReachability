@@ -185,3 +185,14 @@ cdef extern from "reachability/optchaincover.hpp" namespace "reachability":
         cbool query(vid_t, vid_t) nogil
         size_t index_size_bytes()
         int num_chains()
+
+cdef extern from "reachability/dynamic/feline_pk.hpp" namespace "reachability::dynamic":
+    ctypedef unsigned int vertex_t
+    cdef cppclass FelinePK:
+        FelinePK() except +
+        void insert_vertex(vertex_t) except +
+        void remove_vertex(vertex_t) except +
+        void insert_edge(vertex_t, vertex_t) except +
+        void remove_edge(vertex_t, vertex_t) except +
+        cbool reachable(vertex_t, vertex_t) except +
+        size_t index_size_bytes()

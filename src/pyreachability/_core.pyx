@@ -5,7 +5,7 @@ import numpy as np
 import gzip
 import array as _pyarray
 from libcpp.vector cimport vector
-from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling, TreeSSPI, GRIPP, PathTree, IP, OptimalChainCover
+from ._core cimport CSRGraph, vid_t, bfs_reaches, Condensation, scc_condense, Grail, Feline, PLL, TC, TreeCover, BFL, ChainCover, PReaCH, TwoHop, TFLabel, TOL, HL, OReach, ThreeHop, PathHop, Ferrari, DualLabeling, TreeSSPI, GRIPP, PathTree, IP, OptimalChainCover, FelinePK, vertex_t
 
 cnp.import_array()
 
@@ -1603,3 +1603,96 @@ cdef class _OptimalChainCoverCore:
         if not self._built:
             raise RuntimeError("index not built")
         return self._oc.num_chains()
+
+
+cdef class _FelinePKCore:
+    """Cython core for Feline-PK, the dynamic reachability index.
+
+    Unlike every static core above, ``build`` does NOT call ``scc_condense``:
+    Feline-PK maintains its own condensation incrementally (folding a cycle on
+    an edge insertion, splitting a component on an edge removal that breaks
+    one). Calling ``scc_condense`` here would defeat the entire method — the
+    seed just inserts every vertex, then every edge, straight into the
+    C++ ``FelinePK``.
+    """
+    cdef FelinePK* _pk
+    cdef int _n
+    cdef bint _built
+
+    def __cinit__(self):
+        self._pk = new FelinePK()
+        self._n = 0
+        self._built = False
+
+    def __dealloc__(self):
+        if self._pk != NULL:
+            del self._pk
+
+    def build(self, Graph graph):
+        cdef vid_t n = graph._g.num_nodes()
+        cdef vid_t u
+        cdef const vid_t* it
+        cdef const vid_t* end
+        for u in range(n):
+            self._pk.insert_vertex(<vertex_t>u)
+        for u in range(n):
+            it = graph._g.out_begin(u)
+            end = graph._g.out_end(u)
+            while it != end:
+                self._pk.insert_edge(<vertex_t>u, <vertex_t>it[0])
+                it += 1
+        self._n = n
+        self._built = True
+
+    def _check(self, int v):
+        if not self._built:
+            raise RuntimeError("index not built")
+        if v < 0:
+            raise IndexError("vertex id out of range")
+
+    def insert_vertex(self, int v):
+        self._check(v)
+        self._pk.insert_vertex(<vertex_t>v)
+        if v >= self._n:
+            self._n = v + 1
+
+    def remove_vertex(self, int v):
+        self._check(v)
+        self._pk.remove_vertex(<vertex_t>v)
+
+    def insert_edge(self, int u, int v):
+        self._check(u); self._check(v)
+        self._pk.insert_edge(<vertex_t>u, <vertex_t>v)
+        if u >= self._n:
+            self._n = u + 1
+        if v >= self._n:
+            self._n = v + 1
+
+    def remove_edge(self, int u, int v):
+        self._check(u); self._check(v)
+        self._pk.remove_edge(<vertex_t>u, <vertex_t>v)
+
+    def query(self, int u, int v):
+        self._check(u); self._check(v)
+        return self._pk.reachable(<vertex_t>u, <vertex_t>v)
+
+    def query_batch(self, pairs):
+        if not self._built:
+            raise RuntimeError("index not built")
+        cdef cnp.ndarray[cnp.int32_t, ndim=2, mode="c"] p = \
+            np.ascontiguousarray(pairs, dtype=np.int32).reshape(-1, 2)
+        cdef Py_ssize_t m = p.shape[0], i
+        cdef cnp.ndarray[cnp.uint8_t, ndim=1] out = np.empty(m, dtype=np.uint8)
+        if m and int(p.min()) < 0:
+            raise IndexError("vertex id out of range")
+        cdef cnp.int32_t[:, ::1] pv = p
+        cdef cnp.uint8_t[::1] ov = out
+        cdef FelinePK* pk = self._pk
+        for i in range(m):
+            ov[i] = 1 if pk.reachable(<vertex_t>pv[i, 0], <vertex_t>pv[i, 1]) else 0
+        return out.view(np.bool_)
+
+    def index_size_bytes(self):
+        if not self._built:
+            raise RuntimeError("index not built")
+        return self._pk.index_size_bytes()
