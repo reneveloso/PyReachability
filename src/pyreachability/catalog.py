@@ -25,6 +25,14 @@ def methods(kind: str = "all") -> list[str]:
     the default is "all" — callers that must not mix the two halves (benchmarks,
     whose build-once cost has no dynamic counterpart) ask for "static" explicitly.
     """
+    # Imported here, not at module level, to keep this module importable from inside
+    # `dynamic`. Today `dynamic.base` only reaches `..base`, which imports nothing of
+    # ours, so a top-level import would in fact still work — but each method module
+    # registers itself with `from .. import catalog` + `@catalog.register` (see
+    # `static/other.py`), so once `dynamic/__init__` pulls in a method, a top-level
+    # import here would close the cycle: catalog -> dynamic -> dynamic.feline_pk ->
+    # catalog, while catalog is still half-initialised. Keeping it local costs a
+    # cached sys.modules lookup and avoids the trap.
     from .dynamic.base import DynamicReachabilityIndex
 
     if kind == "all":
