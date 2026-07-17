@@ -39,6 +39,9 @@ public:
     void remove(vertex_t r);
 
     // Rebuild all coordinates from two topological orders of the current reps.
+    //
+    // NOT on the insert/remove/query path — only tests call this. Kept because the
+    // reference keeps it. Do not wire it into a reorder: see build_suborder below.
     void set_from_scratch(const std::vector<vertex_t>& order_x,
                           const std::vector<vertex_t>& order_y);
 
@@ -59,6 +62,20 @@ private:
 
 // Algorithm 6: build (X, Y) for the sub-DAG induced by `reps` (edges of E_DAG whose
 // both endpoints are in `reps`). Ranks are returned positionally by `reps`.
+//
+// DO NOT CALL THIS FROM A REORDER PATH. It is not on the insert/remove/query path at all
+// — only tests reach it — and that is deliberate, not an oversight to fix.
+//
+// This function IS the thesis's `constrói_indice(δ, E_DAG ∩ δ²)`: the Alg. 10 line-11
+// operator that FelinePK deliberately does NOT use. Re-sorting δ's sub-DAG from scratch
+// can rank two δ-vertices that are incomparable in it differently from before, letting a
+// δ-vertex jump over a vertex inside the affected band but outside δ — which stays fixed —
+// and inverting a live edge. feline_pk.cpp uses a structured merge instead, per axis.
+// Wiring this back into a reorder reintroduces exactly the defect that was corrected.
+// The analysis, both counterexamples and the evidence are in docs/fidelity.md.
+//
+// It stays because the reference keeps it, and because it is the artefact that NAMES the
+// divergence: deleting it would erase what fidelity.md's claim is about.
 XYOrdering build_suborder(const DynamicGraph& g, const std::vector<vertex_t>& reps);
 
 } // namespace reachability::dynamic

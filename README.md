@@ -187,12 +187,18 @@ The library is built in milestones, each producing working, tested software:
    [`docs/methods.md`](docs/methods.md) for the coverage map.
 5. **First public release** ✅ — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
    in v0.2.0.
+6. **The dynamic half** ✅ — indexes that are *maintained* under updates rather than rebuilt:
+   the `DynamicReachabilityIndex` contract (capabilities declared as data, since the published
+   methods do not form a clean incremental/fully-dynamic hierarchy), `catalog.methods(kind=...)`,
+   a C++ substrate under `src/cpp/dynamic/`, and its first inhabitant, `FelinePK`. A dynamic
+   index maintains its own SCC condensation instead of condensing once and freezing.
 
-Dynamic-graph methods (DAGGER, U2-hop, DBL, and HOPI — the row CSUR 2025 lists as "Ralf et al.")
-and label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
-are planned later extensions. All four are fully dynamic (edge insertions **and** deletions)
-except DBL, which is insertion-only. See [`docs/methods.md`](docs/methods.md) for per-method
-citations and caveats.
+Still ahead: the survey's four dynamic-only Table 1 rows — DAGGER, U2-hop, DBL, and HOPI (the
+row CSUR 2025 lists as "Ralf et al.") — all fully dynamic except DBL, which is insertion-only;
+and label-constrained / path-constrained reachability (edge-labeled graphs, the survey's
+Table 2). See [`docs/methods.md`](docs/methods.md) for per-method citations and caveats,
+including the two that affect DAGGER: it is an arXiv preprint, and its reference code is GPL v3
+against this project's MIT licence, so it must be written from the paper rather than ported.
 
 ## Benchmarks
 

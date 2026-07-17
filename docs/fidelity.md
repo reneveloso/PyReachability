@@ -10,7 +10,7 @@ ever returns a wrong reachability answer.
 > labels) and asserts the implementation reproduces them. Method files still
 > unfilled are reported as skipped tests.
 
-Where an implementation departs from the paper, the departure is one of three kinds:
+Where an implementation departs from the paper, the departure is one of four kinds:
 
 - **Faithful** — the construction and the produced index match the paper (up to tie-breaking).
 - **(B) Speed-only** — the produced index / query answers are equivalent to the paper, but a
@@ -19,16 +19,23 @@ Where an implementation departs from the paper, the departure is one of three ki
 - **(A) Index differs** — the produced index differs in *size/structure* from the paper's
   (queries still exact), because a construction *choice* (which spanning tree, which dummy
   scheme, which parameter) was simplified.
+- **(C) Correction** — the source text is *wrong as written*, and we implement the corrected
+  algorithm instead. This is the only kind where being faithful to the text would be a bug.
+  It demands more than the others: the defect, a counterexample, the fix, and the evidence
+  that distinguishes them must all be recorded, because the code will not match its own
+  citation and the next reader has to be able to check the claim rather than take it.
 
 This page documents the per-method status. Methods not listed (BFS/DFS, TC, Tree Cover, GRAIL,
 FELINE, PLL, BFL, Chain Cover, TOL, DL) are faithful.
 
-**There are no remaining (A) deviations:** every method now produces the paper's index structure.
-The only remaining deviations are **(B) speed-only** — a construction or query *subroutine* is the
-simpler textbook version (same index, same answers) — and they are confined to query-time data
-structures (e.g. a linear residual/segment scan instead of an O(log²k) structure) and one
-slower-but-equivalent build. The table rows marked *faithful* were aligned to the publications in
-the course of this work.
+**Among the survey's Table 1 techniques, there are no remaining (A) deviations:** every one of
+them now produces the paper's index structure. Their only remaining deviations are **(B)
+speed-only** — a construction or query *subroutine* is the simpler textbook version (same index,
+same answers) — confined to query-time data structures (e.g. a linear residual/segment scan
+instead of an O(log²k) structure) and one slower-but-equivalent build. The table rows marked
+*faithful* were aligned to the publications in the course of this work.
+
+The one **(C)** entry is Feline-PK, which is not a Table 1 technique — see its section below.
 
 ## Summary
 

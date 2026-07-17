@@ -1616,12 +1616,10 @@ cdef class _FelinePKCore:
     C++ ``FelinePK``.
     """
     cdef FelinePK* _pk
-    cdef int _n
     cdef bint _built
 
     def __cinit__(self):
         self._pk = new FelinePK()
-        self._n = 0
         self._built = False
 
     def __dealloc__(self):
@@ -1641,7 +1639,6 @@ cdef class _FelinePKCore:
             while it != end:
                 self._pk.insert_edge(<vertex_t>u, <vertex_t>it[0])
                 it += 1
-        self._n = n
         self._built = True
 
     def _check(self, int v):
@@ -1653,8 +1650,6 @@ cdef class _FelinePKCore:
     def insert_vertex(self, int v):
         self._check(v)
         self._pk.insert_vertex(<vertex_t>v)
-        if v >= self._n:
-            self._n = v + 1
 
     def remove_vertex(self, int v):
         self._check(v)
@@ -1663,10 +1658,6 @@ cdef class _FelinePKCore:
     def insert_edge(self, int u, int v):
         self._check(u); self._check(v)
         self._pk.insert_edge(<vertex_t>u, <vertex_t>v)
-        if u >= self._n:
-            self._n = u + 1
-        if v >= self._n:
-            self._n = v + 1
 
     def remove_edge(self, int u, int v):
         self._check(u); self._check(v)
@@ -1688,6 +1679,11 @@ cdef class _FelinePKCore:
         cdef cnp.int32_t[:, ::1] pv = p
         cdef cnp.uint8_t[::1] ov = out
         cdef FelinePK* pk = self._pk
+        # No `with nogil:` here, unlike every static core's query_batch — and this is not an
+        # oversight to tidy up. Those are safe because their queries are pure reads.
+        # FelinePK::reachable MUTATES: it resolves both endpoints through Representative::find,
+        # which path-compresses and writes parent_. It is non-const for that reason. Releasing
+        # the GIL around it would be a real data race, not a speed-up.
         for i in range(m):
             ov[i] = 1 if pk.reachable(<vertex_t>pv[i, 0], <vertex_t>pv[i, 1]) else 0
         return out.view(np.bool_)
