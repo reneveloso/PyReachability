@@ -18,11 +18,15 @@ The library has a high-performance **C++17 core** exposed through **Cython** (C+
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
 reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`).
 
-> **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle:
-> **all 22 static plain-reachability indexes of the CSUR 2025 survey (Table 1)** plus the
-> two baselines, spanning every static index class — traversal and transitive-closure
-> baselines, interval/tree-cover labeling, the 2-hop family, approximate transitive
-> closure, and chain covers. See the [Roadmap](#roadmap) for what's next.
+> **Status:** v0.1.0 — **25 methods** implemented and verified against the BFS/DFS oracle.
+> The static half is **all 22 static plain-reachability indexes of the CSUR 2025 survey
+> (Table 1)** plus the two baselines, spanning every static index class — traversal and
+> transitive-closure baselines, interval/tree-cover labeling, the 2-hop family,
+> approximate transitive closure, and chain covers. Plus **one dynamic method**,
+> `FelinePK` — seeded from a graph, then maintained under edge/vertex insertions and
+> deletions — from outside the survey; see
+> [`docs/methods.md`](docs/methods.md#beyond-the-survey-dynamic-methods-from-other-sources)
+> for its provenance. See the [Roadmap](#roadmap) for what's next.
 
 ---
 
@@ -100,9 +104,23 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dl', 'dual', 'feline', 'ferrari', 'grail', 'gripp', 'hl', 'ip', 'optchain', 'oreach', 'pathhop', 'pathtree', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
+catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dl', 'dual', 'feline', 'feline-pk', 'ferrari', 'grail', 'gripp', 'hl', 'ip', 'optchain', 'oreach', 'pathhop', 'pathtree', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
 Method = catalog.get("bfsdfs")
 idx = Method()
+```
+
+`catalog.methods()` mixes both halves; ask for one explicitly when that matters
+(e.g. a benchmark whose build-once cost has no dynamic counterpart):
+
+```python
+catalog.methods(kind="static")     # the 24 build-once-then-read-only methods
+catalog.methods(kind="dynamic")    # ['feline-pk']
+```
+
+Dynamic methods live in their own subpackage — the import says which half you are in:
+
+```python
+from pyreachability.dynamic import FelinePK
 ```
 
 A runnable version of this walkthrough lives in [`examples/quickstart.py`](examples/quickstart.py).

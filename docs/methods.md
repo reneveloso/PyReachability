@@ -119,3 +119,21 @@ One further caveat, not an error but a reading trap: the *Dynamic* column is def
 over **edge** insertions/deletions (I / I&D). It says nothing about vertex operations, which
 Feline-PK, U2-hop, and DBL all support. Do not read a row's I&D as describing its full update
 API.
+
+## Beyond the survey: dynamic methods from other sources
+
+The survey's Table 1 is the catalog's spine, but it is not a ceiling. Methods
+below come from elsewhere; each declares its provenance, and none is counted in
+the Table 1 coverage claim above.
+
+- ✅ **Feline-PK** (dynamic, I&D + vertex ops) — the incremental Feline of the
+  author's PhD thesis (Algs. 6–10, §4.1): R. R. Veloso, *Consultas de
+  alcançabilidade em grafos muito grandes*. It extends FELINE (Veloso, Cerf,
+  Meira Jr., Zaki, EDBT 2014) by maintaining the X/Y dominance drawing under
+  updates instead of rebuilding it, and by maintaining the SCC condensation
+  itself — folding a component when an insertion closes a cycle, splitting one
+  when a removal breaks it.
+  **Provenance note:** a thesis is not a peer-reviewed publication in the sense
+  of the inclusion rule above, and this is the library author's own method. It is
+  listed here, separately from the survey's techniques, so that neither the rule
+  nor the Table 1 coverage claim is quietly stretched to cover it.
