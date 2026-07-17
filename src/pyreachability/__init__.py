@@ -14,5 +14,6 @@ from ._core import Graph
 from .base import ReachabilityIndex
 from . import catalog
 from . import static   # noqa: F401  — import side effect: @catalog.register
+from . import dynamic  # noqa: F401  — import side effect: @catalog.register
 
 __all__ = ["__version__", "Graph", "ReachabilityIndex", "catalog"]

@@ -10,7 +10,7 @@ ever returns a wrong reachability answer.
 > labels) and asserts the implementation reproduces them. Method files still
 > unfilled are reported as skipped tests.
 
-Where an implementation departs from the paper, the departure is one of three kinds:
+Where an implementation departs from the paper, the departure is one of four kinds:
 
 - **Faithful** — the construction and the produced index match the paper (up to tie-breaking).
 - **(B) Speed-only** — the produced index / query answers are equivalent to the paper, but a
@@ -19,16 +19,23 @@ Where an implementation departs from the paper, the departure is one of three ki
 - **(A) Index differs** — the produced index differs in *size/structure* from the paper's
   (queries still exact), because a construction *choice* (which spanning tree, which dummy
   scheme, which parameter) was simplified.
+- **(C) Correction** — the source text is *wrong as written*, and we implement the corrected
+  algorithm instead. This is the only kind where being faithful to the text would be a bug.
+  It demands more than the others: the defect, a counterexample, the fix, and the evidence
+  that distinguishes them must all be recorded, because the code will not match its own
+  citation and the next reader has to be able to check the claim rather than take it.
 
 This page documents the per-method status. Methods not listed (BFS/DFS, TC, Tree Cover, GRAIL,
 FELINE, PLL, BFL, Chain Cover, TOL, DL) are faithful.
 
-**There are no remaining (A) deviations:** every method now produces the paper's index structure.
-The only remaining deviations are **(B) speed-only** — a construction or query *subroutine* is the
-simpler textbook version (same index, same answers) — and they are confined to query-time data
-structures (e.g. a linear residual/segment scan instead of an O(log²k) structure) and one
-slower-but-equivalent build. The table rows marked *faithful* were aligned to the publications in
-the course of this work.
+**Among the survey's Table 1 techniques, there are no remaining (A) deviations:** every one of
+them now produces the paper's index structure. Their only remaining deviations are **(B)
+speed-only** — a construction or query *subroutine* is the simpler textbook version (same index,
+same answers) — confined to query-time data structures (e.g. a linear residual/segment scan
+instead of an O(log²k) structure) and one slower-but-equivalent build. The table rows marked
+*faithful* were aligned to the publications in the course of this work.
+
+The one **(C)** entry is Feline-PK, which is not a Table 1 technique — see its section below.
 
 ## Summary
 
@@ -147,3 +154,54 @@ aggressively (constant-time block and bidirectional search) for both forward and
 **Hopcroft-Karp** algorithm (O(e√n)) — the matching algorithm the authors specify. We run it over
 the full reachability bipartite graph rather than building their stratified bipartite graphs with
 virtual nodes (a construction that reduces the edge count); same minimum number of chains, same index.
+
+### Feline-PK — the thesis's Alg. 10 reorder is not implemented as written
+
+**Status: faithful to the method, deliberately unfaithful to the text's reorder.**
+
+Two coupled departures, both in the "SCC unchanged" branch, both about how finely
+the reorder is applied. Everything else — the four partial δ sets, the E_DAG
+update, the whole "SCC changed" branch — is the thesis as written.
+
+**Line 11, the operator.** The thesis reorders δ with `constrói_indice(δ, E_DAG ∩ δ²)`:
+a from-scratch topological sort of the induced sub-DAG, re-stamped into δ's own
+slots. Unsound — a fresh order may rank two δ-vertices that are *incomparable* in
+the sub-DAG differently from before, letting a δ-vertex jump over a vertex that is
+inside the affected band but outside δ, which stays fixed, inverting a live edge.
+We use a structured merge instead: δ_in takes the lowest of δ's own slots and δ_out
+the highest, each group keeping its internal order, so δ_in only moves down and
+δ_out only up and no fixed neighbour is ever crossed.
+
+**Line 9, the granularity.** The thesis unions the four partial sets into a single δ
+and permutes both axes from it. But those sets are per-axis, and the union destroys
+the separation: a vertex entering δ only for violating Y still has its X slot reused
+from the shared pool, which can break a live edge on X — an axis that was never
+violated. We run one single-axis phase per violated axis instead.
+
+The two are coupled: the structured merge is defined per axis, so adopting it leaves
+the single δ of line 9 nowhere to go. This is also what the 2014 reference
+implementation does — i.e. the design the thesis intended.
+
+**Evidence.** An all-pairs BFS oracle, checked after every insertion over 200
+randomised runs, *fails* for the text as written (counterexample 10 → 6), *fails*
+for the operator alone with δ still shared (counterexample 5 → 8 on edge (11,7)),
+and *passes* only for both together. Neither defect is visible by inspection: both
+preserve correct answers on the small fixed examples used to illustrate them.
+
+**Independent confirmation of the same methodology.** The thesis-reorder departure
+above is the *known, deliberate* one — but our own test-writing process reproduced
+its central finding independently, on an unrelated line of code. While mutation-testing
+`fold_cycle`'s bookkeeping (the routine that re-wires E_DAG when an insertion folds a
+cycle into one SCC), commenting out the I-side re-wiring line broke `fold_cycle`
+without any *static* fixed-graph test noticing — but `test_update_sequences_agree_with_the_oracle`
+(the same "all-pairs oracle, checked after every update" methodology used above)
+caught it unprompted, with a 3-operation falsifying example
+(`ops=[(True, 0, 2), (True, 1, 0), (True, 2, 0)]`). The reason is structural, not
+incidental: `fold_cycle`'s own invariant is that folded members keep their pre-fold
+coordinates, so a single `build()`-then-`query()` snapshot can look correct by pure
+coordinate dominance even when the DAG bookkeeping underneath it is broken — only a
+*later* structural change exposes the corruption. That is why every dynamic-method
+oracle in this codebase checks after each individual update rather than once at the
+end of a sequence.
+
+Full analysis: `paper_felinepk/feline-pk-alg10.pdf` (private).

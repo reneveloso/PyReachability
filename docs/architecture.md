@@ -14,19 +14,31 @@ PyReachability is three thin layers over one C++ core:
 │  • Graph            — load from NumPy / file   │
 │  • ReachabilityIndex — common interface (ABC)  │
 │  • catalog          — name -> method registry  │
-│  • static/          — the 24 method wrappers,  │
+│  • static/          — the 24 static wrappers,  │
 │                       grouped by index class   │
+│  • dynamic/         — DynamicReachabilityIndex │
+│                       (ABC) + the 1 dynamic    │
+│                       method wrapper (Feline-PK)│
 ├─────────────────────────────────────────────┤
 │  Cython  (_core.pyx / _core.pxd, C++ mode)     │
 │  • Graph cdef class wrapping CSRGraph*          │
-│  • per-method cdef cores (e.g. _BFSDFSCore)     │
+│  • per-method cdef cores (e.g. _BFSDFSCore,     │
+│                       _FelinePKCore)            │
 ├─────────────────────────────────────────────┤
 │  C++17 core  (src/cpp/)                         │
 │  • CSRGraph          — internal representation  │
-│  • scc_condense()    — Tarjan condensation      │
+│  • scc_condense()    — Tarjan condensation       │
+│                       (static methods only)     │
 │  • bfs_reaches(), ... — algorithms              │
+│  • dynamic/          — self-maintaining index   │
+│                       cores, own condensation   │
 └─────────────────────────────────────────────┘
 ```
+
+`dynamic/` sits beside `static/` at every layer, not inside it: a dynamic method's
+Python wrapper, Cython core, and C++ implementation are each their own module, not a
+variant of the static ones. See [Dynamic methods: what differs](#dynamic-methods-what-differs)
+below.
 
 The **boundary stays thin**: Python holds the ergonomic API, Cython does the type marshalling,
 and all the algorithmic work happens in C++. The build (scikit-build-core + CMake) transpiles
@@ -187,10 +199,83 @@ for every method.
 pip install -e . && pytest -v
 ```
 
+## Dynamic methods: what differs
+
+The recipe above is for a **static** method: `build` freezes an index that never
+changes again. A **dynamic** method — seeded from a graph, then maintained under
+`insert_edge` / `remove_edge` / `insert_vertex` / `remove_vertex` — follows the same
+eight steps with three differences:
+
+- It subclasses [`DynamicReachabilityIndex`](../src/pyreachability/dynamic/base.py)
+  (an ABC extending `ReachabilityIndex`), not `ReachabilityIndex` directly.
+- It declares `supports`, a `frozenset` naming the update operations it actually
+  implements (`EDGE_INSERT`, `EDGE_DELETE`, `VERTEX_INSERT`, `VERTEX_DELETE` —
+  abilities — plus flags like `EDGE_INSERT_BATCH` and preconditions like
+  `ACYCLIC_INSERT_ONLY`). Capabilities are **data, not a class hierarchy**: the
+  published dynamic methods do not form a clean Incremental/FullyDynamic lattice
+  (U2-hop has vertex deletion but only acyclic edge insertion; DBL is
+  insertion-only), so a type hierarchy would have to lie about some of them.
+- `build` **seeds** the index rather than freezing it: it establishes the state the
+  update operations then evolve, not a read-only artifact.
+
+**Substrate.** The C++ for a dynamic method lives under `src/cpp/dynamic/` (e.g.
+[`feline_pk.hpp`/`feline_pk.cpp`](../src/cpp/dynamic/feline_pk.cpp)), parallel to —
+not inside — the static core's `src/cpp/`. Critically, it does **not** call
+`scc_condense()`: a one-shot Tarjan pass would already be wrong after the first
+update. A dynamic method instead maintains its own condensation incrementally
+(typically a union-find over SCC representatives plus an explicitly maintained
+condensation DAG), folding a component when an inserted edge closes a cycle and
+splitting one when a removed edge breaks it.
+
+**Design note: enumeration cost in Feline-PK's `remove_edge`.** Two operations in
+`feline_pk.cpp` scan the whole maintained digraph instead of touching only the
+affected component: `components_still_linked` (after an edge is removed, does any
+other `E` edge still link the same two components? — O(|V|+|E|), since it walks
+every vertex's successor list) and `split_component`'s member collection (union-find
+alone cannot list a set's members — O(|V|), since it only inspects each vertex's
+representative, not its edges). Two mitigations were considered and deliberately
+**not** built: a per-`E_DAG`-edge multiplicity counter, which would make
+`components_still_linked` O(1) (decrement and test, no scan); and an explicit
+member list maintained per component, which would make the collection O(|C|)
+instead of O(|V|). Neither is implemented until profiling shows the scan actually
+dominates — this is the note the
+`// ... (see the design note on enumeration cost)` comments in `feline_pk.cpp`
+point to.
+
 ## Testing strategy
 
 - **Oracle:** `BFSDFS` and the independent pure-Python `reachable_set` are ground truth.
 - **Property-based:** `hypothesis` generates random digraphs and cross-checks each method's
   answers against the oracle for all vertex pairs.
 - **C++ unit tests:** `doctest` covers core components (CSR construction, Tarjan, traversal).
+- **Doctests:** every method's docstring `Examples` block runs as a test (`--doctest-modules`
+  is wired into `pyproject.toml`). They are executable documentation, so nothing else would
+  notice them going stale.
 - **CI:** the full suite runs on Linux/macOS/Windows across Python 3.9–3.13.
+
+### Dynamic methods need a time axis
+
+A static index is a function of its input: build once, check the answers. A dynamic one is a
+*state machine*, and a wrong state can keep answering correctly for a while. Two additions
+carry that weight, and neither is optional for a dynamic method:
+
+- **All-pairs check after *every* update, not at the end.** `tests/test_feline_pk.py`
+  generates update sequences with `hypothesis` and re-checks every pair against the oracle
+  after each one; `src/cpp/tests/test_dyn_stress.cpp` does the same in C++ against an
+  *independent* `DynamicGraph` fed the same operations. Checking only at the end names the
+  wrong culprit — the operation that broke the invariant may be dozens of steps back.
+  The oracle must be independent: reading the index's own graph would make it share a
+  failure mode with the subject, and both would agree while both were wrong.
+- **The index invariant, checked directly.** The dominance cut is *conservative* — a corrupted
+  X/Y order degrades into extra traversal, not wrong answers, so a reachability oracle alone
+  can stay green over a broken index on small graphs. The C++ stress asserts every `E_DAG`
+  edge is increasing in both coordinates after each operation.
+
+This is not belt-and-braces. Both of the corrections in
+[`fidelity.md`](fidelity.md#feline-pk--the-thesiss-alg-10-reorder-is-not-implemented-as-written)
+are invisible to inspection and pass every small fixed example; they surface only under
+randomised all-pairs stress. Porting Feline-PK reproduced that independently: a mutation to
+`fold_cycle`'s rewiring slipped past a hand-written test and was caught by the per-update
+oracle with a three-operation counterexample — because folded members keep their pre-fold
+coordinates, so a `build()`-then-`query()` snapshot still looks right by coordinate dominance
+alone. Only a *subsequent* structural change exposes it.

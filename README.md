@@ -18,11 +18,15 @@ The library has a high-performance **C++17 core** exposed through **Cython** (C+
 **extensible method catalog** (each method is a plug-in implementing one interface), and a
 reproducible, catalog-driven benchmark harness (`benchmarks/run_benchmark.py`).
 
-> **Status:** v0.1.0 — **24 methods** implemented and verified against the BFS/DFS oracle:
-> **all 22 static plain-reachability indexes of the CSUR 2025 survey (Table 1)** plus the
-> two baselines, spanning every static index class — traversal and transitive-closure
-> baselines, interval/tree-cover labeling, the 2-hop family, approximate transitive
-> closure, and chain covers. See the [Roadmap](#roadmap) for what's next.
+> **Status:** v0.1.0 — **25 methods** implemented and verified against the BFS/DFS oracle.
+> The static half is **all 22 static plain-reachability indexes of the CSUR 2025 survey
+> (Table 1)** plus the two baselines, spanning every static index class — traversal and
+> transitive-closure baselines, interval/tree-cover labeling, the 2-hop family,
+> approximate transitive closure, and chain covers. Plus **one dynamic method**,
+> `FelinePK` — seeded from a graph, then maintained under edge/vertex insertions and
+> deletions — from outside the survey; see
+> [`docs/methods.md`](docs/methods.md#beyond-the-survey-dynamic-methods-from-other-sources)
+> for its provenance. See the [Roadmap](#roadmap) for what's next.
 
 ---
 
@@ -100,9 +104,23 @@ Discover available methods dynamically through the catalog:
 
 ```python
 from pyreachability import catalog
-catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dl', 'dual', 'feline', 'ferrari', 'grail', 'gripp', 'hl', 'ip', 'optchain', 'oreach', 'pathhop', 'pathtree', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
+catalog.methods()          # ['3hop', 'bfl', 'bfsdfs', 'chaincover', 'dl', 'dual', 'feline', 'feline-pk', 'ferrari', 'grail', 'gripp', 'hl', 'ip', 'optchain', 'oreach', 'pathhop', 'pathtree', 'pll', 'preach', 'sspi', 'tc', 'tfl', 'tol', 'treecover', 'twohop']
 Method = catalog.get("bfsdfs")
 idx = Method()
+```
+
+`catalog.methods()` mixes both halves; ask for one explicitly when that matters
+(e.g. a benchmark whose build-once cost has no dynamic counterpart):
+
+```python
+catalog.methods(kind="static")     # the 24 build-once-then-read-only methods
+catalog.methods(kind="dynamic")    # ['feline-pk']
+```
+
+Dynamic methods live in their own subpackage — the import says which half you are in:
+
+```python
+from pyreachability.dynamic import FelinePK
 ```
 
 A runnable version of this walkthrough lives in [`examples/quickstart.py`](examples/quickstart.py).
@@ -169,12 +187,18 @@ The library is built in milestones, each producing working, tested software:
    [`docs/methods.md`](docs/methods.md) for the coverage map.
 5. **First public release** ✅ — PyPI wheels, Zenodo DOI, GitHub Release. Docs site follows
    in v0.2.0.
+6. **The dynamic half** ✅ — indexes that are *maintained* under updates rather than rebuilt:
+   the `DynamicReachabilityIndex` contract (capabilities declared as data, since the published
+   methods do not form a clean incremental/fully-dynamic hierarchy), `catalog.methods(kind=...)`,
+   a C++ substrate under `src/cpp/dynamic/`, and its first inhabitant, `FelinePK`. A dynamic
+   index maintains its own SCC condensation instead of condensing once and freezing.
 
-Dynamic-graph methods (DAGGER, U2-hop, DBL, and HOPI — the row CSUR 2025 lists as "Ralf et al.")
-and label-constrained / path-constrained reachability (edge-labeled graphs, the survey's Table 2)
-are planned later extensions. All four are fully dynamic (edge insertions **and** deletions)
-except DBL, which is insertion-only. See [`docs/methods.md`](docs/methods.md) for per-method
-citations and caveats.
+Still ahead: the survey's four dynamic-only Table 1 rows — DAGGER, U2-hop, DBL, and HOPI (the
+row CSUR 2025 lists as "Ralf et al.") — all fully dynamic except DBL, which is insertion-only;
+and label-constrained / path-constrained reachability (edge-labeled graphs, the survey's
+Table 2). See [`docs/methods.md`](docs/methods.md) for per-method citations and caveats,
+including the two that affect DAGGER: it is an arXiv preprint, and its reference code is GPL v3
+against this project's MIT licence, so it must be written from the paper rather than ported.
 
 ## Benchmarks
 
